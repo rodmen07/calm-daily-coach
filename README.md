@@ -68,6 +68,12 @@ No server API routes in Pages mode.
 2. Workflow [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) builds and deploys automatically.
 3. In repository settings, set Pages source to GitHub Actions if not already set.
 
+## Dependabot updates
+
+- This repository pins npm to the public registry in [.npmrc](.npmrc).
+- Dependabot registry behavior is configured in [.github/dependabot.yml](.github/dependabot.yml).
+- These settings prevent private-registry resolution errors during npm security update runs.
+
 ## Next implementation steps
 
 1. Replace local browser storage with Firestore sync per authenticated user.
