@@ -18,6 +18,12 @@ Core principles:
 - Persistent check-in storage in [src/lib/browser-checkins.ts](src/lib/browser-checkins.ts)
 - Completion and skip controls plus weekly stats UI in [src/app/page.tsx](src/app/page.tsx)
 
+## Added Google login
+
+- Firebase Google Authentication integration in [src/lib/firebase.ts](src/lib/firebase.ts)
+- Sign-in and sign-out controls in [src/app/page.tsx](src/app/page.tsx)
+- Local data scoping by signed-in user id to avoid cross-user state on shared devices
+
 ## GitHub Pages deployment mode
 
 - This app is configured as a fully static Next.js export for GitHub Pages.
@@ -32,6 +38,16 @@ npm run dev
 ```
 
 Open http://localhost:3000
+
+## Configure Google auth
+
+1. Create a Firebase project.
+2. Enable Authentication and turn on Google provider.
+3. Add authorized domains:
+	- localhost
+	- rodmen07.github.io
+4. Copy [.env.example](.env.example) to `.env.local` and fill all NEXT_PUBLIC_FIREBASE values.
+5. Restart local dev server after env changes.
 
 ## Email reminders
 
@@ -54,7 +70,6 @@ No server API routes in Pages mode.
 
 ## Next implementation steps
 
-1. Add authentication and per-user persistence.
+1. Replace local browser storage with Firestore sync per authenticated user.
 2. Add time-based reminder scheduling through a backend worker.
-3. Replace local storage with per-user database sync.
-4. Add Stripe billing and paid trial gating.
+3. Add Stripe billing and paid trial gating.
