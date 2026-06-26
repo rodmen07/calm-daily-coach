@@ -8,6 +8,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "react/display-name": "off",
+      "react/no-direct-mutation-state": "off",
     },
   },
   // Override default ignores of eslint-config-next.
