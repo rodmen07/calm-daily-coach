@@ -68,6 +68,10 @@ No server API routes in Pages mode.
 2. Workflow [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) builds and deploys automatically.
 3. In repository settings, set Pages source to GitHub Actions if not already set.
 
+## Live URL
+
+https://rodmen07.github.io/calm-daily-coach/
+
 ## Next implementation steps
 
 1. Replace local browser storage with Firestore sync per authenticated user.
