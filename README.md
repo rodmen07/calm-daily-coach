@@ -1,34 +1,30 @@
-# Calm Daily Coach MVP
+# Calm Daily Coach
 
-A deliberate self-improvement app where users choose a daily content dose and receive exactly that amount.
+Calm Daily Coach is a deliberate self-improvement app: pick your focus and dose, get one bounded plan, then stop on purpose.
 
-Core principles:
+## Core principles
 
-- No infinite feed.
-- No streak pressure.
-- Daily cap message once the selected dose is completed.
+- No infinite feed
+- No streak pressure
+- Clear daily cap message after the selected dose is completed
 
-## Implemented in this first slice
+## Current features
 
-- Mobile-first daily plan flow in [src/app/page.tsx](src/app/page.tsx)
-- Plan and rule definitions in [src/lib/plan.ts](src/lib/plan.ts)
+- Daily plan generation from focus area + dose + optional context
+- Three dose options: light (3 min), medium (10 min), deep (20 min)
+- Check-ins with **complete** and **skip** flows (skip requires a reason)
+- Weekly summary with completion rate and top focus
+- Optional Google login with Firebase Authentication
+- Local data scoped per user (`guest` or Firebase user id) in browser storage
+- Reminder action that opens a prefilled `mailto:` draft
 
-## Added in this second slice
+## Project structure
 
-- Persistent check-in storage in [src/lib/browser-checkins.ts](src/lib/browser-checkins.ts)
-- Completion and skip controls plus weekly stats UI in [src/app/page.tsx](src/app/page.tsx)
-
-## Added Google login
-
-- Firebase Google Authentication integration in [src/lib/firebase.ts](src/lib/firebase.ts)
-- Sign-in and sign-out controls in [src/app/page.tsx](src/app/page.tsx)
-- Local data scoping by signed-in user id to avoid cross-user state on shared devices
-
-## GitHub Pages deployment mode
-
-- This app is configured as a fully static Next.js export for GitHub Pages.
-- Plan generation, check-ins, and weekly summaries run in-browser and persist via local storage.
-- Reminder action opens a pre-filled email draft using `mailto:`.
+- Main UI: [/src/app/page.tsx](/src/app/page.tsx)
+- Plan rules and generation: [/src/lib/plan.ts](/src/lib/plan.ts)
+- Check-in persistence and weekly stats: [/src/lib/browser-checkins.ts](/src/lib/browser-checkins.ts)
+- Firebase auth setup: [/src/lib/firebase.ts](/src/lib/firebase.ts)
+- GitHub Pages workflow: [/.github/workflows/deploy-pages.yml](/.github/workflows/deploy-pages.yml)
 
 ## Run locally
 
@@ -39,37 +35,37 @@ npm run dev
 
 Open http://localhost:3000
 
-## Configure Google auth
+## Available scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
+
+## Configure Google auth (optional)
 
 1. Create a Firebase project.
-2. Enable Authentication and turn on Google provider.
+2. Enable Authentication and turn on the Google provider.
 3. Add authorized domains:
-	- localhost
-	- rodmen07.github.io
-4. Copy [.env.example](.env.example) to `.env.local` and fill all NEXT_PUBLIC_FIREBASE values.
-5. Restart local dev server after env changes.
+   - `localhost`
+   - `rodmen07.github.io`
+4. Copy [.env.example](.env.example) to `.env.local`.
+5. Fill all `NEXT_PUBLIC_FIREBASE_*` values.
+6. Restart the dev server.
 
-## Email reminders
+If these environment variables are not set, the app still works in guest mode.
 
-Reminder uses a `mailto:` draft flow in static mode so it works on GitHub Pages with zero backend cost.
+## Deployment
 
-## API contracts
+This project is configured as a static Next.js export for GitHub Pages (`output: "export"`).
 
-No server API routes in Pages mode.
+1. Push to `main`.
+2. Workflow [/.github/workflows/deploy-pages.yml](/.github/workflows/deploy-pages.yml) builds and deploys the `out/` artifact.
+3. In repository settings, set Pages source to **GitHub Actions**.
 
 ## Persistence notes
 
-- Check-ins are stored in browser local storage for zero-cost hosting.
-- Data is device/browser specific until database-backed auth is added.
-
-## Deploy to GitHub Pages
-
-1. Push to `main`.
-2. Workflow [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) builds and deploys automatically.
-3. In repository settings, set Pages source to GitHub Actions if not already set.
-
-## Next implementation steps
-
-1. Replace local browser storage with Firestore sync per authenticated user.
-2. Add time-based reminder scheduling through a backend worker.
-3. Add Stripe billing and paid trial gating.
+- Plans and check-ins are stored in browser local storage.
+- Data is scoped by user id when signed in, but remains local to the current browser/device.
