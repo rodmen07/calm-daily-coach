@@ -72,6 +72,12 @@ No server API routes in Pages mode.
 
 https://rodmen07.github.io/calm-daily-coach/
 
+## Dependabot updates
+
+- This repository pins npm to the public registry in [.npmrc](.npmrc).
+- Dependabot registry behavior is configured in [.github/dependabot.yml](.github/dependabot.yml).
+- These settings prevent private-registry resolution errors during npm security update runs.
+
 ## Next implementation steps
 
 1. Replace local browser storage with Firestore sync per authenticated user.
