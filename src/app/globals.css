@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f5efe2;
+  --foreground: #1c2333;
+  --panel: #fff9ed;
+  --field: #fefcf7;
+  --line: #ddd2be;
+  --accent: #135d4c;
+  --accent-strong: #0f4d3f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sora);
+  --font-mono: var(--font-plex-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sora), sans-serif;
+}
+
+.page-shell {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top right, rgba(19, 93, 76, 0.2), transparent 48%),
+    radial-gradient(circle at bottom left, rgba(196, 145, 52, 0.16), transparent 42%),
+    var(--background);
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: 0 12px 36px rgba(28, 35, 51, 0.08);
+  padding: 18px;
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: var(--font-plex-mono), monospace;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.field {
+  width: 100%;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(19, 93, 76, 0.18);
+}
+
+.dose-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  padding: 10px 12px;
+  font-size: 0.92rem;
+}
+
+.dose-card input {
+  accent-color: var(--accent);
+}
+
+.primary-button,
+.secondary-button {
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.primary-button {
+  border: 1px solid transparent;
+  color: #fff;
+  background: var(--accent);
+}
+
+.primary-button:hover {
+  background: var(--accent-strong);
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--foreground);
+}
+
+.secondary-button:hover {
+  background: #fbf6ec;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    border-radius: 14px;
+    padding: 14px;
+  }
+}
