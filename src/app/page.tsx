@@ -1,8 +1,18 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { DOSE_OPTIONS, FOCUS_AREAS, buildDailyPlan, type DailyDose, type DailyPlan, type FocusArea } from "@/lib/plan";
 import { addCheckin, getWeeklySummary, type WeeklySummary } from "@/lib/browser-checkins";
+import { getFirebaseAuth } from "@/lib/firebase";
+import {
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+  type User,
+} from "firebase/auth";
 
 type ReminderStatus =
   | { type: "idle" }
@@ -22,6 +32,10 @@ const doseLabels: Record<DailyDose, string> = {
 
 const STORAGE_KEY = "calm-daily-coach";
 
+function scopedStorageKey(scopeKey: string) {
+  return `${STORAGE_KEY}:${scopeKey}`;
+}
+
 type SavedState = {
   focus: FocusArea;
   dose: DailyDose;
@@ -30,7 +44,7 @@ type SavedState = {
   plan: DailyPlan | null;
 };
 
-function getInitialState(): SavedState {
+function getInitialState(scopeKey: string): SavedState {
   const fallback: SavedState = {
     focus: "Deep Work",
     dose: "light",
@@ -43,7 +57,7 @@ function getInitialState(): SavedState {
     return fallback;
   }
 
-  const raw = window.localStorage.getItem(STORAGE_KEY);
+  const raw = window.localStorage.getItem(scopedStorageKey(scopeKey));
   if (!raw) {
     return fallback;
   }
@@ -72,21 +86,58 @@ function getInitialState(): SavedState {
 }
 
 export default function Home() {
-  const [initialState] = useState<SavedState>(() => getInitialState());
-  const [focus, setFocus] = useState<FocusArea>(initialState.focus);
-  const [dose, setDose] = useState<DailyDose>(initialState.dose);
-  const [notes, setNotes] = useState(initialState.notes);
-  const [email, setEmail] = useState(initialState.email);
-  const [plan, setPlan] = useState<DailyPlan | null>(initialState.plan);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authMessage, setAuthMessage] = useState("");
+  const [storageScope, setStorageScope] = useState("guest");
+  const [stateHydrated, setStateHydrated] = useState(false);
+  const [focus, setFocus] = useState<FocusArea>("Deep Work");
+  const [dose, setDose] = useState<DailyDose>("light");
+  const [notes, setNotes] = useState("");
+  const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [reminderStatus, setReminderStatus] = useState<ReminderStatus>({ type: "idle" });
   const [checkinStatus, setCheckinStatus] = useState<CheckinStatus>({ type: "idle" });
   const [skipReason, setSkipReason] = useState("");
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
+  const authConfigured = useMemo(() => getFirebaseAuth() !== null, []);
 
   useEffect(() => {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setAuthUser(user);
+      setStorageScope(user?.uid ?? "guest");
+
+      if (user?.email) {
+        setEmail((prev) => prev || user.email || "");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const state = getInitialState(storageScope);
+    setFocus(state.focus);
+    setDose(state.dose);
+    setNotes(state.notes);
+    setEmail((prev) => prev || state.email || authUser?.email || "");
+    setPlan(state.plan);
+    setStateHydrated(true);
+    void loadWeeklySummary(storageScope);
+  }, [storageScope, authUser?.email]);
+
+  useEffect(() => {
+    if (!stateHydrated) {
+      return;
+    }
+
     window.localStorage.setItem(
-      STORAGE_KEY,
+      scopedStorageKey(storageScope),
       JSON.stringify({
         focus,
         dose,
@@ -95,11 +146,7 @@ export default function Home() {
         plan,
       }),
     );
-  }, [focus, dose, notes, email, plan]);
-
-  useEffect(() => {
-    void loadWeeklySummary();
-  }, []);
+  }, [focus, dose, notes, email, plan, storageScope, stateHydrated]);
 
   const canGenerate = useMemo(() => !loading, [loading]);
 
@@ -148,11 +195,46 @@ export default function Home() {
     });
   }
 
-  async function loadWeeklySummary() {
+  async function loadWeeklySummary(scopeKey: string) {
     try {
-      setWeeklySummary(getWeeklySummary());
+      setWeeklySummary(getWeeklySummary(undefined, scopeKey));
     } catch {
       setWeeklySummary(null);
+    }
+  }
+
+  async function signInWithGoogle() {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      setAuthMessage("Google login is not configured yet.");
+      return;
+    }
+
+    setAuthMessage("");
+    const provider = new GoogleAuthProvider();
+
+    try {
+      await signInWithPopup(auth, provider);
+    } catch {
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch {
+        setAuthMessage("Could not open Google login. Please try again.");
+      }
+    }
+  }
+
+  async function signOutUser() {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      return;
+    }
+
+    try {
+      await signOut(auth);
+      setAuthMessage("");
+    } catch {
+      setAuthMessage("Could not sign out right now.");
     }
   }
 
@@ -169,21 +251,24 @@ export default function Home() {
     setCheckinStatus({ type: "idle" });
 
     try {
-      addCheckin({
-        date: plan.date,
-        focus: plan.focus,
-        dose: plan.dose,
-        minutes: plan.minutes,
-        status,
-        skipReason: status === "skipped" ? skipReason.trim() : undefined,
-      });
+      addCheckin(
+        {
+          date: plan.date,
+          focus: plan.focus,
+          dose: plan.dose,
+          minutes: plan.minutes,
+          status,
+          skipReason: status === "skipped" ? skipReason.trim() : undefined,
+        },
+        storageScope,
+      );
 
       setCheckinStatus({
         type: "ok",
         message: status === "done" ? "Great work. Check-in saved." : "Skip logged with context.",
       });
       setSkipReason("");
-      await loadWeeklySummary();
+      await loadWeeklySummary(storageScope);
     } catch {
       setCheckinStatus({ type: "error", message: "Could not save check-in." });
     }
@@ -209,6 +294,26 @@ export default function Home() {
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         <section className="panel mb-5">
           <p className="eyebrow">Calm Daily Coach</p>
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-700">
+              {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
+            </p>
+            {authUser ? (
+              <button className="secondary-button" type="button" onClick={signOutUser}>
+                Sign out
+              </button>
+            ) : (
+              <button className="secondary-button" type="button" onClick={signInWithGoogle}>
+                Continue with Google
+              </button>
+            )}
+          </div>
+          {!authConfigured ? (
+            <p className="mb-3 text-sm text-amber-700">
+              Google login is not configured yet. Add Firebase environment variables to enable it.
+            </p>
+          ) : null}
+          {authMessage ? <p className="mb-3 text-sm text-rose-700">{authMessage}</p> : null}
           <h1 className="mb-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Grow daily. Stop on purpose.
           </h1>
