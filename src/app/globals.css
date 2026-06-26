@@ -119,6 +119,24 @@ body {
   background: #fbf6ec;
 }
 
+.summary-card {
+  border: 1px solid var(--line);
+  background: var(--field);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.summary-label {
+  font-size: 0.78rem;
+  color: #4c5566;
+}
+
+.summary-value {
+  margin-top: 4px;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
 @media (max-width: 640px) {
   .panel {
     border-radius: 14px;

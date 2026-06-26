@@ -8,6 +8,21 @@ type ReminderStatus =
   | { type: "ok"; message: string }
   | { type: "error"; message: string };
 
+type CheckinStatus =
+  | { type: "idle" }
+  | { type: "ok"; message: string }
+  | { type: "error"; message: string };
+
+type WeeklySummary = {
+  windowStart: string;
+  windowEnd: string;
+  total: number;
+  done: number;
+  skipped: number;
+  completionRate: number;
+  byFocus: Record<FocusArea, { done: number; skipped: number }>;
+};
+
 const doseLabels: Record<DailyDose, string> = {
   light: "Light (3 min)",
   medium: "Medium (10 min)",
@@ -74,6 +89,9 @@ export default function Home() {
   const [plan, setPlan] = useState<DailyPlan | null>(initialState.plan);
   const [loading, setLoading] = useState(false);
   const [reminderStatus, setReminderStatus] = useState<ReminderStatus>({ type: "idle" });
+  const [checkinStatus, setCheckinStatus] = useState<CheckinStatus>({ type: "idle" });
+  const [skipReason, setSkipReason] = useState("");
+  const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -87,6 +105,10 @@ export default function Home() {
       }),
     );
   }, [focus, dose, notes, email, plan]);
+
+  useEffect(() => {
+    void loadWeeklySummary();
+  }, []);
 
   const canGenerate = useMemo(() => !loading, [loading]);
 
@@ -108,6 +130,7 @@ export default function Home() {
 
       const payload = (await response.json()) as { plan: DailyPlan };
       setPlan(payload.plan);
+      setCheckinStatus({ type: "idle" });
     } catch {
       setReminderStatus({ type: "error", message: "Could not generate today's plan." });
     } finally {
@@ -152,6 +175,76 @@ export default function Home() {
       setReminderStatus({ type: "error", message: "Could not send reminder." });
     }
   }
+
+  async function loadWeeklySummary() {
+    try {
+      const response = await fetch("/api/weekly-summary", { method: "GET" });
+      if (!response.ok) {
+        throw new Error("summary failed");
+      }
+
+      const payload = (await response.json()) as { summary: WeeklySummary };
+      setWeeklySummary(payload.summary);
+    } catch {
+      setWeeklySummary(null);
+    }
+  }
+
+  async function submitCheckin(status: "done" | "skipped") {
+    if (!plan) {
+      return;
+    }
+
+    if (status === "skipped" && !skipReason.trim()) {
+      setCheckinStatus({ type: "error", message: "Add a short reason before skipping." });
+      return;
+    }
+
+    setCheckinStatus({ type: "idle" });
+
+    try {
+      const response = await fetch("/api/checkins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: plan.date,
+          focus: plan.focus,
+          dose: plan.dose,
+          minutes: plan.minutes,
+          status,
+          skipReason: status === "skipped" ? skipReason.trim() : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("checkin failed");
+      }
+
+      setCheckinStatus({
+        type: "ok",
+        message: status === "done" ? "Great work. Check-in saved." : "Skip logged with context.",
+      });
+      setSkipReason("");
+      await loadWeeklySummary();
+    } catch {
+      setCheckinStatus({ type: "error", message: "Could not save check-in." });
+    }
+  }
+
+  const topFocus = useMemo(() => {
+    if (!weeklySummary) {
+      return null;
+    }
+
+    const ranked = Object.entries(weeklySummary.byFocus)
+      .map(([focusArea, counts]) => ({
+        focus: focusArea as FocusArea,
+        completed: counts.done,
+      }))
+      .sort((a, b) => b.completed - a.completed);
+
+    return ranked[0]?.completed > 0 ? ranked[0].focus : null;
+  }, [weeklySummary]);
 
   return (
     <div className="page-shell">
@@ -249,6 +342,41 @@ export default function Home() {
             </div>
 
             <div className="mt-5 border-t border-slate-200 pt-5">
+              <p className="label mb-2">Close today</p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button type="button" className="primary-button" onClick={() => void submitCheckin("done")}>
+                  Mark complete
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => void submitCheckin("skipped")}
+                >
+                  Skip today
+                </button>
+              </div>
+              <div className="mt-3">
+                <label htmlFor="skip-reason" className="label">
+                  Skip reason (required only if skipping)
+                </label>
+                <input
+                  id="skip-reason"
+                  className="field"
+                  value={skipReason}
+                  onChange={(event) => setSkipReason(event.target.value)}
+                  maxLength={180}
+                  placeholder="Example: travel day and no deep focus window"
+                />
+              </div>
+              {checkinStatus.type === "ok" ? (
+                <p className="mt-2 text-sm text-emerald-700">{checkinStatus.message}</p>
+              ) : null}
+              {checkinStatus.type === "error" ? (
+                <p className="mt-2 text-sm text-rose-700">{checkinStatus.message}</p>
+              ) : null}
+            </div>
+
+            <div className="mt-5 border-t border-slate-200 pt-5">
               <label htmlFor="email" className="label">
                 Reminder email (optional)
               </label>
@@ -272,6 +400,34 @@ export default function Home() {
                 <p className="mt-2 text-sm text-rose-700">{reminderStatus.message}</p>
               ) : null}
             </div>
+          </section>
+        ) : null}
+
+        {weeklySummary ? (
+          <section className="panel mt-5">
+            <h2 className="mb-3 text-xl font-semibold">Weekly summary</h2>
+            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:text-base">
+              <div className="summary-card">
+                <p className="summary-label">Check-ins</p>
+                <p className="summary-value">{weeklySummary.total}</p>
+              </div>
+              <div className="summary-card">
+                <p className="summary-label">Completed</p>
+                <p className="summary-value">{weeklySummary.done}</p>
+              </div>
+              <div className="summary-card">
+                <p className="summary-label">Skipped</p>
+                <p className="summary-value">{weeklySummary.skipped}</p>
+              </div>
+              <div className="summary-card">
+                <p className="summary-label">Completion</p>
+                <p className="summary-value">{Math.round(weeklySummary.completionRate * 100)}%</p>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-slate-700">
+              Window: {weeklySummary.windowStart} to {weeklySummary.windowEnd}
+              {topFocus ? ` | Top focus: ${topFocus}` : ""}
+            </p>
           </section>
         ) : null}
       </main>

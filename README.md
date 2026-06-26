@@ -16,6 +16,13 @@ Core principles:
 - Plan and rule definitions in [src/lib/plan.ts](src/lib/plan.ts)
 - Email transport with SMTP or preview mode in [src/lib/mailer.ts](src/lib/mailer.ts)
 
+## Added in this second slice
+
+- Persistent check-in storage in [src/lib/checkins.ts](src/lib/checkins.ts)
+- Check-in API in [src/app/api/checkins/route.ts](src/app/api/checkins/route.ts)
+- Weekly summary API in [src/app/api/weekly-summary/route.ts](src/app/api/weekly-summary/route.ts)
+- Completion and skip controls plus weekly stats UI in [src/app/page.tsx](src/app/page.tsx)
+
 ## Run locally
 
 ```bash
@@ -54,6 +61,27 @@ If SMTP is not configured, the reminder API still works in preview mode so you c
 	"minutes": 3
 }
 ```
+
+`POST /api/checkins`
+
+```json
+{
+	"date": "2026-06-26",
+	"focus": "Deep Work",
+	"dose": "light",
+	"minutes": 3,
+	"status": "done"
+}
+```
+
+`GET /api/weekly-summary`
+
+Returns rolling 7-day totals and completion rate.
+
+## Persistence notes
+
+- Check-ins are stored in `.data/checkins.json` for local development.
+- This is an intentional MVP storage layer and should be replaced with a real database when auth is added.
 
 ## Next implementation steps
 
