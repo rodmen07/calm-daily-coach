@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { DOSE_OPTIONS, FOCUS_AREAS, type DailyDose, type DailyPlan, type FocusArea } from "@/lib/plan";
+import { DOSE_OPTIONS, FOCUS_AREAS, buildDailyPlan, type DailyDose, type DailyPlan, type FocusArea } from "@/lib/plan";
+import { addCheckin, getWeeklySummary, type WeeklySummary } from "@/lib/browser-checkins";
 
 type ReminderStatus =
   | { type: "idle" }
@@ -12,16 +13,6 @@ type CheckinStatus =
   | { type: "idle" }
   | { type: "ok"; message: string }
   | { type: "error"; message: string };
-
-type WeeklySummary = {
-  windowStart: string;
-  windowEnd: string;
-  total: number;
-  done: number;
-  skipped: number;
-  completionRate: number;
-  byFocus: Record<FocusArea, { done: number; skipped: number }>;
-};
 
 const doseLabels: Record<DailyDose, string> = {
   light: "Light (3 min)",
@@ -118,18 +109,8 @@ export default function Home() {
     setReminderStatus({ type: "idle" });
 
     try {
-      const response = await fetch("/api/daily-plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ focus, dose, notes }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate plan");
-      }
-
-      const payload = (await response.json()) as { plan: DailyPlan };
-      setPlan(payload.plan);
+      const nextPlan = buildDailyPlan({ focus, dose, notes });
+      setPlan(nextPlan);
       setCheckinStatus({ type: "idle" });
     } catch {
       setReminderStatus({ type: "error", message: "Could not generate today's plan." });
@@ -146,45 +127,30 @@ export default function Home() {
 
     setReminderStatus({ type: "idle" });
 
-    try {
-      const response = await fetch("/api/reminders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          focus: plan.focus,
-          dose: plan.dose,
-          action: plan.action,
-          minutes: plan.minutes,
-        }),
-      });
+    const subject = encodeURIComponent(`Your ${plan.minutes}-minute ${plan.focus} plan is ready`);
+    const body = encodeURIComponent(
+      [
+        `Focus: ${plan.focus}`,
+        `Dose: ${plan.dose}`,
+        `Time: ${plan.minutes} minutes`,
+        "",
+        `Action: ${plan.action}`,
+        `Reflection: ${plan.reflection}`,
+        "",
+        "You set the dose. We deliver exactly that amount.",
+      ].join("\n"),
+    );
 
-      if (!response.ok) {
-        throw new Error("Reminder request failed");
-      }
-
-      const payload = (await response.json()) as { delivery: string };
-      setReminderStatus({
-        type: "ok",
-        message:
-          payload.delivery === "smtp"
-            ? "Reminder sent successfully."
-            : "Reminder preview generated. Configure SMTP to send real email.",
-      });
-    } catch {
-      setReminderStatus({ type: "error", message: "Could not send reminder." });
-    }
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    setReminderStatus({
+      type: "ok",
+      message: "Opened your email app with a prefilled reminder draft.",
+    });
   }
 
   async function loadWeeklySummary() {
     try {
-      const response = await fetch("/api/weekly-summary", { method: "GET" });
-      if (!response.ok) {
-        throw new Error("summary failed");
-      }
-
-      const payload = (await response.json()) as { summary: WeeklySummary };
-      setWeeklySummary(payload.summary);
+      setWeeklySummary(getWeeklySummary());
     } catch {
       setWeeklySummary(null);
     }
@@ -203,22 +169,14 @@ export default function Home() {
     setCheckinStatus({ type: "idle" });
 
     try {
-      const response = await fetch("/api/checkins", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date: plan.date,
-          focus: plan.focus,
-          dose: plan.dose,
-          minutes: plan.minutes,
-          status,
-          skipReason: status === "skipped" ? skipReason.trim() : undefined,
-        }),
+      addCheckin({
+        date: plan.date,
+        focus: plan.focus,
+        dose: plan.dose,
+        minutes: plan.minutes,
+        status,
+        skipReason: status === "skipped" ? skipReason.trim() : undefined,
       });
-
-      if (!response.ok) {
-        throw new Error("checkin failed");
-      }
 
       setCheckinStatus({
         type: "ok",

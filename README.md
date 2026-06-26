@@ -11,17 +11,18 @@ Core principles:
 ## Implemented in this first slice
 
 - Mobile-first daily plan flow in [src/app/page.tsx](src/app/page.tsx)
-- Plan generation API in [src/app/api/daily-plan/route.ts](src/app/api/daily-plan/route.ts)
-- Reminder email API in [src/app/api/reminders/route.ts](src/app/api/reminders/route.ts)
 - Plan and rule definitions in [src/lib/plan.ts](src/lib/plan.ts)
-- Email transport with SMTP or preview mode in [src/lib/mailer.ts](src/lib/mailer.ts)
 
 ## Added in this second slice
 
-- Persistent check-in storage in [src/lib/checkins.ts](src/lib/checkins.ts)
-- Check-in API in [src/app/api/checkins/route.ts](src/app/api/checkins/route.ts)
-- Weekly summary API in [src/app/api/weekly-summary/route.ts](src/app/api/weekly-summary/route.ts)
+- Persistent check-in storage in [src/lib/browser-checkins.ts](src/lib/browser-checkins.ts)
 - Completion and skip controls plus weekly stats UI in [src/app/page.tsx](src/app/page.tsx)
+
+## GitHub Pages deployment mode
+
+- This app is configured as a fully static Next.js export for GitHub Pages.
+- Plan generation, check-ins, and weekly summaries run in-browser and persist via local storage.
+- Reminder action opens a pre-filled email draft using `mailto:`.
 
 ## Run locally
 
@@ -34,58 +35,26 @@ Open http://localhost:3000
 
 ## Email reminders
 
-For real email delivery, copy [.env.example](.env.example) to `.env.local` and set SMTP credentials.
-
-If SMTP is not configured, the reminder API still works in preview mode so you can validate product flow without email infra.
+Reminder uses a `mailto:` draft flow in static mode so it works on GitHub Pages with zero backend cost.
 
 ## API contracts
 
-`POST /api/daily-plan`
-
-```json
-{
-	"focus": "Deep Work",
-	"dose": "light",
-	"notes": "optional context"
-}
-```
-
-`POST /api/reminders`
-
-```json
-{
-	"email": "you@example.com",
-	"focus": "Deep Work",
-	"dose": "light",
-	"action": "Run one 15-minute focus sprint...",
-	"minutes": 3
-}
-```
-
-`POST /api/checkins`
-
-```json
-{
-	"date": "2026-06-26",
-	"focus": "Deep Work",
-	"dose": "light",
-	"minutes": 3,
-	"status": "done"
-}
-```
-
-`GET /api/weekly-summary`
-
-Returns rolling 7-day totals and completion rate.
+No server API routes in Pages mode.
 
 ## Persistence notes
 
-- Check-ins are stored in `.data/checkins.json` for local development.
-- This is an intentional MVP storage layer and should be replaced with a real database when auth is added.
+- Check-ins are stored in browser local storage for zero-cost hosting.
+- Data is device/browser specific until database-backed auth is added.
+
+## Deploy to GitHub Pages
+
+1. Push to `main`.
+2. Workflow [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) builds and deploys automatically.
+3. In repository settings, set Pages source to GitHub Actions if not already set.
 
 ## Next implementation steps
 
 1. Add authentication and per-user persistence.
-2. Add time-based reminder scheduling instead of immediate send.
-3. Add weekly summary generation and delivery.
+2. Add time-based reminder scheduling through a backend worker.
+3. Replace local storage with per-user database sync.
 4. Add Stripe billing and paid trial gating.
