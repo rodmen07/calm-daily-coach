@@ -8,6 +8,8 @@
   --line: #ddd2be;
   --accent: #135d4c;
   --accent-strong: #0f4d3f;
+  --font-sora: "Segoe UI", "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-plex-mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 @theme inline {
