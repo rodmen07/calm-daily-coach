@@ -164,6 +164,36 @@ describe("Home page", () => {
     expect(screen.queryByText("Step 4 review unlocks after you submit today's check-in.")).toBeNull();
   });
 
+  it("locks planning controls after plan generation until check-in", async () => {
+    render(<Home />);
+
+    const focus = screen.getByLabelText("Focus area") as HTMLSelectElement;
+    const notes = screen.getByLabelText("Context for today (optional)") as HTMLTextAreaElement;
+    const generate = screen.getByRole("button", { name: "Generate today’s plan" }) as HTMLButtonElement;
+
+    expect(focus.disabled).toBe(false);
+    expect(notes.disabled).toBe(false);
+    expect(generate.disabled).toBe(false);
+
+    fireEvent.submit(generate);
+
+    await waitFor(() => {
+      expect(screen.getByText("Planning is locked until you close today. Submit a check-in to unlock the next plan.")).toBeTruthy();
+      expect((screen.getByLabelText("Focus area") as HTMLSelectElement).disabled).toBe(true);
+      expect((screen.getByLabelText("Context for today (optional)") as HTMLTextAreaElement).disabled).toBe(true);
+      const lockedButton = screen.getByRole("button", { name: "Finish check-in to unlock" }) as HTMLButtonElement;
+      expect(lockedButton.disabled).toBe(true);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Mark complete" }));
+
+    await waitFor(() => {
+      expect((screen.getByLabelText("Focus area") as HTMLSelectElement).disabled).toBe(false);
+      expect((screen.getByLabelText("Context for today (optional)") as HTMLTextAreaElement).disabled).toBe(false);
+      expect(screen.getByRole("button", { name: "Generate today’s plan" })).toBeTruthy();
+    });
+  });
+
   it("requires skip reason before submitting skipped check-in", async () => {
     render(<Home />);
 

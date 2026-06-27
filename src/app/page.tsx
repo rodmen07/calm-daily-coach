@@ -56,6 +56,10 @@ export default function Home() {
     : hasCheckedIn
       ? "Step 4 of 4: review your trend and reset for tomorrow."
       : "Step 3 of 4: complete your action sprint, then close the day.";
+  const isPlanningLocked = hasPlan && !hasCheckedIn;
+  const canEditPlanning = !isPlanningLocked;
+  const canGeneratePlan = canGenerate && canEditPlanning;
+  const canSubmitCheckin = hasPlan && !hasCheckedIn && !loading;
   const completionPercent = weeklySummary ? Math.round(weeklySummary.completionRate * 100) : 0;
   const hasWeeklyProgress = completionPercent > 0;
   const weeklyMomentum =
@@ -170,6 +174,11 @@ export default function Home() {
 
         <section className="panel">
           <form className="space-y-4" onSubmit={generatePlan}>
+            {isPlanningLocked ? (
+              <p className="flow-lock-note rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2" aria-live="polite">
+                Planning is locked until you close today. Submit a check-in to unlock the next plan.
+              </p>
+            ) : null}
             <div>
               <label htmlFor="focus" className="label">
                 Focus area
@@ -178,6 +187,7 @@ export default function Home() {
                 id="focus"
                 className="field"
                 value={focus}
+                disabled={!canEditPlanning}
                 onChange={(event) => setFocus(event.target.value as FocusArea)}
               >
                 {FOCUS_AREAS.map((area) => (
@@ -196,6 +206,7 @@ export default function Home() {
                   <label key={option} className="dose-card">
                     <input
                       checked={dose === option}
+                      disabled={!canEditPlanning}
                       onChange={() => setDose(option)}
                       type="radio"
                       name="dose"
@@ -216,6 +227,7 @@ export default function Home() {
                 className="field min-h-22"
                 maxLength={280}
                 placeholder="Example: low energy today, avoid heavy tasks before noon"
+                disabled={!canEditPlanning}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
               />
@@ -225,8 +237,8 @@ export default function Home() {
               </div>
             </div>
 
-            <button disabled={!canGenerate} className="primary-button" type="submit">
-              {loading ? "Generating..." : "Generate today’s plan"}
+            <button disabled={!canGeneratePlan} className="primary-button" type="submit">
+              {loading ? "Generating..." : isPlanningLocked ? "Finish check-in to unlock" : "Generate today’s plan"}
             </button>
           </form>
         </section>
@@ -276,12 +288,18 @@ export default function Home() {
                 Choose one outcome so your weekly trend reflects today&apos;s reality.
               </p>
               <div className="close-actions">
-                <button type="button" className="primary-button" onClick={() => void submitCheckin("done")}>
+                <button
+                  type="button"
+                  className="primary-button"
+                  disabled={!canSubmitCheckin}
+                  onClick={() => void submitCheckin("done")}
+                >
                   Mark complete
                 </button>
                 <button
                   type="button"
                   className="secondary-button"
+                  disabled={!canSubmitCheckin}
                   onClick={() => void submitCheckin("skipped")}
                 >
                   Skip today
@@ -294,6 +312,7 @@ export default function Home() {
                 <input
                   id="skip-reason"
                   className="field"
+                  disabled={!canSubmitCheckin}
                   value={skipReason}
                   onChange={(event) => setSkipReason(event.target.value)}
                   maxLength={180}

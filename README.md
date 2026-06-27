@@ -21,8 +21,10 @@ Core principles:
 - Completion and skip controls plus weekly stats UI in [src/app/page.tsx](src/app/page.tsx)
 - Animated flow-state chips and celebratory completion feedback in [src/app/page.tsx](src/app/page.tsx)
 - Explicit daily workflow stepper (Focus -> Plan -> Do -> Review) in [src/app/page.tsx](src/app/page.tsx)
+- Hard step locks that prevent plan edits/regeneration until a daily check-in is submitted in [src/app/page.tsx](src/app/page.tsx)
 - Animated weekly and focus progress feedback in [src/app/page.tsx](src/app/page.tsx)
 - Reduced-motion fallbacks for animated feedback in [src/app/globals.css](src/app/globals.css)
+- Animated count-up values for weekly summary totals in [src/app/page.tsx](src/app/page.tsx)
 
 ## Added Google login
 
@@ -61,6 +63,7 @@ Interaction coverage includes generate-plan, mark-complete, and skip-validation 
 Completion feedback styling and success-state behavior are also covered in `src/app/__tests__/page.test.tsx`.
 Progress animation states in the weekly summary are also covered in `src/app/__tests__/page.test.tsx`.
 Workflow-step labeling and completion-state transitions are also covered in `src/app/__tests__/page.test.tsx`.
+Planner lock/unlock behavior around daily check-in is also covered in `src/app/__tests__/page.test.tsx`.
 Animated feedback respects reduced-motion preferences through CSS fallbacks in `src/app/globals.css`.
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
