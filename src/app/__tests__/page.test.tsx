@@ -6,6 +6,7 @@ import { getFirebaseAuth } from "@/lib/firebase";
 
 vi.mock("@/lib/firebase", () => ({
   getFirebaseAuth: vi.fn(() => null),
+  getFirebaseFirestore: vi.fn(() => null),
 }));
 
 vi.mock("@/lib/browser-checkins", () => ({

@@ -142,3 +142,10 @@ Improve the product across six dimensions while maintaining release stability:
 1. Implement stronger quality gate commands and CI wiring.
 2. Add flow-state UI improvements for plan generation and check-in completion feedback.
 3. Draft backend storage adapter contract and Firestore migration plan.
+
+## Progress Log
+
+- 2026-06-27: Added `typecheck` and `check` commands and upgraded CI quality gate.
+- 2026-06-27: Added flow-step progress indicators and accessibility live regions in UI.
+- 2026-06-27: Added check-in storage adapter and migrated planner hook to backend-agnostic store API.
+- 2026-06-27: Implemented Firestore-backed check-in adapter path with automatic local fallback.

@@ -63,6 +63,12 @@ Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.
 - Check-in persistence flows through `src/lib/checkin-store.ts` to support backend migration without UI rewrites.
 - `src/app/page.tsx` focuses on view composition and wiring.
 
+### Check-in backend mode
+
+- Configure `NEXT_PUBLIC_CHECKIN_BACKEND` as `local` (default) or `firestore`.
+- In `firestore` mode, the app uses Firestore when available and automatically falls back to local storage on backend errors.
+- Firestore collection path is `users/{uid}/checkins`.
+
 ## Branch protection quality gate
 
 - Workflow `.github/workflows/ci.yml` runs lint, tests, and coverage on pushes and pull requests to `main`.

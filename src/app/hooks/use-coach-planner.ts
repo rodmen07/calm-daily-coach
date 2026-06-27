@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   createCheckinStore,
@@ -110,14 +108,34 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
 
   useEffect(() => {
-    const state = getInitialState(storageScope);
-    setFocus(state.focus);
-    setDose(state.dose);
-    setNotes(state.notes);
-    setEmail((prev) => prev || state.email || authEmail || "");
-    setPlan(state.plan);
-    setStateHydrated(true);
-    setWeeklySummary(checkinStore.getWeeklySummary(undefined, storageScope));
+    let active = true;
+
+    async function hydratePlannerState() {
+      const state = getInitialState(storageScope);
+      setFocus(state.focus);
+      setDose(state.dose);
+      setNotes(state.notes);
+      setEmail((prev) => prev || state.email || authEmail || "");
+      setPlan(state.plan);
+      setStateHydrated(true);
+
+      try {
+        const summary = await checkinStore.getWeeklySummary(undefined, storageScope);
+        if (active) {
+          setWeeklySummary(summary);
+        }
+      } catch {
+        if (active) {
+          setWeeklySummary(null);
+        }
+      }
+    }
+
+    void hydratePlannerState();
+
+    return () => {
+      active = false;
+    };
   }, [storageScope, authEmail, checkinStore]);
 
   useEffect(() => {
@@ -214,7 +232,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     setCheckinStatus({ type: "idle" });
 
     try {
-      checkinStore.addCheckin(
+      await checkinStore.addCheckin(
         {
           date: plan.date,
           focus: plan.focus,
@@ -232,7 +250,8 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
           status === "done" ? "Great work. Check-in saved." : "Skip logged with context.",
       });
       setSkipReason("");
-      setWeeklySummary(checkinStore.getWeeklySummary(undefined, storageScope));
+      const summary = await checkinStore.getWeeklySummary(undefined, storageScope);
+      setWeeklySummary(summary);
     } catch {
       setCheckinStatus({ type: "error", message: "Could not save check-in." });
     }
