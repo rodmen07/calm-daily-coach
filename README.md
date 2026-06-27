@@ -51,6 +51,18 @@ npm run test:coverage
 
 Current automated coverage focuses on core business logic in `src/lib/plan.ts` and `src/lib/browser-checkins.ts`.
 It also includes app behavior tests in `src/app/__tests__/page.test.tsx` for state hydration and auth-unconfigured UX.
+Interaction coverage includes generate-plan, mark-complete, and skip-validation actions in `src/app/page.tsx`.
+
+## Maintainability structure
+
+- Auth effects and login actions are isolated in `src/app/hooks/use-coach-auth.ts`.
+- Planner state, persistence, and check-in actions are isolated in `src/app/hooks/use-coach-planner.ts`.
+- `src/app/page.tsx` focuses on view composition and wiring.
+
+## Branch protection quality gate
+
+- Workflow `.github/workflows/ci.yml` runs lint, tests, and coverage on pushes and pull requests to `main`.
+- Coverage HTML artifacts are uploaded on each workflow run.
 
 ## Configure Google auth
 

@@ -1,7 +1,7 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "@/app/page";
-import { getWeeklySummary } from "@/lib/browser-checkins";
+import { addCheckin, getWeeklySummary } from "@/lib/browser-checkins";
 import { getFirebaseAuth } from "@/lib/firebase";
 
 vi.mock("@/lib/firebase", () => ({
@@ -101,6 +101,59 @@ describe("Home page", () => {
       expect(persisted).not.toBe("{invalid-json");
       const focus = screen.getByLabelText("Focus area") as HTMLSelectElement;
       expect(focus.value).toBe("Deep Work");
+    });
+  });
+
+  it("generates a plan from selected focus and dose", async () => {
+    render(<Home />);
+
+    fireEvent.change(screen.getByLabelText("Focus area"), {
+      target: { value: "Fitness" },
+    });
+    fireEvent.click(screen.getByDisplayValue("medium"));
+    fireEvent.change(screen.getByLabelText("Context for today (optional)"), {
+      target: { value: "Need energy before calls" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Generate today’s plan" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
+      expect(screen.getByText(/Complete a 20-minute strength circuit/i)).toBeTruthy();
+    });
+  });
+
+  it("submits done check-in and refreshes weekly summary", async () => {
+    render(<Home />);
+
+    fireEvent.submit(screen.getByRole("button", { name: "Generate today’s plan" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Mark complete" }));
+
+    await waitFor(() => {
+      expect(vi.mocked(addCheckin)).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(getWeeklySummary)).toHaveBeenCalledTimes(2);
+      expect(screen.getByText("Great work. Check-in saved.")).toBeTruthy();
+    });
+  });
+
+  it("requires skip reason before submitting skipped check-in", async () => {
+    render(<Home />);
+
+    fireEvent.submit(screen.getByRole("button", { name: "Generate today’s plan" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Skip today" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Add a short reason before skipping.")).toBeTruthy();
+      expect(vi.mocked(addCheckin)).not.toHaveBeenCalled();
     });
   });
 });

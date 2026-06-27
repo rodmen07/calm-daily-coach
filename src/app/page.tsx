@@ -1,28 +1,8 @@
 "use client";
-/* eslint-disable react-hooks/set-state-in-effect */
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { DOSE_OPTIONS, FOCUS_AREAS, buildDailyPlan, type DailyDose, type DailyPlan, type FocusArea } from "@/lib/plan";
-import { addCheckin, getWeeklySummary, type WeeklySummary } from "@/lib/browser-checkins";
-import { getFirebaseAuth } from "@/lib/firebase";
-import {
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithRedirect,
-  signOut,
-  type User,
-} from "firebase/auth";
-
-type ReminderStatus =
-  | { type: "idle" }
-  | { type: "ok"; message: string }
-  | { type: "error"; message: string };
-
-type CheckinStatus =
-  | { type: "idle" }
-  | { type: "ok"; message: string }
-  | { type: "error"; message: string };
+import { DOSE_OPTIONS, FOCUS_AREAS, type DailyDose, type FocusArea } from "@/lib/plan";
+import { useCoachAuth } from "@/app/hooks/use-coach-auth";
+import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 
 const doseLabels: Record<DailyDose, string> = {
   light: "Light (3 min)",
@@ -30,264 +10,36 @@ const doseLabels: Record<DailyDose, string> = {
   deep: "Deep (20 min)",
 };
 
-const STORAGE_KEY = "calm-daily-coach";
-
-function scopedStorageKey(scopeKey: string) {
-  return `${STORAGE_KEY}:${scopeKey}`;
-}
-
-type SavedState = {
-  focus: FocusArea;
-  dose: DailyDose;
-  notes: string;
-  email: string;
-  plan: DailyPlan | null;
-};
-
-function getInitialState(scopeKey: string): SavedState {
-  const fallback: SavedState = {
-    focus: "Deep Work",
-    dose: "light",
-    notes: "",
-    email: "",
-    plan: null,
-  };
-
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  const raw = window.localStorage.getItem(scopedStorageKey(scopeKey));
-  if (!raw) {
-    return fallback;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as {
-      focus?: FocusArea;
-      dose?: DailyDose;
-      notes?: string;
-      email?: string;
-      plan?: DailyPlan;
-    };
-
-    return {
-      focus: parsed.focus && FOCUS_AREAS.includes(parsed.focus) ? parsed.focus : fallback.focus,
-      dose: parsed.dose && DOSE_OPTIONS.includes(parsed.dose) ? parsed.dose : fallback.dose,
-      notes: typeof parsed.notes === "string" ? parsed.notes : fallback.notes,
-      email: typeof parsed.email === "string" ? parsed.email : fallback.email,
-      plan:
-        parsed.plan?.date === new Date().toISOString().slice(0, 10) ? parsed.plan : fallback.plan,
-    };
-  } catch {
-    window.localStorage.removeItem(scopedStorageKey(scopeKey));
-    return fallback;
-  }
-}
-
 export default function Home() {
-  const [authUser, setAuthUser] = useState<User | null>(null);
-  const [authMessage, setAuthMessage] = useState("");
-  const [storageScope, setStorageScope] = useState("guest");
-  const [stateHydrated, setStateHydrated] = useState(false);
-  const [focus, setFocus] = useState<FocusArea>("Deep Work");
-  const [dose, setDose] = useState<DailyDose>("light");
-  const [notes, setNotes] = useState("");
-  const [email, setEmail] = useState("");
-  const [plan, setPlan] = useState<DailyPlan | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [reminderStatus, setReminderStatus] = useState<ReminderStatus>({ type: "idle" });
-  const [checkinStatus, setCheckinStatus] = useState<CheckinStatus>({ type: "idle" });
-  const [skipReason, setSkipReason] = useState("");
-  const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
-  const authConfigured = useMemo(() => getFirebaseAuth() !== null, []);
+  const { authUser, authMessage, authConfigured, signInWithGoogle, signOutUser } =
+    useCoachAuth();
+  const storageScope = authUser?.uid ?? "guest";
 
-  useEffect(() => {
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setAuthUser(user);
-      setStorageScope(user?.uid ?? "guest");
-
-      if (user?.email) {
-        setEmail((prev) => prev || user.email || "");
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const state = getInitialState(storageScope);
-    setFocus(state.focus);
-    setDose(state.dose);
-    setNotes(state.notes);
-    setEmail((prev) => prev || state.email || authUser?.email || "");
-    setPlan(state.plan);
-    setStateHydrated(true);
-    void loadWeeklySummary(storageScope);
-  }, [storageScope, authUser?.email]);
-
-  useEffect(() => {
-    if (!stateHydrated) {
-      return;
-    }
-
-    window.localStorage.setItem(
-      scopedStorageKey(storageScope),
-      JSON.stringify({
-        focus,
-        dose,
-        notes,
-        email,
-        plan,
-      }),
-    );
-  }, [focus, dose, notes, email, plan, storageScope, stateHydrated]);
-
-  const canGenerate = useMemo(() => !loading, [loading]);
-
-  async function generatePlan(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setReminderStatus({ type: "idle" });
-
-    try {
-      const nextPlan = buildDailyPlan({ focus, dose, notes });
-      setPlan(nextPlan);
-      setCheckinStatus({ type: "idle" });
-    } catch {
-      setReminderStatus({ type: "error", message: "Could not generate today's plan." });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function sendReminder() {
-    if (!plan || !email) {
-      setReminderStatus({ type: "error", message: "Add an email to send reminders." });
-      return;
-    }
-
-    setReminderStatus({ type: "idle" });
-
-    const subject = encodeURIComponent(`Your ${plan.minutes}-minute ${plan.focus} plan is ready`);
-    const body = encodeURIComponent(
-      [
-        `Focus: ${plan.focus}`,
-        `Dose: ${plan.dose}`,
-        `Time: ${plan.minutes} minutes`,
-        "",
-        `Action: ${plan.action}`,
-        `Reflection: ${plan.reflection}`,
-        "",
-        "You set the dose. We deliver exactly that amount.",
-      ].join("\n"),
-    );
-
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    setReminderStatus({
-      type: "ok",
-      message: "Opened your email app with a prefilled reminder draft.",
-    });
-  }
-
-  async function loadWeeklySummary(scopeKey: string) {
-    try {
-      setWeeklySummary(getWeeklySummary(undefined, scopeKey));
-    } catch {
-      setWeeklySummary(null);
-    }
-  }
-
-  async function signInWithGoogle() {
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      setAuthMessage("Google login is not configured yet.");
-      return;
-    }
-
-    setAuthMessage("");
-    const provider = new GoogleAuthProvider();
-
-    try {
-      await signInWithPopup(auth, provider);
-    } catch {
-      try {
-        await signInWithRedirect(auth, provider);
-      } catch {
-        setAuthMessage("Could not open Google login. Please try again.");
-      }
-    }
-  }
-
-  async function signOutUser() {
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      return;
-    }
-
-    try {
-      await signOut(auth);
-      setAuthMessage("");
-    } catch {
-      setAuthMessage("Could not sign out right now.");
-    }
-  }
-
-  async function submitCheckin(status: "done" | "skipped") {
-    if (!plan) {
-      return;
-    }
-
-    if (status === "skipped" && !skipReason.trim()) {
-      setCheckinStatus({ type: "error", message: "Add a short reason before skipping." });
-      return;
-    }
-
-    setCheckinStatus({ type: "idle" });
-
-    try {
-      addCheckin(
-        {
-          date: plan.date,
-          focus: plan.focus,
-          dose: plan.dose,
-          minutes: plan.minutes,
-          status,
-          skipReason: status === "skipped" ? skipReason.trim() : undefined,
-        },
-        storageScope,
-      );
-
-      setCheckinStatus({
-        type: "ok",
-        message: status === "done" ? "Great work. Check-in saved." : "Skip logged with context.",
-      });
-      setSkipReason("");
-      await loadWeeklySummary(storageScope);
-    } catch {
-      setCheckinStatus({ type: "error", message: "Could not save check-in." });
-    }
-  }
-
-  const topFocus = useMemo(() => {
-    if (!weeklySummary) {
-      return null;
-    }
-
-    const ranked = Object.entries(weeklySummary.byFocus)
-      .map(([focusArea, counts]) => ({
-        focus: focusArea as FocusArea,
-        completed: counts.done,
-      }))
-      .sort((a, b) => b.completed - a.completed);
-
-    return ranked[0]?.completed > 0 ? ranked[0].focus : null;
-  }, [weeklySummary]);
+  const {
+    focus,
+    setFocus,
+    dose,
+    setDose,
+    notes,
+    setNotes,
+    email,
+    setEmail,
+    plan,
+    loading,
+    canGenerate,
+    reminderStatus,
+    sendReminder,
+    checkinStatus,
+    submitCheckin,
+    skipReason,
+    setSkipReason,
+    weeklySummary,
+    topFocus,
+    generatePlan,
+  } = useCoachPlanner({
+    storageScope,
+    authEmail: authUser?.email,
+  });
 
   return (
     <div className="page-shell">
