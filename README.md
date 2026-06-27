@@ -71,8 +71,8 @@ No server API routes in Pages mode.
 ## Dependabot updates
 
 - This repository pins npm to the public registry in [.npmrc](.npmrc).
-- Dependabot registry behavior is configured in [.github/dependabot.yml](.github/dependabot.yml).
-- These settings prevent private-registry resolution errors during npm security update runs.
+- Dependabot update schedule is configured in [.github/dependabot.yml](.github/dependabot.yml).
+- This setup avoids invalid config parsing and keeps npm updates on the public registry.
 
 ## Next implementation steps
 
