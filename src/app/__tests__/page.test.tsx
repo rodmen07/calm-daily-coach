@@ -55,6 +55,11 @@ describe("Home page", () => {
     await waitFor(() => {
       expect(screen.getByText("Weekly completion trend")).toBeTruthy();
     });
+
+    expect(
+      screen.getByText("Pick the effort level you can complete today without overextending."),
+    ).toBeTruthy();
+    expect(screen.getByText("0/280")).toBeTruthy();
   });
 
   it("hydrates state from guest scoped local storage", async () => {
@@ -123,6 +128,9 @@ describe("Home page", () => {
     fireEvent.change(screen.getByLabelText("Context for today (optional)"), {
       target: { value: "Need energy before calls" },
     });
+    expect(
+      screen.getByText((text) => text.endsWith("/280") && text !== "0/280"),
+    ).toBeTruthy();
     fireEvent.submit(screen.getByRole("button", { name: "Generate today’s plan" }));
 
     await waitFor(() => {

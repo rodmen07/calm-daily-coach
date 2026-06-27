@@ -85,6 +85,31 @@ body {
   accent-color: var(--accent);
 }
 
+.dose-hint {
+  margin-bottom: 8px;
+  color: #5a6375;
+  font-size: 0.8rem;
+}
+
+.field-meta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: #5a6375;
+}
+
+.field-counter {
+  font-size: 0.78rem;
+  color: #4f5868;
+  font-family: var(--font-plex-mono), monospace;
+}
+
 .primary-button,
 .secondary-button {
   border-radius: 999px;
@@ -219,6 +244,12 @@ body {
   padding: 10px 12px;
 }
 
+.close-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 @media (max-width: 640px) {
   .panel {
     border-radius: 14px;
@@ -227,5 +258,16 @@ body {
 
   .plan-meta-grid {
     grid-template-columns: 1fr;
+  }
+
+  .close-actions {
+    position: sticky;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 10;
+    background: rgba(255, 249, 237, 0.95);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px;
+    backdrop-filter: blur(4px);
   }
 }

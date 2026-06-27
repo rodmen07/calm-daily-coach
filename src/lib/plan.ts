@@ -36,7 +36,7 @@ const actionMap: Record<FocusArea, Record<DailyDose, string>> = {
     light: "Take a 10-minute walk and finish with 1 minute of deep breathing.",
     medium:
       "Complete a 20-minute strength circuit: squats, push-ups, rows, and core.",
-    deep: "Do a 40-minute workout and log your energy before and after.",
+    deep: "Do a 20-minute workout and log your energy before and after.",
   },
   Sleep: {
     light: "Set your wind-down alarm 30 minutes before bedtime.",

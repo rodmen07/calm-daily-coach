@@ -148,6 +148,7 @@ export default function Home() {
 
             <div>
               <p className="label mb-2">Daily dose</p>
+              <p className="dose-hint">Pick the effort level you can complete today without overextending.</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {DOSE_OPTIONS.map((option) => (
                   <label key={option} className="dose-card">
@@ -176,6 +177,10 @@ export default function Home() {
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
               />
+              <div className="field-meta">
+                <p className="field-hint">Include constraints so your plan matches real-life context.</p>
+                <p className="field-counter" aria-live="polite">{notes.length}/280</p>
+              </div>
             </div>
 
             <button disabled={!canGenerate} className="primary-button" type="submit">
@@ -228,7 +233,7 @@ export default function Home() {
               <p className="mb-3 text-sm text-slate-600">
                 Choose one outcome so your weekly trend reflects today&apos;s reality.
               </p>
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="close-actions">
                 <button type="button" className="primary-button" onClick={() => void submitCheckin("done")}>
                   Mark complete
                 </button>
