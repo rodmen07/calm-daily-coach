@@ -8,7 +8,6 @@ on:
 permissions:
   contents: read
   statuses: write
-  checks: write
 
 jobs:
   lint-build:
@@ -56,18 +55,4 @@ jobs:
               context: "lint-and-build",
               description,
               target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-            });
-
-            await github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: "lint-and-build",
-              head_sha: context.payload.pull_request.head.sha,
-              status: "completed",
-              conclusion: state === "success" ? "success" : "failure",
-              details_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-              output: {
-                title: "lint-and-build compatibility",
-                summary: description,
-              },
             });

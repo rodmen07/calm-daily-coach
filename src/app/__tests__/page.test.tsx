@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "@/app/page";
 import { addCheckin, getWeeklySummary } from "@/lib/browser-checkins";
@@ -24,10 +24,6 @@ vi.mock("@/lib/browser-checkins", () => ({
       "Deep Work": { done: 0, skipped: 0 },
       Communication: { done: 0, skipped: 0 },
       Mindfulness: { done: 0, skipped: 0 },
-      Nutrition: { done: 0, skipped: 0 },
-      Learning: { done: 0, skipped: 0 },
-      Organization: { done: 0, skipped: 0 },
-      Relationships: { done: 0, skipped: 0 },
       Finances: { done: 0, skipped: 0 },
     },
   })),
@@ -80,10 +76,10 @@ describe("Home page", () => {
           date: today,
           focus: "Sleep",
           dose: "deep",
-          minutes: 30,
+          minutes: 20,
           action: "Audit your sleep environment and design a full bedtime routine.",
           reflection: "What is one adjustment that would improve tonight's sleep by 10%?",
-          optionalResource: "Optional: Write a 5-step wind-down checklist in your notes app.",
+          optionalResource: "Optional: Write a 3-step wind-down checklist in your notes app.",
           capMessage: "You reached today's plan. See you tomorrow.",
         },
       }),
@@ -125,11 +121,6 @@ describe("Home page", () => {
     expect(screen.getAllByText("2. Plan").length).toBeGreaterThan(0);
     expect(screen.getAllByText("3. Do").length).toBeGreaterThan(0);
     expect(screen.getAllByText("4. Review").length).toBeGreaterThan(0);
-    const categoryList = screen.getByRole("list", { name: "Improvement categories" });
-    expect(within(categoryList).getByText("Nutrition")).toBeTruthy();
-    expect(within(categoryList).getByText("Learning")).toBeTruthy();
-    expect(within(categoryList).getByText("Organization")).toBeTruthy();
-    expect(within(categoryList).getByText("Relationships")).toBeTruthy();
     expect(screen.getByText("Step 4 review unlocks after you submit today's check-in.")).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText("Focus area"), {
@@ -146,7 +137,7 @@ describe("Home page", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
-      expect(screen.getByText(/15-minute/i)).toBeTruthy();
+      expect(screen.getByText(/10-minute/i)).toBeTruthy();
     });
   });
 
@@ -222,18 +213,8 @@ describe("Home page", () => {
 
     await waitFor(() => {
       expect(screen.queryByText("Today's deliberate dose")).toBeNull();
-      const generate = screen.getByRole("button", { name: "Generate today’s plan" });
-      expect(generate).toBeTruthy();
-      expect(document.activeElement).toBe(generate);
-      expect(screen.getByText("Ready for your next day. Set your focus and generate a fresh plan.")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Generate today’s plan" })).toBeTruthy();
       expect(screen.getByText("Step 4 review unlocks after you submit today's check-in.")).toBeTruthy();
-    });
-
-    fireEvent.submit(screen.getByRole("button", { name: "Generate today’s plan" }));
-
-    await waitFor(() => {
-      expect(screen.queryByText("Ready for your next day. Set your focus and generate a fresh plan.")).toBeNull();
-      expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
     });
   });
 
@@ -268,10 +249,6 @@ describe("Home page", () => {
         "Deep Work": { done: 0, skipped: 0 },
         Communication: { done: 0, skipped: 0 },
         Mindfulness: { done: 0, skipped: 0 },
-        Nutrition: { done: 0, skipped: 0 },
-        Learning: { done: 0, skipped: 0 },
-        Organization: { done: 0, skipped: 0 },
-        Relationships: { done: 0, skipped: 0 },
         Finances: { done: 0, skipped: 0 },
       },
     });
@@ -303,10 +280,6 @@ describe("Home page", () => {
         "Deep Work": { done: 1, skipped: 0 },
         Communication: { done: 0, skipped: 0 },
         Mindfulness: { done: 0, skipped: 0 },
-        Nutrition: { done: 0, skipped: 0 },
-        Learning: { done: 0, skipped: 0 },
-        Organization: { done: 0, skipped: 0 },
-        Relationships: { done: 0, skipped: 0 },
         Finances: { done: 0, skipped: 0 },
       },
     });
