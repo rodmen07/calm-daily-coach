@@ -30,6 +30,7 @@ Core principles:
 - Visible improvement category chips in [src/app/page.tsx](src/app/page.tsx)
 - Route-based multi-page UX flow for Focus, Execute, and Review in [src/app/focus/page.tsx](src/app/focus/page.tsx), [src/app/execute/page.tsx](src/app/execute/page.tsx), and [src/app/review/page.tsx](src/app/review/page.tsx)
 - Shared top-level route navigation shell in [src/app/layout.tsx](src/app/layout.tsx) and [src/app/globals.css](src/app/globals.css)
+- Swipe-enabled step cards with left/right gesture navigation and arrow-key fallback in [src/app/components/swipe-step-card.tsx](src/app/components/swipe-step-card.tsx)
 
 ## Added Google login
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DOSE_OPTIONS, FOCUS_AREAS, type DailyDose, type FocusArea } from "@/lib/plan";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
+import { SwipeStepCard } from "@/app/components/swipe-step-card";
 
 const doseLabels: Record<DailyDose, string> = {
   light: "Light (5 min)",
@@ -37,17 +38,14 @@ export default function FocusPage() {
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
-        <section className="panel mb-5">
-          <p className="eyebrow">Step 1</p>
-          <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">Set your focus</h1>
-          <p className="mb-3 text-sm leading-6 text-slate-700 sm:text-base">
-            Choose the area and dose first, then generate a plan you can execute today.
-          </p>
-          <div className="flow-route-links mb-3 text-sm">
-            <Link className="secondary-button" href="/execute">Go to Execute</Link>
-            <Link className="secondary-button" href="/review">Go to Review</Link>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <SwipeStepCard
+          stepLabel="Step 1"
+          title="Set your focus"
+          description="Choose the area and dose first, then generate a plan you can execute today."
+          nextHref="/execute"
+          nextLabel="Next: Execute"
+        >
+          <div className="mb-5 flex flex-col gap-2 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
               {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
             </p>
@@ -61,9 +59,6 @@ export default function FocusPage() {
               </button>
             )}
           </div>
-        </section>
-
-        <section className="panel">
           <form className="space-y-4" onSubmit={generatePlan}>
             {isPlanningLocked ? (
               <p className="flow-lock-note rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2" aria-live="polite">
@@ -137,10 +132,9 @@ export default function FocusPage() {
               {loading ? "Generating..." : isPlanningLocked ? "Finish check-in to unlock" : "Generate plan"}
             </button>
           </form>
-        </section>
 
         {plan ? (
-          <section className="panel mt-5">
+          <section className="mt-5 rounded-xl border border-[var(--line)] bg-[var(--field)] p-4">
             <h2 className="mb-2 text-xl font-semibold">Plan ready</h2>
             <p className="text-sm text-slate-700">
               Your {plan.minutes}-minute {plan.focus} plan is ready. Continue to Execute to close the day.
@@ -150,6 +144,7 @@ export default function FocusPage() {
             </div>
           </section>
         ) : null}
+        </SwipeStepCard>
       </main>
     </div>
   );

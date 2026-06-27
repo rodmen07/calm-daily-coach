@@ -78,6 +78,49 @@ body {
   gap: 8px;
 }
 
+.step-card {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff9ed 100%);
+  box-shadow: 0 18px 44px rgba(28, 35, 51, 0.12);
+  padding: 18px;
+  touch-action: pan-y;
+  outline: none;
+}
+
+.step-card:focus-visible {
+  box-shadow: 0 0 0 4px rgba(19, 93, 76, 0.2), 0 18px 44px rgba(28, 35, 51, 0.12);
+}
+
+.step-card-header {
+  border-bottom: 1px solid #e6ddcd;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+}
+
+.step-card-swipe-hint {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px dashed #b9c7cf;
+  color: #4b5668;
+  background: #f3f7f8;
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  font-family: var(--font-plex-mono), monospace;
+}
+
+.step-card-body {
+  display: grid;
+  gap: 12px;
+}
+
+.step-card-footer {
+  margin-top: 16px;
+  border-top: 1px solid #e6ddcd;
+  padding-top: 12px;
+}
+
 .page-shell {
   min-height: 100dvh;
   background:
@@ -612,6 +655,11 @@ body {
 }
 
 @media (max-width: 640px) {
+  .step-card {
+    border-radius: 16px;
+    padding: 14px;
+  }
+
   .panel {
     border-radius: 14px;
     padding: 14px;

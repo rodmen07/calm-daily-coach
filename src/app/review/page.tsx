@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import type { FocusArea } from "@/lib/plan";
+import { SwipeStepCard } from "@/app/components/swipe-step-card";
 
 export default function ReviewPage() {
   const { authUser } = useCoachAuth();
@@ -26,26 +26,21 @@ export default function ReviewPage() {
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
-        <section className="panel mb-5">
-          <p className="eyebrow">Step 3</p>
-          <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">Review and adjust</h1>
-          <p className="mb-3 text-sm leading-6 text-slate-700 sm:text-base">
-            Track weekly outcomes and decide where to focus your next 5, 15, or 30 minutes.
-          </p>
-          <div className="flow-route-links text-sm">
-            <Link className="secondary-button" href="/focus">Back to Focus</Link>
-            <Link className="secondary-button" href="/execute">Back to Execute</Link>
-          </div>
-        </section>
-
-        {!weeklySummary ? (
-          <section className="panel">
+        <SwipeStepCard
+          stepLabel="Step 3"
+          title="Review and adjust"
+          description="Track weekly outcomes and decide where to focus your next 5, 15, or 30 minutes."
+          previousHref="/execute"
+          previousLabel="Back: Execute"
+        >
+          {!weeklySummary ? (
+          <section className="rounded-xl border border-[var(--line)] bg-[var(--field)] p-4">
             <p className="text-sm text-slate-700">
               Complete at least one check-in to unlock weekly insights.
             </p>
           </section>
         ) : (
-          <section className="panel">
+          <section>
             <h2 className="mb-3 text-xl font-semibold">Weekly summary</h2>
             {checkinStatus.type !== "ok" ? (
               <p className="mb-3 rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2 text-sm text-slate-700">
@@ -98,6 +93,7 @@ export default function ReviewPage() {
             </div>
           </section>
         )}
+        </SwipeStepCard>
       </main>
     </div>
   );

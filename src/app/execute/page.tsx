@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
+import { SwipeStepCard } from "@/app/components/swipe-step-card";
 
 export default function ExecutePage() {
   const { authUser } = useCoachAuth();
@@ -25,20 +26,17 @@ export default function ExecutePage() {
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
-        <section className="panel mb-5">
-          <p className="eyebrow">Step 2</p>
-          <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">Execute your plan</h1>
-          <p className="mb-3 text-sm leading-6 text-slate-700 sm:text-base">
-            Work through your action sprint, reflect, and close the day with one outcome.
-          </p>
-          <div className="flow-route-links text-sm">
-            <Link className="secondary-button" href="/focus">Back to Focus</Link>
-            <Link className="secondary-button" href="/review">Go to Review</Link>
-          </div>
-        </section>
-
-        {!plan ? (
-          <section className="panel">
+        <SwipeStepCard
+          stepLabel="Step 2"
+          title="Execute your plan"
+          description="Work through your action sprint, reflect, and close the day with one outcome."
+          previousHref="/focus"
+          previousLabel="Back: Focus"
+          nextHref="/review"
+          nextLabel="Next: Review"
+        >
+          {!plan ? (
+          <section className="rounded-xl border border-[var(--line)] bg-[var(--field)] p-4">
             <p className="text-sm text-slate-700">
               No active plan yet. Start from Focus to generate your deliberate daily plan.
             </p>
@@ -47,7 +45,7 @@ export default function ExecutePage() {
             </div>
           </section>
         ) : (
-          <section className="panel">
+          <section>
             <h2 className="mb-4 text-xl font-semibold">Today&apos;s deliberate dose</h2>
             <div className="plan-meta-grid mb-4 text-sm sm:text-base">
               <p className="plan-pill">
@@ -142,6 +140,7 @@ export default function ExecutePage() {
             </div>
           </section>
         )}
+        </SwipeStepCard>
       </main>
     </div>
   );
