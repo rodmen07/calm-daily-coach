@@ -78,6 +78,65 @@ body {
   color: #5a6375;
 }
 
+.flow-gates {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.flow-gate {
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  background: #fffdf8;
+}
+
+.flow-gate-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.flow-gate-state {
+  margin-top: 2px;
+  font-size: 0.78rem;
+}
+
+.flow-gate.is-complete {
+  border-color: #b6d7cf;
+  background: #e7f3ef;
+}
+
+.flow-gate.is-complete .flow-gate-label,
+.flow-gate.is-complete .flow-gate-state {
+  color: #2d6659;
+}
+
+.flow-gate.is-current {
+  border-color: #98c8bb;
+  background: #d9efe9;
+}
+
+.flow-gate.is-current .flow-gate-label,
+.flow-gate.is-current .flow-gate-state {
+  color: #145646;
+}
+
+.flow-gate.is-locked {
+  border-color: #d5dce6;
+  background: #eceff3;
+}
+
+.flow-gate.is-locked .flow-gate-label,
+.flow-gate.is-locked .flow-gate-state {
+  color: #546073;
+}
+
+.flow-lock-note {
+  color: #5a6375;
+}
+
 .label {
   display: block;
   margin-bottom: 0.35rem;
@@ -417,6 +476,10 @@ body {
     padding: 14px;
   }
 
+  .flow-gates {
+    grid-template-columns: 1fr;
+  }
+
   .plan-meta-grid {
     grid-template-columns: 1fr;
   }
@@ -430,5 +493,24 @@ body {
     border-radius: 12px;
     padding: 10px;
     backdrop-filter: blur(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-chip,
+  .progress-badge,
+  .progress-fill,
+  .progress-caption,
+  .focus-row,
+  .status-banner,
+  .primary-button,
+  .secondary-button {
+    animation: none !important;
+    transition-duration: 0ms !important;
+  }
+
+  .progress-fill.is-animated::after {
+    animation: none !important;
+    transform: translateX(130%);
   }
 }
