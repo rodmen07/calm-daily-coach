@@ -23,6 +23,61 @@ body {
   font-family: var(--font-sora), sans-serif;
 }
 
+.site-nav-shell {
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 249, 237, 0.94);
+  backdrop-filter: blur(4px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.site-nav-inner {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.site-nav-title {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: var(--font-plex-mono), monospace;
+}
+
+.site-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.site-nav-links a {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #2b3342;
+  background: #fffdf8;
+}
+
+.site-nav-links a:hover {
+  background: #eef8f4;
+  border-color: #98c8bb;
+}
+
+.flow-route-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .page-shell {
   min-height: 100dvh;
   background:

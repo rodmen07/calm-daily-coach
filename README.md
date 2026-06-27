@@ -28,6 +28,8 @@ Core principles:
 - Staggered reveal motion for weekly summary cards and focus breakdown rows in [src/app/page.tsx](src/app/page.tsx)
 - Expanded improvement categories and 5/15/30-minute activity windows in [src/lib/plan.ts](src/lib/plan.ts)
 - Visible improvement category chips in [src/app/page.tsx](src/app/page.tsx)
+- Route-based multi-page UX flow for Focus, Execute, and Review in [src/app/focus/page.tsx](src/app/focus/page.tsx), [src/app/execute/page.tsx](src/app/execute/page.tsx), and [src/app/review/page.tsx](src/app/review/page.tsx)
+- Shared top-level route navigation shell in [src/app/layout.tsx](src/app/layout.tsx) and [src/app/globals.css](src/app/globals.css)
 
 ## Added Google login
 
@@ -81,7 +83,8 @@ Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.
 - Auth effects and login actions are isolated in `src/app/hooks/use-coach-auth.ts`.
 - Planner state, persistence, and check-in actions are isolated in `src/app/hooks/use-coach-planner.ts`.
 - Check-in persistence flows through `src/lib/checkin-store.ts` to support backend migration without UI rewrites.
-- `src/app/page.tsx` focuses on view composition and wiring.
+- `src/app/page.tsx` remains the single-page dashboard composition.
+- Route pages `src/app/focus/page.tsx`, `src/app/execute/page.tsx`, and `src/app/review/page.tsx` provide a deeper step-by-step UX while reusing the same planner and auth hooks.
 
 ### Check-in backend mode
 
