@@ -6,9 +6,9 @@ import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 
 const doseLabels: Record<DailyDose, string> = {
-  light: "Light (3 min)",
-  medium: "Medium (10 min)",
-  deep: "Deep (20 min)",
+  light: "Light (5 min)",
+  medium: "Medium (15 min)",
+  deep: "Deep (30 min)",
 };
 
 function AnimatedCounter({

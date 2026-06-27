@@ -24,6 +24,10 @@ vi.mock("@/lib/browser-checkins", () => ({
       "Deep Work": { done: 0, skipped: 0 },
       Communication: { done: 0, skipped: 0 },
       Mindfulness: { done: 0, skipped: 0 },
+      Nutrition: { done: 0, skipped: 0 },
+      Learning: { done: 0, skipped: 0 },
+      Organization: { done: 0, skipped: 0 },
+      Relationships: { done: 0, skipped: 0 },
       Finances: { done: 0, skipped: 0 },
     },
   })),
@@ -76,10 +80,10 @@ describe("Home page", () => {
           date: today,
           focus: "Sleep",
           dose: "deep",
-          minutes: 20,
+          minutes: 30,
           action: "Audit your sleep environment and design a full bedtime routine.",
           reflection: "What is one adjustment that would improve tonight's sleep by 10%?",
-          optionalResource: "Optional: Write a 3-step wind-down checklist in your notes app.",
+          optionalResource: "Optional: Write a 5-step wind-down checklist in your notes app.",
           capMessage: "You reached today's plan. See you tomorrow.",
         },
       }),
@@ -137,7 +141,7 @@ describe("Home page", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
-      expect(screen.getByText(/10-minute/i)).toBeTruthy();
+      expect(screen.getByText(/15-minute/i)).toBeTruthy();
     });
   });
 
@@ -249,6 +253,10 @@ describe("Home page", () => {
         "Deep Work": { done: 0, skipped: 0 },
         Communication: { done: 0, skipped: 0 },
         Mindfulness: { done: 0, skipped: 0 },
+        Nutrition: { done: 0, skipped: 0 },
+        Learning: { done: 0, skipped: 0 },
+        Organization: { done: 0, skipped: 0 },
+        Relationships: { done: 0, skipped: 0 },
         Finances: { done: 0, skipped: 0 },
       },
     });
@@ -280,6 +288,10 @@ describe("Home page", () => {
         "Deep Work": { done: 1, skipped: 0 },
         Communication: { done: 0, skipped: 0 },
         Mindfulness: { done: 0, skipped: 0 },
+        Nutrition: { done: 0, skipped: 0 },
+        Learning: { done: 0, skipped: 0 },
+        Organization: { done: 0, skipped: 0 },
+        Relationships: { done: 0, skipped: 0 },
         Finances: { done: 0, skipped: 0 },
       },
     });

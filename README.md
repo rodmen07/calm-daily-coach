@@ -26,6 +26,7 @@ Core principles:
 - Reduced-motion fallbacks for animated feedback in [src/app/globals.css](src/app/globals.css)
 - Animated count-up values for weekly summary totals in [src/app/page.tsx](src/app/page.tsx)
 - Staggered reveal motion for weekly summary cards and focus breakdown rows in [src/app/page.tsx](src/app/page.tsx)
+- Expanded improvement categories and 5/15/30-minute activity windows in [src/lib/plan.ts](src/lib/plan.ts)
 
 ## Added Google login
 
@@ -69,6 +70,7 @@ Explicit Start next day reset behavior after review is also covered in `src/app/
 Animated feedback respects reduced-motion preferences through CSS fallbacks in `src/app/globals.css`.
 Weekly count-up values for totals, completion percentage, and focus counts are also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
 Staggered summary-card and focus-row animation coverage is kept lightweight through the same page interaction suite.
+The expanded focus-area set and 5/15/30-minute plan generation are covered in [src/lib/__tests__/plan.test.ts](src/lib/__tests__/plan.test.ts).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
 ## Maintainability structure
