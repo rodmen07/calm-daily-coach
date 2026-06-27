@@ -78,6 +78,7 @@ export default function Home() {
     migrationStatus,
     topFocus,
     generatePlan,
+    startNextDay,
   } = useCoachPlanner({
     storageScope,
     authEmail: authUser?.email,
@@ -379,6 +380,15 @@ export default function Home() {
                   {checkinStatus.message}
                 </p>
               ) : null}
+              {hasCheckedIn ? (
+                <button
+                  type="button"
+                  className="secondary-button mt-3"
+                  onClick={startNextDay}
+                >
+                  Start next day
+                </button>
+              ) : null}
             </div>
 
             <div className="mt-5 border-t border-slate-200 pt-5">
@@ -443,7 +453,7 @@ export default function Home() {
                 {completionPercent}% completed in this 7-day window.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:text-base">
+            <div className="summary-grid grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:text-base">
               <div className="summary-card">
                 <p className="summary-label">Check-ins</p>
                 <p className="summary-value">
@@ -483,7 +493,7 @@ export default function Home() {
               {topFocus ? ` | Top focus: ${topFocus}` : ""}
             </p>
             {focusBreakdown.length > 0 ? (
-              <div className="mt-4 space-y-2">
+              <div className="focus-breakdown-list mt-4 space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
                   Focus breakdown
                 </p>

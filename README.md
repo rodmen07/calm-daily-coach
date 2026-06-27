@@ -64,6 +64,7 @@ Completion feedback styling and success-state behavior are also covered in `src/
 Progress animation states in the weekly summary are also covered in `src/app/__tests__/page.test.tsx`.
 Workflow-step labeling and completion-state transitions are also covered in `src/app/__tests__/page.test.tsx`.
 Planner lock/unlock behavior around daily check-in is also covered in `src/app/__tests__/page.test.tsx`.
+Explicit Start next day reset behavior after review is also covered in `src/app/__tests__/page.test.tsx`.
 Animated feedback respects reduced-motion preferences through CSS fallbacks in `src/app/globals.css`.
 Weekly count-up values for totals, completion percentage, and focus counts are also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.

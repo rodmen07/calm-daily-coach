@@ -194,6 +194,30 @@ describe("Home page", () => {
     });
   });
 
+  it("resets the active plan when starting next day after check-in", async () => {
+    render(<Home />);
+
+    fireEvent.submit(screen.getByRole("button", { name: "Generate today’s plan" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Mark complete" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Start next day" })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Start next day" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Today's deliberate dose")).toBeNull();
+      expect(screen.getByRole("button", { name: "Generate today’s plan" })).toBeTruthy();
+      expect(screen.getByText("Step 4 review unlocks after you submit today's check-in.")).toBeTruthy();
+    });
+  });
+
   it("requires skip reason before submitting skipped check-in", async () => {
     render(<Home />);
 
