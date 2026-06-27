@@ -119,6 +119,10 @@ export async function getWeeklySummary(endDateInput?: string) {
     "Deep Work": { done: 0, skipped: 0 },
     Communication: { done: 0, skipped: 0 },
     Mindfulness: { done: 0, skipped: 0 },
+    Nutrition: { done: 0, skipped: 0 },
+    Learning: { done: 0, skipped: 0 },
+    Organization: { done: 0, skipped: 0 },
+    Relationships: { done: 0, skipped: 0 },
     Finances: { done: 0, skipped: 0 },
   };
 
