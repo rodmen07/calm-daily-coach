@@ -187,29 +187,47 @@ export default function Home() {
         {plan ? (
           <section className="panel mt-5">
             <h2 className="mb-4 text-xl font-semibold">Today&apos;s deliberate dose</h2>
-            <div className="space-y-3 text-sm leading-6 sm:text-base">
-              <p>
-                <strong>Focus:</strong> {plan.focus}
+            <div className="plan-meta-grid mb-4 text-sm sm:text-base">
+              <p className="plan-pill">
+                <span className="plan-pill-label">Focus</span>
+                <span className="plan-pill-value">{plan.focus}</span>
               </p>
-              <p>
-                <strong>Time:</strong> {plan.minutes} minutes
+              <p className="plan-pill">
+                <span className="plan-pill-label">Dose</span>
+                <span className="plan-pill-value">{plan.dose}</span>
               </p>
-              <p>
-                <strong>Action:</strong> {plan.action}
+              <p className="plan-pill">
+                <span className="plan-pill-label">Time</span>
+                <span className="plan-pill-value">{plan.minutes} min</span>
               </p>
-              <p>
-                <strong>Reflection:</strong> {plan.reflection}
-              </p>
+            </div>
+
+            <ol className="plan-steps text-sm leading-6 sm:text-base">
+              <li className="plan-step">
+                <p className="plan-step-title">1. Action sprint</p>
+                <p className="plan-step-body">{plan.action}</p>
+              </li>
+              <li className="plan-step">
+                <p className="plan-step-title">2. Reflection checkpoint</p>
+                <p className="plan-step-body">{plan.reflection}</p>
+              </li>
               {plan.optionalResource ? (
-                <p>
-                  <strong>Optional:</strong> {plan.optionalResource}
-                </p>
+                <li className="plan-step">
+                  <p className="plan-step-title">3. Optional extra</p>
+                  <p className="plan-step-body">{plan.optionalResource}</p>
+                </li>
               ) : null}
-              <p className="rounded-lg bg-slate-100 p-3 text-sm text-slate-700">{plan.capMessage}</p>
+            </ol>
+
+            <div className="plan-cap mt-4">
+              <p className="text-sm text-slate-700">{plan.capMessage}</p>
             </div>
 
             <div className="mt-5 border-t border-slate-200 pt-5">
               <p className="label mb-2">Close today</p>
+              <p className="mb-3 text-sm text-slate-600">
+                Choose one outcome so your weekly trend reflects today&apos;s reality.
+              </p>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button type="button" className="primary-button" onClick={() => void submitCheckin("done")}>
                   Mark complete

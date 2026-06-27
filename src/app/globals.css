@@ -159,9 +159,73 @@ body {
   background: #fffdf8;
 }
 
+.plan-meta-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.plan-pill {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf8;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.plan-pill-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #596275;
+}
+
+.plan-pill-value {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.plan-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.plan-step {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fffefb;
+  padding: 12px;
+}
+
+.plan-step-title {
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.plan-step-body {
+  color: #2b3342;
+}
+
+.plan-cap {
+  border-radius: 10px;
+  background: #f1ece1;
+  border: 1px solid #e1d5bf;
+  padding: 10px 12px;
+}
+
 @media (max-width: 640px) {
   .panel {
     border-radius: 14px;
     padding: 14px;
+  }
+
+  .plan-meta-grid {
+    grid-template-columns: 1fr;
   }
 }
