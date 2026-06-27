@@ -26,6 +26,11 @@ Core principles:
 - Reduced-motion fallbacks for animated feedback in [src/app/globals.css](src/app/globals.css)
 - Animated count-up values for weekly summary totals in [src/app/page.tsx](src/app/page.tsx)
 - Staggered reveal motion for weekly summary cards and focus breakdown rows in [src/app/page.tsx](src/app/page.tsx)
+- Expanded improvement categories and 5/15/30-minute activity windows in [src/lib/plan.ts](src/lib/plan.ts)
+- Visible improvement category chips in [src/app/page.tsx](src/app/page.tsx)
+- Route-based multi-page UX flow for Focus, Execute, and Review in [src/app/focus/page.tsx](src/app/focus/page.tsx), [src/app/execute/page.tsx](src/app/execute/page.tsx), and [src/app/review/page.tsx](src/app/review/page.tsx)
+- Shared top-level route navigation shell in [src/app/layout.tsx](src/app/layout.tsx) and [src/app/globals.css](src/app/globals.css)
+- Swipe-enabled step cards with left/right gesture navigation and arrow-key fallback in [src/app/components/swipe-step-card.tsx](src/app/components/swipe-step-card.tsx)
 
 ## Added Google login
 
@@ -66,9 +71,12 @@ Progress animation states in the weekly summary are also covered in `src/app/__t
 Workflow-step labeling and completion-state transitions are also covered in `src/app/__tests__/page.test.tsx`.
 Planner lock/unlock behavior around daily check-in is also covered in `src/app/__tests__/page.test.tsx`.
 Explicit Start next day reset behavior after review is also covered in `src/app/__tests__/page.test.tsx`.
+Post-reset confirmation messaging and keyboard focus return to the plan generator are also covered in `src/app/__tests__/page.test.tsx`.
 Animated feedback respects reduced-motion preferences through CSS fallbacks in `src/app/globals.css`.
 Weekly count-up values for totals, completion percentage, and focus counts are also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
 Staggered summary-card and focus-row animation coverage is kept lightweight through the same page interaction suite.
+The expanded focus-area set and 5/15/30-minute plan generation are covered in [src/lib/__tests__/plan.test.ts](src/lib/__tests__/plan.test.ts).
+The visible category strip is also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
 ## Maintainability structure
@@ -76,7 +84,8 @@ Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.
 - Auth effects and login actions are isolated in `src/app/hooks/use-coach-auth.ts`.
 - Planner state, persistence, and check-in actions are isolated in `src/app/hooks/use-coach-planner.ts`.
 - Check-in persistence flows through `src/lib/checkin-store.ts` to support backend migration without UI rewrites.
-- `src/app/page.tsx` focuses on view composition and wiring.
+- `src/app/page.tsx` remains the single-page dashboard composition.
+- Route pages `src/app/focus/page.tsx`, `src/app/execute/page.tsx`, and `src/app/review/page.tsx` provide a deeper step-by-step UX while reusing the same planner and auth hooks.
 
 ### Check-in backend mode
 

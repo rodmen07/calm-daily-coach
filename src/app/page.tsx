@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { DOSE_OPTIONS, FOCUS_AREAS, type DailyDose, type FocusArea } from "@/lib/plan";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
@@ -85,6 +85,8 @@ export default function Home() {
   });
 
   const hasPlan = Boolean(plan);
+  const [nextDayNotice, setNextDayNotice] = useState<string | null>(null);
+  const generateButtonRef = useRef<HTMLButtonElement>(null);
   const hasCheckedIn = checkinStatus.type === "ok";
   const flowStep = !hasPlan ? 1 : hasCheckedIn ? 4 : 3;
   const flowSteps = [
@@ -121,6 +123,22 @@ export default function Home() {
         .filter((row) => row.total > 0)
         .sort((a, b) => b.done - a.done)
     : [];
+
+  useEffect(() => {
+    if (!hasPlan && nextDayNotice) {
+      generateButtonRef.current?.focus();
+    }
+  }, [hasPlan, nextDayNotice]);
+
+  async function handleGeneratePlan(event: FormEvent<HTMLFormElement>) {
+    setNextDayNotice(null);
+    await generatePlan(event);
+  }
+
+  function handleStartNextDay() {
+    startNextDay();
+    setNextDayNotice("Ready for your next day. Set your focus and generate a fresh plan.");
+  }
 
   return (
     <div className="page-shell">
@@ -215,7 +233,15 @@ export default function Home() {
         </section>
 
         <section className="panel">
-          <form className="space-y-4" onSubmit={generatePlan}>
+          <form className="space-y-4" onSubmit={handleGeneratePlan}>
+            {nextDayNotice ? (
+              <p
+                className="status-banner rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2 text-sm text-emerald-800"
+                aria-live="polite"
+              >
+                {nextDayNotice}
+              </p>
+            ) : null}
             {isPlanningLocked ? (
               <p className="flow-lock-note rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2" aria-live="polite">
                 Planning is locked until you close today. Submit a check-in to unlock the next plan.
@@ -296,7 +322,7 @@ export default function Home() {
               </div>
             </div>
 
-            <button disabled={!canGeneratePlan} className="primary-button" type="submit">
+            <button ref={generateButtonRef} disabled={!canGeneratePlan} className="primary-button" type="submit">
               {loading ? "Generating..." : isPlanningLocked ? "Finish check-in to unlock" : "Generate today’s plan"}
             </button>
           </form>
@@ -401,7 +427,7 @@ export default function Home() {
                 <button
                   type="button"
                   className="secondary-button mt-3"
-                  onClick={startNextDay}
+                  onClick={handleStartNextDay}
                 >
                   Start next day
                 </button>

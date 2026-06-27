@@ -13,7 +13,7 @@ describe("buildDailyPlan", () => {
     });
 
     expect(plan.date).toBe("2026-06-27");
-    expect(plan.minutes).toBe(10);
+    expect(plan.minutes).toBe(15);
     expect(plan.focus).toBe("Deep Work");
     expect(plan.optionalResource).toBeTruthy();
     expect(plan.capMessage).toBe("You reached today's plan. See you tomorrow.");
@@ -29,14 +29,14 @@ describe("buildDailyPlan", () => {
     });
 
     expect(plan.optionalResource).toBeNull();
-    expect(plan.minutes).toBe(3);
+    expect(plan.minutes).toBe(5);
   });
 
   it("keeps activity text aligned with dose time windows", () => {
     const expectedMinutesByDose = {
-      light: 3,
-      medium: 10,
-      deep: 20,
+      light: 5,
+      medium: 15,
+      deep: 30,
     } as const;
 
     for (const focus of FOCUS_AREAS) {
@@ -57,8 +57,8 @@ describe("buildDailyPlan", () => {
     const second = buildDailyPlan({ focus: "Fitness", dose: "medium", notes: "variant-b" });
 
     expect(first.action).not.toBe(second.action);
-    expect(first.action).toContain("10-minute");
-    expect(second.action).toContain("10-minute");
+    expect(first.action).toContain("15-minute");
+    expect(second.action).toContain("15-minute");
 
     vi.useRealTimers();
   });
