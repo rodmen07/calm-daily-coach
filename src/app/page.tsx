@@ -42,8 +42,22 @@ export default function Home() {
     authEmail: authUser?.email,
   });
 
-  const flowStep = plan ? (checkinStatus.type === "ok" ? 3 : 2) : 1;
+  const hasPlan = Boolean(plan);
+  const hasCheckedIn = checkinStatus.type === "ok";
+  const flowStep = !hasPlan ? 1 : hasCheckedIn ? 4 : 3;
+  const flowSteps = [
+    { label: "1. Focus" },
+    { label: "2. Plan" },
+    { label: "3. Do" },
+    { label: "4. Review" },
+  ] as const;
+  const flowNarrative = !hasPlan
+    ? "Step 1 of 4: define your focus, dose, and context."
+    : hasCheckedIn
+      ? "Step 4 of 4: review your trend and reset for tomorrow."
+      : "Step 3 of 4: complete your action sprint, then close the day.";
   const completionPercent = weeklySummary ? Math.round(weeklySummary.completionRate * 100) : 0;
+  const hasWeeklyProgress = completionPercent > 0;
   const weeklyMomentum =
     completionPercent >= 70
       ? "Strong week"
@@ -68,22 +82,22 @@ export default function Home() {
         <section className="panel mb-5">
           <p className="eyebrow">Calm Daily Coach</p>
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-            <span
-              className={`flow-chip ${flowStep >= 1 ? "is-active" : "is-idle"}`}
-            >
-              1. Define
-            </span>
-            <span
-              className={`flow-chip ${flowStep >= 2 ? "is-active" : "is-idle"}`}
-            >
-              2. Execute
-            </span>
-            <span
-              className={`flow-chip ${flowStep >= 3 ? "is-active" : "is-idle"}`}
-            >
-              3. Close
-            </span>
+            {flowSteps.map((step, index) => {
+              const stepNumber = index + 1;
+              const stateClass =
+                stepNumber < flowStep
+                  ? "is-complete"
+                  : stepNumber === flowStep
+                    ? "is-active"
+                    : "is-idle";
+              return (
+                <span key={step.label} className={`flow-chip ${stateClass}`}>
+                  {step.label}
+                </span>
+              );
+            })}
           </div>
+          <p className="flow-detail mb-3 text-xs sm:text-sm">{flowNarrative}</p>
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
               {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
@@ -318,12 +332,21 @@ export default function Home() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
                   Weekly completion trend
                 </p>
-                <p className="text-sm font-semibold text-slate-700">{weeklyMomentum}</p>
+                <p className={`progress-badge text-sm font-semibold ${hasWeeklyProgress ? "is-animated" : ""}`}>
+                  {weeklyMomentum}
+                </p>
               </div>
-              <div className="progress-track" role="img" aria-label={`Weekly completion ${completionPercent}%`}>
-                <div className="progress-fill" style={{ width: `${completionPercent}%` }} />
+              <div
+                className={`progress-track ${hasWeeklyProgress ? "is-animated" : ""}`}
+                role="img"
+                aria-label={`Weekly completion ${completionPercent}%`}
+              >
+                <div
+                  className={`progress-fill ${hasWeeklyProgress ? "is-animated" : ""}`}
+                  style={{ width: `${completionPercent}%` }}
+                />
               </div>
-              <p className="mt-2 text-xs text-slate-600">
+              <p className={`progress-caption mt-2 text-xs ${hasWeeklyProgress ? "is-animated" : ""}`}>
                 {completionPercent}% completed in this 7-day window.
               </p>
             </div>
@@ -355,16 +378,20 @@ export default function Home() {
                   Focus breakdown
                 </p>
                 {focusBreakdown.map((item) => (
-                  <div key={item.focusArea} className="focus-row">
+                  <div key={item.focusArea} className={`focus-row ${item.done > 0 ? "has-progress" : ""}`}>
                     <div className="mb-1 flex items-center justify-between gap-2 text-xs sm:text-sm">
                       <span className="font-medium text-slate-700">{item.focusArea}</span>
                       <span className="text-slate-600">
                         {item.done}/{item.total} complete
                       </span>
                     </div>
-                    <div className="progress-track">
+                    <div
+                      className={`progress-track ${item.done > 0 ? "is-animated" : ""}`}
+                      role="img"
+                      aria-label={`${item.focusArea} completion ${Math.round((item.done / item.total) * 100)}%`}
+                    >
                       <div
-                        className="progress-fill"
+                        className={`progress-fill ${item.done > 0 ? "is-animated" : ""}`}
                         style={{ width: `${Math.round((item.done / item.total) * 100)}%` }}
                       />
                     </div>

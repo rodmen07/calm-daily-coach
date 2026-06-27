@@ -117,9 +117,10 @@ describe("Home page", () => {
   it("generates a plan from selected focus and dose", async () => {
     render(<Home />);
 
-    expect(screen.getByText("1. Define")).toBeTruthy();
-    expect(screen.getByText("2. Execute")).toBeTruthy();
-    expect(screen.getByText("3. Close")).toBeTruthy();
+    expect(screen.getByText("1. Focus")).toBeTruthy();
+    expect(screen.getByText("2. Plan")).toBeTruthy();
+    expect(screen.getByText("3. Do")).toBeTruthy();
+    expect(screen.getByText("4. Review")).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText("Focus area"), {
       target: { value: "Fitness" },
@@ -156,7 +157,7 @@ describe("Home page", () => {
       const feedback = screen.getByText("Great work. Check-in saved.");
       expect(feedback).toBeTruthy();
       expect(feedback.className).toContain("status-celebrate");
-      expect(screen.getByText("3. Close")).toBeTruthy();
+      expect(screen.getByText("4. Review")).toBeTruthy();
     });
   });
 
@@ -174,6 +175,36 @@ describe("Home page", () => {
     await waitFor(() => {
       expect(screen.getByText("Add a short reason before skipping.")).toBeTruthy();
       expect(vi.mocked(addCheckin)).not.toHaveBeenCalled();
+    });
+  });
+
+  it("shows animated progress feedback when weekly progress exists", async () => {
+    vi.mocked(getWeeklySummary).mockReturnValue({
+      windowStart: "2026-06-21",
+      windowEnd: "2026-06-27",
+      total: 4,
+      done: 3,
+      skipped: 1,
+      completionRate: 0.75,
+      byFocus: {
+        Fitness: { done: 2, skipped: 0 },
+        Sleep: { done: 1, skipped: 1 },
+        "Deep Work": { done: 0, skipped: 0 },
+        Communication: { done: 0, skipped: 0 },
+        Mindfulness: { done: 0, skipped: 0 },
+        Finances: { done: 0, skipped: 0 },
+      },
+    });
+
+    render(<Home />);
+
+    await waitFor(() => {
+      const weeklyTrack = screen.getByRole("img", { name: "Weekly completion 75%" });
+      expect(weeklyTrack.className).toContain("is-animated");
+      expect(screen.getByText("Strong week").className).toContain("is-animated");
+      expect(screen.getByRole("img", { name: "Fitness completion 100%" }).className).toContain(
+        "is-animated",
+      );
     });
   });
 });
