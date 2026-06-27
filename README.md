@@ -60,6 +60,7 @@ Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.
 
 - Auth effects and login actions are isolated in `src/app/hooks/use-coach-auth.ts`.
 - Planner state, persistence, and check-in actions are isolated in `src/app/hooks/use-coach-planner.ts`.
+- Check-in persistence flows through `src/lib/checkin-store.ts` to support backend migration without UI rewrites.
 - `src/app/page.tsx` focuses on view composition and wiring.
 
 ## Branch protection quality gate

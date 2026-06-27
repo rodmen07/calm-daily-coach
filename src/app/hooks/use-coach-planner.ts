@@ -2,8 +2,10 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
-  addCheckin,
-  getWeeklySummary,
+  createCheckinStore,
+  type CheckinStoreAdapter,
+} from "@/lib/checkin-store";
+import {
   type WeeklySummary,
 } from "@/lib/browser-checkins";
 import {
@@ -94,6 +96,7 @@ type UseCoachPlannerArgs = {
 };
 
 export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs) {
+  const checkinStore: CheckinStoreAdapter = useMemo(() => createCheckinStore(), []);
   const [stateHydrated, setStateHydrated] = useState(false);
   const [focus, setFocus] = useState<FocusArea>("Deep Work");
   const [dose, setDose] = useState<DailyDose>("light");
@@ -114,8 +117,8 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     setEmail((prev) => prev || state.email || authEmail || "");
     setPlan(state.plan);
     setStateHydrated(true);
-    setWeeklySummary(getWeeklySummary(undefined, storageScope));
-  }, [storageScope, authEmail]);
+    setWeeklySummary(checkinStore.getWeeklySummary(undefined, storageScope));
+  }, [storageScope, authEmail, checkinStore]);
 
   useEffect(() => {
     if (!stateHydrated) {
@@ -211,7 +214,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     setCheckinStatus({ type: "idle" });
 
     try {
-      addCheckin(
+      checkinStore.addCheckin(
         {
           date: plan.date,
           focus: plan.focus,
@@ -229,7 +232,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
           status === "done" ? "Great work. Check-in saved." : "Skip logged with context.",
       });
       setSkipReason("");
-      setWeeklySummary(getWeeklySummary(undefined, storageScope));
+      setWeeklySummary(checkinStore.getWeeklySummary(undefined, storageScope));
     } catch {
       setCheckinStatus({ type: "error", message: "Could not save check-in." });
     }
