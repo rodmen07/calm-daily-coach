@@ -32,6 +32,8 @@ export default function ReviewPage() {
           description="Track weekly outcomes and decide where to focus your next 5, 15, or 30 minutes."
           previousHref="/execute"
           previousLabel="Back: Execute"
+          nextHref="/"
+          nextLabel="Complete loop: Dashboard"
         >
           {!weeklySummary ? (
           <section className="rounded-xl border border-[var(--line)] bg-[var(--field)] p-4">
@@ -93,6 +95,9 @@ export default function ReviewPage() {
             </div>
           </section>
         )}
+          <div className="mt-5 rounded-xl border border-[var(--line)] bg-[var(--field)] p-3 text-sm text-slate-700">
+            Finish this step by returning to Dashboard, then begin your next cycle from Focus.
+          </div>
         </SwipeStepCard>
       </main>
     </div>
