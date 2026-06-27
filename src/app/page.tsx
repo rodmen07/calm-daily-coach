@@ -80,7 +80,7 @@ function getInitialState(scopeKey: string): SavedState {
         parsed.plan?.date === new Date().toISOString().slice(0, 10) ? parsed.plan : fallback.plan,
     };
   } catch {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(scopedStorageKey(scopeKey));
     return fallback;
   }
 }

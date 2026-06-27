@@ -1,4 +1,4 @@
-import type { DailyDose, FocusArea } from "@/lib/plan";
+import { FOCUS_AREAS, type DailyDose, type FocusArea } from "@/lib/plan";
 
 export type CheckinStatus = "done" | "skipped";
 
@@ -33,6 +33,19 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function toDateOnly(value?: string) {
+  if (!value) {
+    return todayDate();
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return todayDate();
+  }
+
+  return parsed.toISOString().slice(0, 10);
+}
+
 function parseCheckins(raw: string | null): BrowserCheckin[] {
   if (!raw) {
     return [];
@@ -57,7 +70,7 @@ export function listCheckins(scopeKey = "guest"): BrowserCheckin[] {
 
   const raw = window.localStorage.getItem(storageKey(scopeKey));
   return parseCheckins(raw)
-    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export function addCheckin(input: Omit<BrowserCheckin, "id" | "createdAt">, scopeKey = "guest") {
@@ -77,26 +90,18 @@ export function addCheckin(input: Omit<BrowserCheckin, "id" | "createdAt">, scop
 }
 
 export function getWeeklySummary(endDateInput?: string, scopeKey = "guest"): WeeklySummary {
-  const endDate = new Date(endDateInput ?? todayDate());
+  const endDate = new Date(toDateOnly(endDateInput));
   const startDate = new Date(endDate);
   startDate.setDate(endDate.getDate() - 6);
-
-  const focusAreas: FocusArea[] = [
-    "Fitness",
-    "Sleep",
-    "Deep Work",
-    "Communication",
-    "Mindfulness",
-    "Finances",
-  ];
+  const startKey = startDate.toISOString().slice(0, 10);
+  const endKey = endDate.toISOString().slice(0, 10);
 
   const byFocus = Object.fromEntries(
-    focusAreas.map((focusArea) => [focusArea, { done: 0, skipped: 0 }]),
+    FOCUS_AREAS.map((focusArea) => [focusArea, { done: 0, skipped: 0 }]),
   ) as Record<FocusArea, { done: number; skipped: number }>;
 
   const inWindow = listCheckins(scopeKey).filter((checkin) => {
-    const date = new Date(checkin.date);
-    return date >= startDate && date <= endDate;
+    return checkin.date >= startKey && checkin.date <= endKey;
   });
 
   for (const checkin of inWindow) {
@@ -107,8 +112,8 @@ export function getWeeklySummary(endDateInput?: string, scopeKey = "guest"): Wee
   const skipped = inWindow.filter((entry) => entry.status === "skipped").length;
 
   return {
-    windowStart: startDate.toISOString().slice(0, 10),
-    windowEnd: endDate.toISOString().slice(0, 10),
+    windowStart: startKey,
+    windowEnd: endKey,
     total: inWindow.length,
     done,
     skipped,

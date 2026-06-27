@@ -41,6 +41,16 @@ npm run dev
 
 Open http://localhost:3000
 
+## Quality and tests
+
+```bash
+npm run lint
+npm run test
+npm run test:coverage
+```
+
+Current automated coverage focuses on core business logic in `src/lib/plan.ts` and `src/lib/browser-checkins.ts`.
+
 ## Configure Google auth
 
 1. Create a Firebase project.
