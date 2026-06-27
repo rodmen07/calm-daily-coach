@@ -43,6 +43,24 @@ export default function Home() {
   });
 
   const flowStep = plan ? (checkinStatus.type === "ok" ? 3 : 2) : 1;
+  const completionPercent = weeklySummary ? Math.round(weeklySummary.completionRate * 100) : 0;
+  const weeklyMomentum =
+    completionPercent >= 70
+      ? "Strong week"
+      : completionPercent >= 40
+        ? "Steady progress"
+        : "Early momentum";
+  const focusBreakdown = weeklySummary
+    ? Object.entries(weeklySummary.byFocus)
+        .map(([focusArea, counts]) => ({
+          focusArea,
+          done: counts.done,
+          skipped: counts.skipped,
+          total: counts.done + counts.skipped,
+        }))
+        .filter((row) => row.total > 0)
+        .sort((a, b) => b.done - a.done)
+    : [];
 
   return (
     <div className="page-shell">
@@ -263,6 +281,20 @@ export default function Home() {
         {weeklySummary ? (
           <section className="panel mt-5">
             <h2 className="mb-3 text-xl font-semibold">Weekly summary</h2>
+            <div className="mb-4 rounded-xl border border-[var(--line)] bg-[var(--field)] p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Weekly completion trend
+                </p>
+                <p className="text-sm font-semibold text-slate-700">{weeklyMomentum}</p>
+              </div>
+              <div className="progress-track" role="img" aria-label={`Weekly completion ${completionPercent}%`}>
+                <div className="progress-fill" style={{ width: `${completionPercent}%` }} />
+              </div>
+              <p className="mt-2 text-xs text-slate-600">
+                {completionPercent}% completed in this 7-day window.
+              </p>
+            </div>
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:text-base">
               <div className="summary-card">
                 <p className="summary-label">Check-ins</p>
@@ -285,6 +317,33 @@ export default function Home() {
               Window: {weeklySummary.windowStart} to {weeklySummary.windowEnd}
               {topFocus ? ` | Top focus: ${topFocus}` : ""}
             </p>
+            {focusBreakdown.length > 0 ? (
+              <div className="mt-4 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Focus breakdown
+                </p>
+                {focusBreakdown.map((item) => (
+                  <div key={item.focusArea} className="focus-row">
+                    <div className="mb-1 flex items-center justify-between gap-2 text-xs sm:text-sm">
+                      <span className="font-medium text-slate-700">{item.focusArea}</span>
+                      <span className="text-slate-600">
+                        {item.done}/{item.total} complete
+                      </span>
+                    </div>
+                    <div className="progress-track">
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${Math.round((item.done / item.total) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-slate-600">
+                No check-ins yet this week. Generate today&apos;s plan to start your trendline.
+              </p>
+            )}
           </section>
         ) : null}
       </main>

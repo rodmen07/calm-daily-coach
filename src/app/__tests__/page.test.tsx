@@ -40,7 +40,7 @@ describe("Home page", () => {
     cleanup();
   });
 
-  it("shows guest mode and auth configuration warning when Firebase auth is unavailable", () => {
+  it("shows guest mode and auth configuration warning when Firebase auth is unavailable", async () => {
     vi.mocked(getFirebaseAuth).mockReturnValue(null);
 
     render(<Home />);
@@ -51,6 +51,10 @@ describe("Home page", () => {
         "Google login is not configured yet. Add Firebase environment variables to enable it.",
       ),
     ).toBeTruthy();
+
+    await waitFor(() => {
+      expect(screen.getByText("Weekly completion trend")).toBeTruthy();
+    });
   });
 
   it("hydrates state from guest scoped local storage", async () => {
