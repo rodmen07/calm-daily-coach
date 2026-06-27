@@ -1,5 +1,6 @@
 import { FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth";
+import { Firestore, getFirestore } from "firebase/firestore";
 
 type FirebaseConfig = {
   apiKey: string;
@@ -50,4 +51,13 @@ export function getFirebaseAuth(): Auth | null {
   }
 
   return getAuth(app);
+}
+
+export function getFirebaseFirestore(): Firestore | null {
+  const app = getFirebaseApp();
+  if (!app) {
+    return null;
+  }
+
+  return getFirestore(app);
 }

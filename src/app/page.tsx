@@ -1,28 +1,9 @@
 "use client";
-/* eslint-disable react-hooks/set-state-in-effect */
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { DOSE_OPTIONS, FOCUS_AREAS, buildDailyPlan, type DailyDose, type DailyPlan, type FocusArea } from "@/lib/plan";
-import { addCheckin, getWeeklySummary, type WeeklySummary } from "@/lib/browser-checkins";
-import { getFirebaseAuth } from "@/lib/firebase";
-import {
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithRedirect,
-  signOut,
-  type User,
-} from "firebase/auth";
-
-type ReminderStatus =
-  | { type: "idle" }
-  | { type: "ok"; message: string }
-  | { type: "error"; message: string };
-
-type CheckinStatus =
-  | { type: "idle" }
-  | { type: "ok"; message: string }
-  | { type: "error"; message: string };
+import { useEffect, useState } from "react";
+import { DOSE_OPTIONS, FOCUS_AREAS, type DailyDose, type FocusArea } from "@/lib/plan";
+import { useCoachAuth } from "@/app/hooks/use-coach-auth";
+import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 
 const doseLabels: Record<DailyDose, string> = {
   light: "Light (3 min)",
@@ -30,270 +11,167 @@ const doseLabels: Record<DailyDose, string> = {
   deep: "Deep (20 min)",
 };
 
-const STORAGE_KEY = "calm-daily-coach";
+function AnimatedCounter({
+  value,
+  suffix = "",
+  className,
+  testId,
+}: {
+  value: number;
+  suffix?: string;
+  className?: string;
+  testId?: string;
+}) {
+  const [displayValue, setDisplayValue] = useState(0);
 
-function scopedStorageKey(scopeKey: string) {
-  return `${STORAGE_KEY}:${scopeKey}`;
-}
+  useEffect(() => {
+    const duration = 650;
+    const startTime = Date.now();
 
-type SavedState = {
-  focus: FocusArea;
-  dose: DailyDose;
-  notes: string;
-  email: string;
-  plan: DailyPlan | null;
-};
+    const intervalId = window.setInterval(() => {
+      const progress = Math.min((Date.now() - startTime) / duration, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(Math.round(value * easedProgress));
 
-function getInitialState(scopeKey: string): SavedState {
-  const fallback: SavedState = {
-    focus: "Deep Work",
-    dose: "light",
-    notes: "",
-    email: "",
-    plan: null,
-  };
+      if (progress >= 1) {
+        window.clearInterval(intervalId);
+      }
+    }, 16);
 
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  const raw = window.localStorage.getItem(scopedStorageKey(scopeKey));
-  if (!raw) {
-    return fallback;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as {
-      focus?: FocusArea;
-      dose?: DailyDose;
-      notes?: string;
-      email?: string;
-      plan?: DailyPlan;
+    return () => {
+      window.clearInterval(intervalId);
     };
+  }, [value]);
 
-    return {
-      focus: parsed.focus && FOCUS_AREAS.includes(parsed.focus) ? parsed.focus : fallback.focus,
-      dose: parsed.dose && DOSE_OPTIONS.includes(parsed.dose) ? parsed.dose : fallback.dose,
-      notes: typeof parsed.notes === "string" ? parsed.notes : fallback.notes,
-      email: typeof parsed.email === "string" ? parsed.email : fallback.email,
-      plan:
-        parsed.plan?.date === new Date().toISOString().slice(0, 10) ? parsed.plan : fallback.plan,
-    };
-  } catch {
-    window.localStorage.removeItem(STORAGE_KEY);
-    return fallback;
-  }
+  return (
+    <span className={className} data-testid={testId}>
+      {displayValue}
+      {suffix}
+    </span>
+  );
 }
 
 export default function Home() {
-  const [authUser, setAuthUser] = useState<User | null>(null);
-  const [authMessage, setAuthMessage] = useState("");
-  const [storageScope, setStorageScope] = useState("guest");
-  const [stateHydrated, setStateHydrated] = useState(false);
-  const [focus, setFocus] = useState<FocusArea>("Deep Work");
-  const [dose, setDose] = useState<DailyDose>("light");
-  const [notes, setNotes] = useState("");
-  const [email, setEmail] = useState("");
-  const [plan, setPlan] = useState<DailyPlan | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [reminderStatus, setReminderStatus] = useState<ReminderStatus>({ type: "idle" });
-  const [checkinStatus, setCheckinStatus] = useState<CheckinStatus>({ type: "idle" });
-  const [skipReason, setSkipReason] = useState("");
-  const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
-  const authConfigured = useMemo(() => getFirebaseAuth() !== null, []);
+  const { authUser, authMessage, authConfigured, signInWithGoogle, signOutUser } =
+    useCoachAuth();
+  const storageScope = authUser?.uid ?? "guest";
 
-  useEffect(() => {
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      return;
-    }
+  const {
+    focus,
+    setFocus,
+    dose,
+    setDose,
+    notes,
+    setNotes,
+    email,
+    setEmail,
+    plan,
+    loading,
+    canGenerate,
+    reminderStatus,
+    sendReminder,
+    checkinStatus,
+    submitCheckin,
+    skipReason,
+    setSkipReason,
+    weeklySummary,
+    migrationStatus,
+    topFocus,
+    generatePlan,
+    startNextDay,
+  } = useCoachPlanner({
+    storageScope,
+    authEmail: authUser?.email,
+  });
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setAuthUser(user);
-      setStorageScope(user?.uid ?? "guest");
-
-      if (user?.email) {
-        setEmail((prev) => prev || user.email || "");
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const state = getInitialState(storageScope);
-    setFocus(state.focus);
-    setDose(state.dose);
-    setNotes(state.notes);
-    setEmail((prev) => prev || state.email || authUser?.email || "");
-    setPlan(state.plan);
-    setStateHydrated(true);
-    void loadWeeklySummary(storageScope);
-  }, [storageScope, authUser?.email]);
-
-  useEffect(() => {
-    if (!stateHydrated) {
-      return;
-    }
-
-    window.localStorage.setItem(
-      scopedStorageKey(storageScope),
-      JSON.stringify({
-        focus,
-        dose,
-        notes,
-        email,
-        plan,
-      }),
-    );
-  }, [focus, dose, notes, email, plan, storageScope, stateHydrated]);
-
-  const canGenerate = useMemo(() => !loading, [loading]);
-
-  async function generatePlan(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setReminderStatus({ type: "idle" });
-
-    try {
-      const nextPlan = buildDailyPlan({ focus, dose, notes });
-      setPlan(nextPlan);
-      setCheckinStatus({ type: "idle" });
-    } catch {
-      setReminderStatus({ type: "error", message: "Could not generate today's plan." });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function sendReminder() {
-    if (!plan || !email) {
-      setReminderStatus({ type: "error", message: "Add an email to send reminders." });
-      return;
-    }
-
-    setReminderStatus({ type: "idle" });
-
-    const subject = encodeURIComponent(`Your ${plan.minutes}-minute ${plan.focus} plan is ready`);
-    const body = encodeURIComponent(
-      [
-        `Focus: ${plan.focus}`,
-        `Dose: ${plan.dose}`,
-        `Time: ${plan.minutes} minutes`,
-        "",
-        `Action: ${plan.action}`,
-        `Reflection: ${plan.reflection}`,
-        "",
-        "You set the dose. We deliver exactly that amount.",
-      ].join("\n"),
-    );
-
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    setReminderStatus({
-      type: "ok",
-      message: "Opened your email app with a prefilled reminder draft.",
-    });
-  }
-
-  async function loadWeeklySummary(scopeKey: string) {
-    try {
-      setWeeklySummary(getWeeklySummary(undefined, scopeKey));
-    } catch {
-      setWeeklySummary(null);
-    }
-  }
-
-  async function signInWithGoogle() {
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      setAuthMessage("Google login is not configured yet.");
-      return;
-    }
-
-    setAuthMessage("");
-    const provider = new GoogleAuthProvider();
-
-    try {
-      await signInWithPopup(auth, provider);
-    } catch {
-      try {
-        await signInWithRedirect(auth, provider);
-      } catch {
-        setAuthMessage("Could not open Google login. Please try again.");
-      }
-    }
-  }
-
-  async function signOutUser() {
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      return;
-    }
-
-    try {
-      await signOut(auth);
-      setAuthMessage("");
-    } catch {
-      setAuthMessage("Could not sign out right now.");
-    }
-  }
-
-  async function submitCheckin(status: "done" | "skipped") {
-    if (!plan) {
-      return;
-    }
-
-    if (status === "skipped" && !skipReason.trim()) {
-      setCheckinStatus({ type: "error", message: "Add a short reason before skipping." });
-      return;
-    }
-
-    setCheckinStatus({ type: "idle" });
-
-    try {
-      addCheckin(
-        {
-          date: plan.date,
-          focus: plan.focus,
-          dose: plan.dose,
-          minutes: plan.minutes,
-          status,
-          skipReason: status === "skipped" ? skipReason.trim() : undefined,
-        },
-        storageScope,
-      );
-
-      setCheckinStatus({
-        type: "ok",
-        message: status === "done" ? "Great work. Check-in saved." : "Skip logged with context.",
-      });
-      setSkipReason("");
-      await loadWeeklySummary(storageScope);
-    } catch {
-      setCheckinStatus({ type: "error", message: "Could not save check-in." });
-    }
-  }
-
-  const topFocus = useMemo(() => {
-    if (!weeklySummary) {
-      return null;
-    }
-
-    const ranked = Object.entries(weeklySummary.byFocus)
-      .map(([focusArea, counts]) => ({
-        focus: focusArea as FocusArea,
-        completed: counts.done,
-      }))
-      .sort((a, b) => b.completed - a.completed);
-
-    return ranked[0]?.completed > 0 ? ranked[0].focus : null;
-  }, [weeklySummary]);
+  const hasPlan = Boolean(plan);
+  const hasCheckedIn = checkinStatus.type === "ok";
+  const flowStep = !hasPlan ? 1 : hasCheckedIn ? 4 : 3;
+  const flowSteps = [
+    { label: "1. Focus" },
+    { label: "2. Plan" },
+    { label: "3. Do" },
+    { label: "4. Review" },
+  ] as const;
+  const flowNarrative = !hasPlan
+    ? "Step 1 of 4: define your focus, dose, and context."
+    : hasCheckedIn
+      ? "Step 4 of 4: review your trend and reset for tomorrow."
+      : "Step 3 of 4: complete your action sprint, then close the day.";
+  const isPlanningLocked = hasPlan && !hasCheckedIn;
+  const canEditPlanning = !isPlanningLocked;
+  const canGeneratePlan = canGenerate && canEditPlanning;
+  const canSubmitCheckin = hasPlan && !hasCheckedIn && !loading;
+  const completionPercent = weeklySummary ? Math.round(weeklySummary.completionRate * 100) : 0;
+  const hasWeeklyProgress = completionPercent > 0;
+  const weeklyMomentum =
+    completionPercent >= 70
+      ? "Strong week"
+      : completionPercent >= 40
+        ? "Steady progress"
+        : "Early momentum";
+  const focusBreakdown = weeklySummary
+    ? Object.entries(weeklySummary.byFocus)
+        .map(([focusArea, counts]) => ({
+          focusArea,
+          done: counts.done,
+          skipped: counts.skipped,
+          total: counts.done + counts.skipped,
+        }))
+        .filter((row) => row.total > 0)
+        .sort((a, b) => b.done - a.done)
+    : [];
 
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         <section className="panel mb-5">
           <p className="eyebrow">Calm Daily Coach</p>
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+            {flowSteps.map((step, index) => {
+              const stepNumber = index + 1;
+              const stateClass =
+                stepNumber < flowStep
+                  ? "is-complete"
+                  : stepNumber === flowStep
+                    ? "is-active"
+                    : "is-idle";
+              return (
+                <span key={step.label} className={`flow-chip ${stateClass}`}>
+                  {step.label}
+                </span>
+              );
+            })}
+          </div>
+          <p className="flow-detail mb-3 text-xs sm:text-sm">{flowNarrative}</p>
+          <div className="flow-gates mb-3" aria-label="Daily workflow progress">
+            {flowSteps.map((step, index) => {
+              const stepNumber = index + 1;
+              const stateClass =
+                stepNumber < flowStep
+                  ? "is-complete"
+                  : stepNumber === flowStep
+                    ? "is-current"
+                    : "is-locked";
+              return (
+                <div key={`gate-${step.label}`} className={`flow-gate ${stateClass}`}>
+                  <p className="flow-gate-label">{step.label}</p>
+                  <p className="flow-gate-state">
+                    {stepNumber < flowStep
+                      ? "Complete"
+                      : stepNumber === flowStep
+                        ? "Current"
+                        : "Locked"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+          {!hasCheckedIn ? (
+            <p className="flow-lock-note text-xs sm:text-sm" aria-live="polite">
+              Step 4 review unlocks after you submit today&apos;s check-in.
+            </p>
+          ) : null}
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
               {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
@@ -313,7 +191,21 @@ export default function Home() {
               Google login is not configured yet. Add Firebase environment variables to enable it.
             </p>
           ) : null}
-          {authMessage ? <p className="mb-3 text-sm text-rose-700">{authMessage}</p> : null}
+          {authMessage ? (
+            <p className="mb-3 text-sm text-rose-700" role="alert" aria-live="assertive">
+              {authMessage}
+            </p>
+          ) : null}
+          {migrationStatus.type === "ok" ? (
+            <p className="mb-3 text-sm text-emerald-700" aria-live="polite">
+              {migrationStatus.message}
+            </p>
+          ) : null}
+          {migrationStatus.type === "error" ? (
+            <p className="mb-3 text-sm text-rose-700" role="alert" aria-live="assertive">
+              {migrationStatus.message}
+            </p>
+          ) : null}
           <h1 className="mb-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Grow daily. Stop on purpose.
           </h1>
@@ -324,6 +216,11 @@ export default function Home() {
 
         <section className="panel">
           <form className="space-y-4" onSubmit={generatePlan}>
+            {isPlanningLocked ? (
+              <p className="flow-lock-note rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2" aria-live="polite">
+                Planning is locked until you close today. Submit a check-in to unlock the next plan.
+              </p>
+            ) : null}
             <div>
               <label htmlFor="focus" className="label">
                 Focus area
@@ -332,6 +229,7 @@ export default function Home() {
                 id="focus"
                 className="field"
                 value={focus}
+                disabled={!canEditPlanning}
                 onChange={(event) => setFocus(event.target.value as FocusArea)}
               >
                 {FOCUS_AREAS.map((area) => (
@@ -344,11 +242,13 @@ export default function Home() {
 
             <div>
               <p className="label mb-2">Daily dose</p>
+              <p className="dose-hint">Pick the effort level you can complete today without overextending.</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {DOSE_OPTIONS.map((option) => (
                   <label key={option} className="dose-card">
                     <input
                       checked={dose === option}
+                      disabled={!canEditPlanning}
                       onChange={() => setDose(option)}
                       type="radio"
                       name="dose"
@@ -369,13 +269,18 @@ export default function Home() {
                 className="field min-h-22"
                 maxLength={280}
                 placeholder="Example: low energy today, avoid heavy tasks before noon"
+                disabled={!canEditPlanning}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
               />
+              <div className="field-meta">
+                <p className="field-hint">Include constraints so your plan matches real-life context.</p>
+                <p className="field-counter" aria-live="polite">{notes.length}/280</p>
+              </div>
             </div>
 
-            <button disabled={!canGenerate} className="primary-button" type="submit">
-              {loading ? "Generating..." : "Generate today’s plan"}
+            <button disabled={!canGeneratePlan} className="primary-button" type="submit">
+              {loading ? "Generating..." : isPlanningLocked ? "Finish check-in to unlock" : "Generate today’s plan"}
             </button>
           </form>
         </section>
@@ -383,36 +288,60 @@ export default function Home() {
         {plan ? (
           <section className="panel mt-5">
             <h2 className="mb-4 text-xl font-semibold">Today&apos;s deliberate dose</h2>
-            <div className="space-y-3 text-sm leading-6 sm:text-base">
-              <p>
-                <strong>Focus:</strong> {plan.focus}
+            <div className="plan-meta-grid mb-4 text-sm sm:text-base">
+              <p className="plan-pill">
+                <span className="plan-pill-label">Focus</span>
+                <span className="plan-pill-value">{plan.focus}</span>
               </p>
-              <p>
-                <strong>Time:</strong> {plan.minutes} minutes
+              <p className="plan-pill">
+                <span className="plan-pill-label">Dose</span>
+                <span className="plan-pill-value">{plan.dose}</span>
               </p>
-              <p>
-                <strong>Action:</strong> {plan.action}
+              <p className="plan-pill">
+                <span className="plan-pill-label">Time</span>
+                <span className="plan-pill-value">{plan.minutes} min</span>
               </p>
-              <p>
-                <strong>Reflection:</strong> {plan.reflection}
-              </p>
+            </div>
+
+            <ol className="plan-steps text-sm leading-6 sm:text-base">
+              <li className="plan-step">
+                <p className="plan-step-title">1. Action sprint</p>
+                <p className="plan-step-body">{plan.action}</p>
+              </li>
+              <li className="plan-step">
+                <p className="plan-step-title">2. Reflection checkpoint</p>
+                <p className="plan-step-body">{plan.reflection}</p>
+              </li>
               {plan.optionalResource ? (
-                <p>
-                  <strong>Optional:</strong> {plan.optionalResource}
-                </p>
+                <li className="plan-step">
+                  <p className="plan-step-title">3. Optional extra</p>
+                  <p className="plan-step-body">{plan.optionalResource}</p>
+                </li>
               ) : null}
-              <p className="rounded-lg bg-slate-100 p-3 text-sm text-slate-700">{plan.capMessage}</p>
+            </ol>
+
+            <div className="plan-cap mt-4">
+              <p className="text-sm text-slate-700">{plan.capMessage}</p>
             </div>
 
             <div className="mt-5 border-t border-slate-200 pt-5">
               <p className="label mb-2">Close today</p>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button type="button" className="primary-button" onClick={() => void submitCheckin("done")}>
+              <p className="mb-3 text-sm text-slate-600">
+                Choose one outcome so your weekly trend reflects today&apos;s reality.
+              </p>
+              <div className="close-actions">
+                <button
+                  type="button"
+                  className="primary-button"
+                  disabled={!canSubmitCheckin}
+                  onClick={() => void submitCheckin("done")}
+                >
                   Mark complete
                 </button>
                 <button
                   type="button"
                   className="secondary-button"
+                  disabled={!canSubmitCheckin}
                   onClick={() => void submitCheckin("skipped")}
                 >
                   Skip today
@@ -425,6 +354,7 @@ export default function Home() {
                 <input
                   id="skip-reason"
                   className="field"
+                  disabled={!canSubmitCheckin}
                   value={skipReason}
                   onChange={(event) => setSkipReason(event.target.value)}
                   maxLength={180}
@@ -432,10 +362,32 @@ export default function Home() {
                 />
               </div>
               {checkinStatus.type === "ok" ? (
-                <p className="mt-2 text-sm text-emerald-700">{checkinStatus.message}</p>
+                <p
+                  className={`status-banner mt-2 text-sm text-emerald-800 ${
+                    checkinStatus.message.startsWith("Great work") ? "status-celebrate" : ""
+                  }`}
+                  aria-live="polite"
+                >
+                  {checkinStatus.message}
+                </p>
               ) : null}
               {checkinStatus.type === "error" ? (
-                <p className="mt-2 text-sm text-rose-700">{checkinStatus.message}</p>
+                <p
+                  className="status-banner mt-2 text-sm text-rose-800"
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  {checkinStatus.message}
+                </p>
+              ) : null}
+              {hasCheckedIn ? (
+                <button
+                  type="button"
+                  className="secondary-button mt-3"
+                  onClick={startNextDay}
+                >
+                  Start next day
+                </button>
               ) : null}
             </div>
 
@@ -457,10 +409,14 @@ export default function Home() {
                 </button>
               </div>
               {reminderStatus.type === "ok" ? (
-                <p className="mt-2 text-sm text-emerald-700">{reminderStatus.message}</p>
+                <p className="mt-2 text-sm text-emerald-700" aria-live="polite">
+                  {reminderStatus.message}
+                </p>
               ) : null}
               {reminderStatus.type === "error" ? (
-                <p className="mt-2 text-sm text-rose-700">{reminderStatus.message}</p>
+                <p className="mt-2 text-sm text-rose-700" role="alert" aria-live="assertive">
+                  {reminderStatus.message}
+                </p>
               ) : null}
             </div>
           </section>
@@ -469,28 +425,109 @@ export default function Home() {
         {weeklySummary ? (
           <section className="panel mt-5">
             <h2 className="mb-3 text-xl font-semibold">Weekly summary</h2>
-            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:text-base">
+            {!hasCheckedIn ? (
+              <p className="mb-3 rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2 text-sm text-slate-700">
+                Today&apos;s review is waiting - close the day above to refresh this panel with your latest check-in.
+              </p>
+            ) : null}
+            <div className="mb-4 rounded-xl border border-[var(--line)] bg-[var(--field)] p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Weekly completion trend
+                </p>
+                <p className={`progress-badge text-sm font-semibold ${hasWeeklyProgress ? "is-animated" : ""}`}>
+                  {weeklyMomentum}
+                </p>
+              </div>
+              <div
+                className={`progress-track ${hasWeeklyProgress ? "is-animated" : ""}`}
+                role="img"
+                aria-label={`Weekly completion ${completionPercent}%`}
+              >
+                <div
+                  className={`progress-fill ${hasWeeklyProgress ? "is-animated" : ""}`}
+                  style={{ width: `${completionPercent}%` }}
+                />
+              </div>
+              <p className={`progress-caption mt-2 text-xs ${hasWeeklyProgress ? "is-animated" : ""}`}>
+                {completionPercent}% completed in this 7-day window.
+              </p>
+            </div>
+            <div className="summary-grid grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:text-base">
               <div className="summary-card">
                 <p className="summary-label">Check-ins</p>
-                <p className="summary-value">{weeklySummary.total}</p>
+                <p className="summary-value">
+                  <AnimatedCounter key={weeklySummary.total} value={weeklySummary.total} testId="weekly-total-count" />
+                </p>
               </div>
               <div className="summary-card">
                 <p className="summary-label">Completed</p>
-                <p className="summary-value">{weeklySummary.done}</p>
+                <p className="summary-value">
+                  <AnimatedCounter key={weeklySummary.done} value={weeklySummary.done} testId="weekly-done-count" />
+                </p>
               </div>
               <div className="summary-card">
                 <p className="summary-label">Skipped</p>
-                <p className="summary-value">{weeklySummary.skipped}</p>
+                <p className="summary-value">
+                  <AnimatedCounter
+                    key={weeklySummary.skipped}
+                    value={weeklySummary.skipped}
+                    testId="weekly-skipped-count"
+                  />
+                </p>
               </div>
               <div className="summary-card">
                 <p className="summary-label">Completion</p>
-                <p className="summary-value">{Math.round(weeklySummary.completionRate * 100)}%</p>
+                <p className="summary-value">
+                  <AnimatedCounter
+                    key={completionPercent}
+                    value={Math.round(weeklySummary.completionRate * 100)}
+                    suffix="%"
+                    testId="weekly-completion-percent"
+                  />
+                </p>
               </div>
             </div>
             <p className="mt-3 text-sm text-slate-700">
               Window: {weeklySummary.windowStart} to {weeklySummary.windowEnd}
               {topFocus ? ` | Top focus: ${topFocus}` : ""}
             </p>
+            {focusBreakdown.length > 0 ? (
+              <div className="focus-breakdown-list mt-4 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Focus breakdown
+                </p>
+                {focusBreakdown.map((item) => (
+                  <div key={item.focusArea} className={`focus-row ${item.done > 0 ? "has-progress" : ""}`}>
+                    <div className="mb-1 flex items-center justify-between gap-2 text-xs sm:text-sm">
+                      <span className="font-medium text-slate-700">{item.focusArea}</span>
+                      <span className="text-slate-600">
+                        <AnimatedCounter
+                          key={`${item.focusArea}-${item.done}`}
+                          value={item.done}
+                          testId={`focus-done-${item.focusArea}`}
+                        />
+                        /{item.total} complete
+                      </span>
+                    </div>
+                    <div
+                      className={`progress-track ${item.done > 0 ? "is-animated" : ""}`}
+                      role="img"
+                      aria-label={`${item.focusArea} completion ${Math.round((item.done / item.total) * 100)}%`}
+                    >
+                      <div
+                        className={`progress-fill ${item.done > 0 ? "is-animated" : ""}`}
+                        style={{ width: `${Math.round((item.done / item.total) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-slate-600">
+                No check-ins yet this week. Generate today&apos;s plan to start your trendline.
+              </p>
+            )}
           </section>
         ) : null}
       </main>

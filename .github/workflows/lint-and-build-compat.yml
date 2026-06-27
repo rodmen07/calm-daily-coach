@@ -1,0 +1,58 @@
+name: lint-and-build compatibility
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  lint-build:
+    name: lint-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  report-legacy-status:
+    name: report-legacy-status
+    needs: lint-build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report legacy lint-and-build status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const state = "${{ needs.lint-build.result }}" === "success" ? "success" : "failure";
+            const description = state === "success"
+              ? "lint-and-build compatibility check passed"
+              : "lint-and-build compatibility check failed";
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state,
+              context: "lint-and-build",
+              description,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });

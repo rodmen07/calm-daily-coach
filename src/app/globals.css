@@ -48,6 +48,95 @@ body {
   font-family: var(--font-plex-mono), monospace;
 }
 
+.flow-chip {
+  border-radius: 999px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+.flow-chip.is-active {
+  background: #d9efe9;
+  color: #145646;
+  border-color: #98c8bb;
+  animation: chip-pop 220ms ease-out;
+}
+
+.flow-chip.is-complete {
+  background: #e7f3ef;
+  color: #2d6659;
+  border-color: #b6d7cf;
+}
+
+.flow-chip.is-idle {
+  background: #eceff3;
+  color: #546073;
+  border-color: #d5dce6;
+}
+
+.flow-detail {
+  color: #5a6375;
+}
+
+.flow-gates {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.flow-gate {
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  background: #fffdf8;
+}
+
+.flow-gate-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.flow-gate-state {
+  margin-top: 2px;
+  font-size: 0.78rem;
+}
+
+.flow-gate.is-complete {
+  border-color: #b6d7cf;
+  background: #e7f3ef;
+}
+
+.flow-gate.is-complete .flow-gate-label,
+.flow-gate.is-complete .flow-gate-state {
+  color: #2d6659;
+}
+
+.flow-gate.is-current {
+  border-color: #98c8bb;
+  background: #d9efe9;
+}
+
+.flow-gate.is-current .flow-gate-label,
+.flow-gate.is-current .flow-gate-state {
+  color: #145646;
+}
+
+.flow-gate.is-locked {
+  border-color: #d5dce6;
+  background: #eceff3;
+}
+
+.flow-gate.is-locked .flow-gate-label,
+.flow-gate.is-locked .flow-gate-state {
+  color: #546073;
+}
+
+.flow-lock-note {
+  color: #5a6375;
+}
+
 .label {
   display: block;
   margin-bottom: 0.35rem;
@@ -83,6 +172,31 @@ body {
 
 .dose-card input {
   accent-color: var(--accent);
+}
+
+.dose-hint {
+  margin-bottom: 8px;
+  color: #5a6375;
+  font-size: 0.8rem;
+}
+
+.field-meta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: #5a6375;
+}
+
+.field-counter {
+  font-size: 0.78rem;
+  color: #4f5868;
+  font-family: var(--font-plex-mono), monospace;
 }
 
 .primary-button,
@@ -137,9 +251,329 @@ body {
   font-weight: 700;
 }
 
+.summary-grid .summary-card {
+  animation: summary-card-rise 320ms ease-out both;
+}
+
+.summary-grid .summary-card:nth-child(1) {
+  animation-delay: 40ms;
+}
+
+.summary-grid .summary-card:nth-child(2) {
+  animation-delay: 100ms;
+}
+
+.summary-grid .summary-card:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.summary-grid .summary-card:nth-child(4) {
+  animation-delay: 220ms;
+}
+
+.progress-badge {
+  color: #475467;
+  transition: color 200ms ease, transform 200ms ease;
+}
+
+.progress-badge.is-animated {
+  color: var(--accent-strong);
+  animation: progress-badge-rise 240ms ease-out;
+}
+
+.progress-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #e6ddcd;
+  overflow: hidden;
+}
+
+.progress-track.is-animated {
+  box-shadow: inset 0 0 0 1px rgba(19, 93, 76, 0.08);
+}
+
+.progress-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), #1a7f67);
+  transition: width 220ms ease;
+}
+
+.progress-fill.is-animated {
+  animation: progress-fill-grow 500ms ease-out, progress-fill-glow 1200ms ease-out;
+}
+
+.progress-fill.is-animated::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.38) 45%, transparent 100%);
+  transform: translateX(-100%);
+  animation: progress-sheen 1200ms ease-out;
+}
+
+.progress-caption {
+  color: #5f6878;
+  transition: color 200ms ease;
+}
+
+.progress-caption.is-animated {
+  color: #365346;
+}
+
+.focus-row {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fffdf8;
+}
+
+.focus-row.has-progress {
+  animation: progress-badge-rise 220ms ease-out;
+}
+
+.focus-breakdown-list .focus-row {
+  animation: focus-row-rise 280ms ease-out both;
+}
+
+.focus-breakdown-list .focus-row:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.focus-breakdown-list .focus-row:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.focus-breakdown-list .focus-row:nth-child(4) {
+  animation-delay: 160ms;
+}
+
+.focus-breakdown-list .focus-row:nth-child(5) {
+  animation-delay: 220ms;
+}
+
+.plan-meta-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.plan-pill {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf8;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.plan-pill-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #596275;
+}
+
+.plan-pill-value {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.plan-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.plan-step {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fffefb;
+  padding: 12px;
+}
+
+.plan-step-title {
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.plan-step-body {
+  color: #2b3342;
+}
+
+.plan-cap {
+  border-radius: 10px;
+  background: #f1ece1;
+  border: 1px solid #e1d5bf;
+  padding: 10px 12px;
+}
+
+.status-banner {
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #eef9f5;
+  padding: 10px 12px;
+  animation: status-rise 200ms ease-out;
+}
+
+.status-celebrate {
+  animation: status-rise 200ms ease-out, status-glow 850ms ease-out;
+}
+
+@keyframes chip-pop {
+  0% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes status-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes status-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(19, 93, 76, 0);
+  }
+  45% {
+    box-shadow: 0 0 0 5px rgba(19, 93, 76, 0.14);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(19, 93, 76, 0);
+  }
+}
+
+@keyframes progress-badge-rise {
+  0% {
+    opacity: 0.78;
+    transform: translateY(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progress-fill-grow {
+  0% {
+    filter: saturate(0.9);
+    transform: scaleX(0.96);
+    transform-origin: left center;
+  }
+  100% {
+    filter: saturate(1);
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+@keyframes progress-fill-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(19, 93, 76, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(19, 93, 76, 0.12);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(19, 93, 76, 0);
+  }
+}
+
+@keyframes progress-sheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+
+@keyframes summary-card-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes focus-row-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 @media (max-width: 640px) {
   .panel {
     border-radius: 14px;
     padding: 14px;
+  }
+
+  .flow-gates {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .close-actions {
+    position: sticky;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 10;
+    background: rgba(255, 249, 237, 0.95);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-chip,
+  .progress-badge,
+  .progress-fill,
+  .progress-caption,
+  .focus-row,
+  .summary-card,
+  .status-banner,
+  .primary-button,
+  .secondary-button {
+    animation: none !important;
+    transition-duration: 0ms !important;
+  }
+
+  .progress-fill.is-animated::after {
+    animation: none !important;
+    transform: translateX(130%);
   }
 }

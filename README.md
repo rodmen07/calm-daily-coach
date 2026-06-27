@@ -19,6 +19,13 @@ Core principles:
 
 - Persistent check-in storage in [src/lib/browser-checkins.ts](src/lib/browser-checkins.ts)
 - Completion and skip controls plus weekly stats UI in [src/app/page.tsx](src/app/page.tsx)
+- Animated flow-state chips and celebratory completion feedback in [src/app/page.tsx](src/app/page.tsx)
+- Explicit daily workflow stepper (Focus -> Plan -> Do -> Review) in [src/app/page.tsx](src/app/page.tsx)
+- Hard step locks that prevent plan edits/regeneration until a daily check-in is submitted in [src/app/page.tsx](src/app/page.tsx)
+- Animated weekly and focus progress feedback in [src/app/page.tsx](src/app/page.tsx)
+- Reduced-motion fallbacks for animated feedback in [src/app/globals.css](src/app/globals.css)
+- Animated count-up values for weekly summary totals in [src/app/page.tsx](src/app/page.tsx)
+- Staggered reveal motion for weekly summary cards and focus breakdown rows in [src/app/page.tsx](src/app/page.tsx)
 
 ## Added Google login
 
@@ -41,6 +48,48 @@ npm run dev
 
 Open http://localhost:3000
 
+## Quality and tests
+
+```bash
+npm run lint
+npm run typecheck
+npm run check
+npm run test
+npm run test:coverage
+```
+
+Current automated coverage focuses on core business logic in `src/lib/plan.ts` and `src/lib/browser-checkins.ts`.
+It also includes app behavior tests in `src/app/__tests__/page.test.tsx` for state hydration and auth-unconfigured UX.
+Interaction coverage includes generate-plan, mark-complete, and skip-validation actions in `src/app/page.tsx`.
+Completion feedback styling and success-state behavior are also covered in `src/app/__tests__/page.test.tsx`.
+Progress animation states in the weekly summary are also covered in `src/app/__tests__/page.test.tsx`.
+Workflow-step labeling and completion-state transitions are also covered in `src/app/__tests__/page.test.tsx`.
+Planner lock/unlock behavior around daily check-in is also covered in `src/app/__tests__/page.test.tsx`.
+Explicit Start next day reset behavior after review is also covered in `src/app/__tests__/page.test.tsx`.
+Animated feedback respects reduced-motion preferences through CSS fallbacks in `src/app/globals.css`.
+Weekly count-up values for totals, completion percentage, and focus counts are also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
+Staggered summary-card and focus-row animation coverage is kept lightweight through the same page interaction suite.
+Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
+
+## Maintainability structure
+
+- Auth effects and login actions are isolated in `src/app/hooks/use-coach-auth.ts`.
+- Planner state, persistence, and check-in actions are isolated in `src/app/hooks/use-coach-planner.ts`.
+- Check-in persistence flows through `src/lib/checkin-store.ts` to support backend migration without UI rewrites.
+- `src/app/page.tsx` focuses on view composition and wiring.
+
+### Check-in backend mode
+
+- Configure `NEXT_PUBLIC_CHECKIN_BACKEND` as `local` (default) or `firestore`.
+- In `firestore` mode, the app uses Firestore when available and automatically falls back to local storage on backend errors.
+- Firestore collection path is `users/{uid}/checkins`.
+- On sign-in, guest check-ins are migrated to the signed-in scope once per backend mode with an idempotent migration marker.
+
+## Branch protection quality gate
+
+- Workflow `.github/workflows/ci.yml` runs lint, tests, and coverage on pushes and pull requests to `main`.
+- Coverage HTML artifacts are uploaded on each workflow run.
+
 ## Configure Google auth
 
 1. Create a Firebase project.
@@ -50,6 +99,18 @@ Open http://localhost:3000
 	- rodmen07.github.io
 4. Copy [.env.example](.env.example) to `.env.local` and fill all NEXT_PUBLIC_FIREBASE values.
 5. Restart local dev server after env changes.
+
+### OAuth troubleshooting checklist
+
+If Google login fails on the live site, verify these first:
+
+1. Firebase Authentication -> Sign-in method -> Google is enabled.
+2. Firebase Authentication -> Settings -> Authorized domains includes `rodmen07.github.io`.
+3. GitHub repository secrets for deploy workflow include all NEXT_PUBLIC_FIREBASE_* values.
+4. `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` matches your Firebase project auth domain (usually `<project-id>.firebaseapp.com`).
+5. Browser popup blockers are disabled for the live site.
+
+The app now shows Firebase error codes/messages in UI to make production diagnosis faster.
 
 ## Email reminders
 
