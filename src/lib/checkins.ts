@@ -113,18 +113,9 @@ export async function getWeeklySummary(endDateInput?: string) {
   const done = inWindow.filter((item) => item.status === "done").length;
   const skipped = inWindow.filter((item) => item.status === "skipped").length;
 
-  const byFocus: Record<FocusArea, { done: number; skipped: number }> = {
-    Fitness: { done: 0, skipped: 0 },
-    Sleep: { done: 0, skipped: 0 },
-    "Deep Work": { done: 0, skipped: 0 },
-    Communication: { done: 0, skipped: 0 },
-    Mindfulness: { done: 0, skipped: 0 },
-    Nutrition: { done: 0, skipped: 0 },
-    Learning: { done: 0, skipped: 0 },
-    Organization: { done: 0, skipped: 0 },
-    Relationships: { done: 0, skipped: 0 },
-    Finances: { done: 0, skipped: 0 },
-  };
+  const byFocus = Object.fromEntries(
+    FOCUS_AREAS.map((focusArea) => [focusArea, { done: 0, skipped: 0 }]),
+  ) as Record<FocusArea, { done: number; skipped: number }>;
 
   for (const item of inWindow) {
     byFocus[item.focus][item.status] += 1;

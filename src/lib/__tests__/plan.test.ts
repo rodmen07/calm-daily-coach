@@ -65,6 +65,11 @@ describe("buildDailyPlan", () => {
 });
 
 describe("dailyPlanInputSchema", () => {
+  it("keeps focus areas alphabetically ordered", () => {
+    const sorted = [...FOCUS_AREAS].sort((a, b) => a.localeCompare(b));
+    expect(FOCUS_AREAS).toEqual(sorted);
+  });
+
   it("rejects notes longer than 280 characters", () => {
     const result = dailyPlanInputSchema.safeParse({
       focus: "Sleep",
