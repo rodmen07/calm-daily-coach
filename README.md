@@ -74,6 +74,18 @@ Interaction coverage includes generate-plan, mark-complete, and skip-validation 
 4. Copy [.env.example](.env.example) to `.env.local` and fill all NEXT_PUBLIC_FIREBASE values.
 5. Restart local dev server after env changes.
 
+### OAuth troubleshooting checklist
+
+If Google login fails on the live site, verify these first:
+
+1. Firebase Authentication -> Sign-in method -> Google is enabled.
+2. Firebase Authentication -> Settings -> Authorized domains includes `rodmen07.github.io`.
+3. GitHub repository secrets for deploy workflow include all NEXT_PUBLIC_FIREBASE_* values.
+4. `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` matches your Firebase project auth domain (usually `<project-id>.firebaseapp.com`).
+5. Browser popup blockers are disabled for the live site.
+
+The app now shows Firebase error codes/messages in UI to make production diagnosis faster.
+
 ## Email reminders
 
 Reminder uses a `mailto:` draft flow in static mode so it works on GitHub Pages with zero backend cost.
