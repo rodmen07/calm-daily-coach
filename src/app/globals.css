@@ -180,6 +180,30 @@ body {
   font-size: 0.8rem;
 }
 
+.category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-chip {
+  border-radius: 999px;
+  border: 1px solid #d5dce6;
+  background: #fffdf8;
+  color: #4f5868;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.category-chip.is-selected {
+  border-color: #98c8bb;
+  background: #d9efe9;
+  color: #145646;
+  animation: chip-pop 220ms ease-out;
+}
+
 .field-meta {
   margin-top: 6px;
   display: flex;
@@ -560,6 +584,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .flow-chip,
+  .category-chip,
   .progress-badge,
   .progress-fill,
   .progress-caption,
