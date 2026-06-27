@@ -1,37 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase";
 import {
+  authErrorMessage,
+  shouldFallbackToRedirect,
+} from "@/lib/firebase-auth-errors";
+import {
   GoogleAuthProvider,
   getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
   signInWithRedirect,
   signOut,
-  type AuthError,
   type User,
 } from "firebase/auth";
-
-function authErrorMessage(error: unknown) {
-  const authError = error as Partial<AuthError>;
-  const code = authError?.code ?? "unknown";
-
-  switch (code) {
-    case "auth/unauthorized-domain":
-      return "Google login is blocked for this domain. Add rodmen07.github.io in Firebase Authentication authorized domains.";
-    case "auth/operation-not-allowed":
-      return "Google login is disabled in Firebase. Enable Google provider in Authentication settings.";
-    case "auth/invalid-api-key":
-      return "Firebase API key is invalid. Check NEXT_PUBLIC_FIREBASE_API_KEY in repository secrets.";
-    case "auth/popup-blocked":
-      return "Popup was blocked by the browser. Retrying with redirect...";
-    case "auth/popup-closed-by-user":
-      return "Sign-in popup was closed before completion.";
-    case "auth/network-request-failed":
-      return "Network request failed during sign-in. Check connection and retry.";
-    default:
-      return `Google login failed (${code}).`;
-  }
-}
 
 export function useCoachAuth() {
   const [authUser, setAuthUser] = useState<User | null>(null);
@@ -70,7 +51,7 @@ export function useCoachAuth() {
     } catch (error: unknown) {
       const message = authErrorMessage(error);
 
-      if ((error as Partial<AuthError>)?.code === "auth/popup-blocked") {
+      if (shouldFallbackToRedirect(error)) {
         setAuthMessage(message);
         try {
           await signInWithRedirect(auth, provider);
