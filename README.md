@@ -27,6 +27,7 @@ Core principles:
 - Animated count-up values for weekly summary totals in [src/app/page.tsx](src/app/page.tsx)
 - Staggered reveal motion for weekly summary cards and focus breakdown rows in [src/app/page.tsx](src/app/page.tsx)
 - Expanded improvement categories and 5/15/30-minute activity windows in [src/lib/plan.ts](src/lib/plan.ts)
+- Added Career, Creativity, and Home focus areas, with the full focus list now kept alphabetical in [src/lib/plan.ts](src/lib/plan.ts)
 - Visible improvement category chips in [src/app/page.tsx](src/app/page.tsx)
 - Route-based multi-page UX flow for Focus, Execute, and Review in [src/app/focus/page.tsx](src/app/focus/page.tsx), [src/app/execute/page.tsx](src/app/execute/page.tsx), and [src/app/review/page.tsx](src/app/review/page.tsx)
 - Shared top-level route navigation shell in [src/app/layout.tsx](src/app/layout.tsx) and [src/app/globals.css](src/app/globals.css)

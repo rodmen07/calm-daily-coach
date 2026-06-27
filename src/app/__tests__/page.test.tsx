@@ -19,16 +19,19 @@ vi.mock("@/lib/browser-checkins", () => ({
     skipped: 0,
     completionRate: 0,
     byFocus: {
-      Fitness: { done: 0, skipped: 0 },
-      Sleep: { done: 0, skipped: 0 },
-      "Deep Work": { done: 0, skipped: 0 },
+      Career: { done: 0, skipped: 0 },
       Communication: { done: 0, skipped: 0 },
+      Creativity: { done: 0, skipped: 0 },
+      "Deep Work": { done: 0, skipped: 0 },
+      Finances: { done: 0, skipped: 0 },
+      Fitness: { done: 0, skipped: 0 },
+      Home: { done: 0, skipped: 0 },
+      Learning: { done: 0, skipped: 0 },
       Mindfulness: { done: 0, skipped: 0 },
       Nutrition: { done: 0, skipped: 0 },
-      Learning: { done: 0, skipped: 0 },
       Organization: { done: 0, skipped: 0 },
       Relationships: { done: 0, skipped: 0 },
-      Finances: { done: 0, skipped: 0 },
+      Sleep: { done: 0, skipped: 0 },
     },
   })),
 }));
@@ -130,6 +133,9 @@ describe("Home page", () => {
     expect(within(categoryList).getByText("Learning")).toBeTruthy();
     expect(within(categoryList).getByText("Organization")).toBeTruthy();
     expect(within(categoryList).getByText("Relationships")).toBeTruthy();
+    expect(within(categoryList).getByText("Career")).toBeTruthy();
+    expect(within(categoryList).getByText("Creativity")).toBeTruthy();
+    expect(within(categoryList).getByText("Home")).toBeTruthy();
     expect(screen.getByText("Step 4 review unlocks after you submit today's check-in.")).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText("Focus area"), {
@@ -263,16 +269,19 @@ describe("Home page", () => {
       skipped: 1,
       completionRate: 0.75,
       byFocus: {
-        Fitness: { done: 2, skipped: 0 },
-        Sleep: { done: 1, skipped: 1 },
-        "Deep Work": { done: 0, skipped: 0 },
+        Career: { done: 0, skipped: 0 },
         Communication: { done: 0, skipped: 0 },
+        Creativity: { done: 0, skipped: 0 },
+        "Deep Work": { done: 0, skipped: 0 },
+        Finances: { done: 0, skipped: 0 },
+        Fitness: { done: 2, skipped: 0 },
+        Home: { done: 0, skipped: 0 },
+        Learning: { done: 0, skipped: 0 },
         Mindfulness: { done: 0, skipped: 0 },
         Nutrition: { done: 0, skipped: 0 },
-        Learning: { done: 0, skipped: 0 },
         Organization: { done: 0, skipped: 0 },
         Relationships: { done: 0, skipped: 0 },
-        Finances: { done: 0, skipped: 0 },
+        Sleep: { done: 1, skipped: 1 },
       },
     });
 
@@ -298,16 +307,19 @@ describe("Home page", () => {
       skipped: 2,
       completionRate: 0.75,
       byFocus: {
-        Fitness: { done: 3, skipped: 0 },
-        Sleep: { done: 2, skipped: 0 },
-        "Deep Work": { done: 1, skipped: 0 },
+        Career: { done: 0, skipped: 0 },
         Communication: { done: 0, skipped: 0 },
+        Creativity: { done: 0, skipped: 0 },
+        "Deep Work": { done: 1, skipped: 0 },
+        Finances: { done: 0, skipped: 0 },
+        Fitness: { done: 3, skipped: 0 },
+        Home: { done: 0, skipped: 0 },
+        Learning: { done: 0, skipped: 0 },
         Mindfulness: { done: 0, skipped: 0 },
         Nutrition: { done: 0, skipped: 0 },
-        Learning: { done: 0, skipped: 0 },
         Organization: { done: 0, skipped: 0 },
         Relationships: { done: 0, skipped: 0 },
-        Finances: { done: 0, skipped: 0 },
+        Sleep: { done: 2, skipped: 0 },
       },
     });
 

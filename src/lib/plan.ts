@@ -1,16 +1,19 @@
 import { z } from "zod";
 
 const focusAreas = [
-  "Fitness",
-  "Sleep",
-  "Deep Work",
+  "Career",
   "Communication",
+  "Creativity",
+  "Deep Work",
+  "Finances",
+  "Fitness",
+  "Home",
+  "Learning",
   "Mindfulness",
   "Nutrition",
-  "Learning",
   "Organization",
   "Relationships",
-  "Finances",
+  "Sleep",
 ] as const;
 
 const doseOptions = ["light", "medium", "deep"] as const;
@@ -36,38 +39,55 @@ export type DailyPlan = {
 };
 
 const actionVariantsMap: Record<FocusArea, Record<DailyDose, readonly string[]>> = {
-  Fitness: {
+  Career: {
     light: [
-      "Do a 5-minute movement burst: 90s squats, 90s wall push-ups, 2 minutes of deep breathing.",
-      "Take a brisk 5-minute walk and finish with three deep breaths.",
-      "Run a 5-minute mobility reset for hips, shoulders, and neck.",
+      "Use 5 minutes to prioritize your top career task for today.",
+      "Take 5 minutes to update one bullet in your resume or work journal.",
+      "Do a 5-minute career check-in: one goal, one next action, one deadline.",
     ],
     medium: [
-      "Complete a 15-minute strength circuit: squats, push-ups, rows, and core.",
-      "Do a 15-minute interval workout: 45s work and 30s rest across four moves.",
-      "Run a 15-minute bodyweight ladder and log your energy after.",
+      "Spend 15 minutes advancing one career project or professional milestone.",
+      "Use 15 minutes to draft a concise update for your manager or mentor.",
+      "Do a 15-minute career sprint: refine one portfolio item or accomplishment note.",
     ],
     deep: [
-      "Do a 30-minute workout and log your energy before and after.",
-      "Complete a focused 30-minute strength session with short rests.",
-      "Run a 30-minute mixed cardio and mobility session, then note recovery level.",
+      "Use 30 minutes to execute one high-impact career development task end-to-end.",
+      "Run a 30-minute career planning block and define next-month targets.",
+      "Do a 30-minute professional growth session: strategy, outreach, and follow-up.",
     ],
   },
-  Sleep: {
+  Communication: {
     light: [
-      "Do a 5-minute pre-sleep prep: set your wind-down alarm and dim one light source.",
-      "Use 5 minutes to prep your sleep space: water, cool room, and device cutoff.",
-      "Take 5 minutes to queue tomorrow's bedtime reminder and clear bedside clutter.",
+      "Use 5 minutes to send one clear status update to someone waiting on you.",
+      "Take 5 minutes to clarify one message and remove ambiguity before sending.",
+      "Do a 5-minute communication cleanup: one concise reply, one clear next step.",
     ],
     medium: [
-      "Run a 15-minute wind-down: no screens, dim lights, and light stretching.",
-      "Complete a 15-minute sleep prep routine with breathing and room reset.",
-      "Do a 15-minute digital sunset and set up your bedtime cues.",
+      "Spend 15 minutes preparing and delivering a difficult message using SBI.",
+      "Use 15 minutes to script key points and send a high-clarity communication.",
+      "Do a 15-minute communication sprint: align expectations and confirm ownership.",
     ],
     deep: [
-      "Audit your sleep environment for 30 minutes and design a tighter bedtime routine.",
-      "Run a 30-minute sleep reset: environment check plus next-week bedtime plan.",
-      "Use 30 minutes to map sleep blockers and create one concrete nightly protocol.",
+      "Hold a 30-minute high-stakes conversation and document what worked.",
+      "Use 30 minutes to resolve one communication bottleneck end-to-end.",
+      "Run a 30-minute alignment call and capture decisions in writing.",
+    ],
+  },
+  Creativity: {
+    light: [
+      "Use 5 minutes to sketch, brainstorm, or capture three fresh ideas.",
+      "Take 5 minutes to create one rough draft without editing yourself.",
+      "Do a 5-minute creative warm-up: prompt, response, and one refinement.",
+    ],
+    medium: [
+      "Spend 15 minutes building a first draft of one creative concept.",
+      "Use 15 minutes to iterate one idea into a clearer, stronger version.",
+      "Do a 15-minute creative block and ship one small artifact.",
+    ],
+    deep: [
+      "Use 30 minutes to produce and polish one meaningful creative output.",
+      "Run a 30-minute creative session from concept to shareable draft.",
+      "Do a 30-minute idea-to-output cycle and capture what to improve next.",
     ],
   },
   "Deep Work": {
@@ -87,21 +107,72 @@ const actionVariantsMap: Record<FocusArea, Record<DailyDose, readonly string[]>>
       "Use 30 minutes to complete the hardest part of your top task.",
     ],
   },
-  Communication: {
+  Finances: {
     light: [
-      "Use 5 minutes to send one clear status update to someone waiting on you.",
-      "Take 5 minutes to clarify one message and remove ambiguity before sending.",
-      "Do a 5-minute communication cleanup: one concise reply, one clear next step.",
+      "Use 5 minutes to review yesterday's spending and categorize key transactions.",
+      "Take 5 minutes to log recent purchases and flag one avoidable expense.",
+      "Do a 5-minute money check: totals, anomalies, and one quick correction.",
     ],
     medium: [
-      "Spend 15 minutes preparing and delivering a difficult message using SBI.",
-      "Use 15 minutes to script key points and send a high-clarity communication.",
-      "Do a 15-minute communication sprint: align expectations and confirm ownership.",
+      "Spend 15 minutes setting this week's spending limits in your budget tracker.",
+      "Use 15 minutes to reconcile accounts and update category caps.",
+      "Run a 15-minute budget tune-up and define one spending rule for this week.",
     ],
     deep: [
-      "Hold a 30-minute high-stakes conversation and document what worked.",
-      "Use 30 minutes to resolve one communication bottleneck end-to-end.",
-      "Run a 30-minute alignment call and capture decisions in writing.",
+      "Review monthly cash flow for 30 minutes and choose one concrete optimization.",
+      "Use 30 minutes to analyze recurring expenses and set one reduction action.",
+      "Run a 30-minute financial planning block and lock one savings move.",
+    ],
+  },
+  Fitness: {
+    light: [
+      "Do a 5-minute movement burst: 90s squats, 90s wall push-ups, 2 minutes of deep breathing.",
+      "Take a brisk 5-minute walk and finish with three deep breaths.",
+      "Run a 5-minute mobility reset for hips, shoulders, and neck.",
+    ],
+    medium: [
+      "Complete a 15-minute strength circuit: squats, push-ups, rows, and core.",
+      "Do a 15-minute interval workout: 45s work and 30s rest across four moves.",
+      "Run a 15-minute bodyweight ladder and log your energy after.",
+    ],
+    deep: [
+      "Do a 30-minute workout and log your energy before and after.",
+      "Complete a focused 30-minute strength session with short rests.",
+      "Run a 30-minute mixed cardio and mobility session, then note recovery level.",
+    ],
+  },
+  Home: {
+    light: [
+      "Use 5 minutes to reset one small home area you use daily.",
+      "Take 5 minutes to complete one quick home maintenance task.",
+      "Do a 5-minute home refresh: tidy, wipe, and reset one zone.",
+    ],
+    medium: [
+      "Spend 15 minutes organizing one home space for easier daily use.",
+      "Use 15 minutes to complete a focused home upkeep routine.",
+      "Do a 15-minute home reset that improves tomorrow morning flow.",
+    ],
+    deep: [
+      "Use 30 minutes to complete a meaningful home improvement or reset task.",
+      "Run a 30-minute home systems block: organize, label, and simplify.",
+      "Do a 30-minute cleanup and maintenance sprint in one priority area.",
+    ],
+  },
+  Learning: {
+    light: [
+      "Use 5 minutes to review notes or flashcards from one recent lesson.",
+      "Take 5 minutes to define the one concept you want to understand better.",
+      "Do a 5-minute learning sprint: one recap, one question, one takeaway.",
+    ],
+    medium: [
+      "Spend 15 minutes studying one concept without multitasking.",
+      "Use 15 minutes to watch, read, or practice one targeted learning module.",
+      "Do a 15-minute learning block and write a three-bullet summary.",
+    ],
+    deep: [
+      "Use 30 minutes to study a topic, then explain it back in your own words.",
+      "Run a 30-minute learning session with notes, practice, and recall.",
+      "Do a 30-minute deep dive into one skill and identify the next drill.",
     ],
   },
   Mindfulness: {
@@ -138,23 +209,6 @@ const actionVariantsMap: Record<FocusArea, Record<DailyDose, readonly string[]>>
       "Review your food habits for 30 minutes and pick one sustainable improvement.",
     ],
   },
-  Learning: {
-    light: [
-      "Use 5 minutes to review notes or flashcards from one recent lesson.",
-      "Take 5 minutes to define the one concept you want to understand better.",
-      "Do a 5-minute learning sprint: one recap, one question, one takeaway.",
-    ],
-    medium: [
-      "Spend 15 minutes studying one concept without multitasking.",
-      "Use 15 minutes to watch, read, or practice one targeted learning module.",
-      "Do a 15-minute learning block and write a three-bullet summary.",
-    ],
-    deep: [
-      "Use 30 minutes to study a topic, then explain it back in your own words.",
-      "Run a 30-minute learning session with notes, practice, and recall.",
-      "Do a 30-minute deep dive into one skill and identify the next drill.",
-    ],
-  },
   Organization: {
     light: [
       "Use 5 minutes to clear one surface or reset one small workspace.",
@@ -189,50 +243,56 @@ const actionVariantsMap: Record<FocusArea, Record<DailyDose, readonly string[]>>
       "Do a 30-minute outreach session: three messages, one call, and one follow-up.",
     ],
   },
-  Finances: {
+  Sleep: {
     light: [
-      "Use 5 minutes to review yesterday's spending and categorize key transactions.",
-      "Take 5 minutes to log recent purchases and flag one avoidable expense.",
-      "Do a 5-minute money check: totals, anomalies, and one quick correction.",
+      "Do a 5-minute pre-sleep prep: set your wind-down alarm and dim one light source.",
+      "Use 5 minutes to prep your sleep space: water, cool room, and device cutoff.",
+      "Take 5 minutes to queue tomorrow's bedtime reminder and clear bedside clutter.",
     ],
     medium: [
-      "Spend 15 minutes setting this week's spending limits in your budget tracker.",
-      "Use 15 minutes to reconcile accounts and update category caps.",
-      "Run a 15-minute budget tune-up and define one spending rule for this week.",
+      "Run a 15-minute wind-down: no screens, dim lights, and light stretching.",
+      "Complete a 15-minute sleep prep routine with breathing and room reset.",
+      "Do a 15-minute digital sunset and set up your bedtime cues.",
     ],
     deep: [
-      "Review monthly cash flow for 30 minutes and choose one concrete optimization.",
-      "Use 30 minutes to analyze recurring expenses and set one reduction action.",
-      "Run a 30-minute financial planning block and lock one savings move.",
+      "Audit your sleep environment for 30 minutes and design a tighter bedtime routine.",
+      "Run a 30-minute sleep reset: environment check plus next-week bedtime plan.",
+      "Use 30 minutes to map sleep blockers and create one concrete nightly protocol.",
     ],
   },
 };
 
 const reflectionMap: Record<FocusArea, string> = {
-  Fitness: "What changed in your energy after completing this?",
-  Sleep: "What is one adjustment that would improve tonight's sleep by 10%?",
-  "Deep Work": "What interrupted your focus, and how will you prevent it tomorrow?",
+  Career: "What progress did you make toward your next professional milestone?",
   Communication: "Which phrase or framing made your message clearer?",
+  Creativity: "What idea became more original or useful after this session?",
+  "Deep Work": "What interrupted your focus, and how will you prevent it tomorrow?",
+  Finances: "What spending decision today aligns with your long-term goals?",
+  Fitness: "What changed in your energy after completing this?",
+  Home: "What home routine now feels easier because of this effort?",
+  Learning: "What concept became clearer, and what still needs review?",
   Mindfulness: "What emotion showed up most strongly, and what triggered it?",
   Nutrition: "What food choice today best supported your energy?",
-  Learning: "What concept became clearer, and what still needs review?",
   Organization: "What system or space now feels easier to maintain?",
   Relationships: "What made the connection feel more thoughtful or complete?",
-  Finances: "What spending decision today aligns with your long-term goals?",
+  Sleep: "What is one adjustment that would improve tonight's sleep by 10%?",
 };
 
 const resourceMap: Record<FocusArea, string> = {
-  Fitness: "Optional: Save a 30-minute bodyweight routine you can repeat tomorrow.",
-  Sleep: "Optional: Write a 5-step wind-down checklist in your notes app.",
-  "Deep Work": "Optional: Use a single-task timer for your next block.",
+  Career: "Optional: Save one weekly career objective with a concrete owner and due date.",
   Communication:
     "Optional: Draft key talking points before your next important conversation.",
+  Creativity: "Optional: Save one creative prompt for your next session.",
+  "Deep Work": "Optional: Use a single-task timer for your next block.",
+  Finances: "Optional: Create one spending category alert for this week.",
+  Fitness: "Optional: Save a 30-minute bodyweight routine you can repeat tomorrow.",
+  Home: "Optional: Save a short daily home reset checklist.",
+  Learning: "Optional: Bookmark one course, article, or practice prompt for later.",
   Mindfulness: "Optional: Use a guided breathing app for your next session.",
   Nutrition: "Optional: Save one simple meal template you can repeat this week.",
-  Learning: "Optional: Bookmark one course, article, or practice prompt for later.",
   Organization: "Optional: Save one repeatable cleanup checklist for your workspace.",
   Relationships: "Optional: Write one appreciation message you can send later today.",
-  Finances: "Optional: Create one spending category alert for this week.",
+  Sleep: "Optional: Write a 5-step wind-down checklist in your notes app.",
 };
 
 export const FOCUS_AREAS = focusAreas;
