@@ -50,6 +50,7 @@ npm run test:coverage
 ```
 
 Current automated coverage focuses on core business logic in `src/lib/plan.ts` and `src/lib/browser-checkins.ts`.
+It also includes app behavior tests in `src/app/__tests__/page.test.tsx` for state hydration and auth-unconfigured UX.
 
 ## Configure Google auth
 
