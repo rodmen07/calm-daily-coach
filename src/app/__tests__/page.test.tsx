@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "@/app/page";
 import { addCheckin, getWeeklySummary } from "@/lib/browser-checkins";
@@ -125,6 +125,11 @@ describe("Home page", () => {
     expect(screen.getAllByText("2. Plan").length).toBeGreaterThan(0);
     expect(screen.getAllByText("3. Do").length).toBeGreaterThan(0);
     expect(screen.getAllByText("4. Review").length).toBeGreaterThan(0);
+    const categoryList = screen.getByRole("list", { name: "Improvement categories" });
+    expect(within(categoryList).getByText("Nutrition")).toBeTruthy();
+    expect(within(categoryList).getByText("Learning")).toBeTruthy();
+    expect(within(categoryList).getByText("Organization")).toBeTruthy();
+    expect(within(categoryList).getByText("Relationships")).toBeTruthy();
     expect(screen.getByText("Step 4 review unlocks after you submit today's check-in.")).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText("Focus area"), {
@@ -217,8 +222,18 @@ describe("Home page", () => {
 
     await waitFor(() => {
       expect(screen.queryByText("Today's deliberate dose")).toBeNull();
-      expect(screen.getByRole("button", { name: "Generate today’s plan" })).toBeTruthy();
+      const generate = screen.getByRole("button", { name: "Generate today’s plan" });
+      expect(generate).toBeTruthy();
+      expect(document.activeElement).toBe(generate);
+      expect(screen.getByText("Ready for your next day. Set your focus and generate a fresh plan.")).toBeTruthy();
       expect(screen.getByText("Step 4 review unlocks after you submit today's check-in.")).toBeTruthy();
+    });
+
+    fireEvent.submit(screen.getByRole("button", { name: "Generate today’s plan" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Ready for your next day. Set your focus and generate a fresh plan.")).toBeNull();
+      expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
     });
   });
 

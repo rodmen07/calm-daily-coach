@@ -27,6 +27,7 @@ Core principles:
 - Animated count-up values for weekly summary totals in [src/app/page.tsx](src/app/page.tsx)
 - Staggered reveal motion for weekly summary cards and focus breakdown rows in [src/app/page.tsx](src/app/page.tsx)
 - Expanded improvement categories and 5/15/30-minute activity windows in [src/lib/plan.ts](src/lib/plan.ts)
+- Visible improvement category chips in [src/app/page.tsx](src/app/page.tsx)
 
 ## Added Google login
 
@@ -67,10 +68,12 @@ Progress animation states in the weekly summary are also covered in `src/app/__t
 Workflow-step labeling and completion-state transitions are also covered in `src/app/__tests__/page.test.tsx`.
 Planner lock/unlock behavior around daily check-in is also covered in `src/app/__tests__/page.test.tsx`.
 Explicit Start next day reset behavior after review is also covered in `src/app/__tests__/page.test.tsx`.
+Post-reset confirmation messaging and keyboard focus return to the plan generator are also covered in `src/app/__tests__/page.test.tsx`.
 Animated feedback respects reduced-motion preferences through CSS fallbacks in `src/app/globals.css`.
 Weekly count-up values for totals, completion percentage, and focus counts are also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
 Staggered summary-card and focus-row animation coverage is kept lightweight through the same page interaction suite.
 The expanded focus-area set and 5/15/30-minute plan generation are covered in [src/lib/__tests__/plan.test.ts](src/lib/__tests__/plan.test.ts).
+The visible category strip is also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
 ## Maintainability structure
