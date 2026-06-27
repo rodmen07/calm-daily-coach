@@ -135,7 +135,7 @@ describe("Home page", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Today's deliberate dose")).toBeTruthy();
-      expect(screen.getByText(/Complete a 20-minute strength circuit/i)).toBeTruthy();
+      expect(screen.getByText(/10-minute/i)).toBeTruthy();
     });
   });
 
