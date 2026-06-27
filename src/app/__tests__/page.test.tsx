@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "@/app/page";
 import { addCheckin, getWeeklySummary } from "@/lib/browser-checkins";
@@ -239,5 +239,48 @@ describe("Home page", () => {
         "is-animated",
       );
     });
+  });
+
+  it("counts weekly summary values up to the final totals", async () => {
+    vi.useFakeTimers();
+    vi.mocked(getWeeklySummary).mockReturnValue({
+      windowStart: "2026-06-21",
+      windowEnd: "2026-06-27",
+      total: 8,
+      done: 6,
+      skipped: 2,
+      completionRate: 0.75,
+      byFocus: {
+        Fitness: { done: 3, skipped: 0 },
+        Sleep: { done: 2, skipped: 0 },
+        "Deep Work": { done: 1, skipped: 0 },
+        Communication: { done: 0, skipped: 0 },
+        Mindfulness: { done: 0, skipped: 0 },
+        Finances: { done: 0, skipped: 0 },
+      },
+    });
+
+    render(<Home />);
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText("Weekly summary")).toBeTruthy();
+    expect(screen.getByTestId("weekly-total-count").textContent).toBe("0");
+    expect(screen.getByTestId("weekly-done-count").textContent).toBe("0");
+    expect(screen.getByTestId("weekly-skipped-count").textContent).toBe("0");
+    expect(screen.getByTestId("weekly-completion-percent").textContent).toBe("0%");
+
+    await act(async () => {
+      vi.advanceTimersByTime(800);
+    });
+
+    expect(screen.getByTestId("weekly-total-count").textContent).toBe("8");
+    expect(screen.getByTestId("weekly-done-count").textContent).toBe("6");
+    expect(screen.getByTestId("weekly-skipped-count").textContent).toBe("2");
+    expect(screen.getByTestId("weekly-completion-percent").textContent).toBe("75%");
+
+    vi.useRealTimers();
   });
 });

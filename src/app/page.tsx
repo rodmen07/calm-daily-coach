@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { DOSE_OPTIONS, FOCUS_AREAS, type DailyDose, type FocusArea } from "@/lib/plan";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
@@ -9,6 +10,46 @@ const doseLabels: Record<DailyDose, string> = {
   medium: "Medium (10 min)",
   deep: "Deep (20 min)",
 };
+
+function AnimatedCounter({
+  value,
+  suffix = "",
+  className,
+  testId,
+}: {
+  value: number;
+  suffix?: string;
+  className?: string;
+  testId?: string;
+}) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const duration = 650;
+    const startTime = Date.now();
+
+    const intervalId = window.setInterval(() => {
+      const progress = Math.min((Date.now() - startTime) / duration, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(Math.round(value * easedProgress));
+
+      if (progress >= 1) {
+        window.clearInterval(intervalId);
+      }
+    }, 16);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [value]);
+
+  return (
+    <span className={className} data-testid={testId}>
+      {displayValue}
+      {suffix}
+    </span>
+  );
+}
 
 export default function Home() {
   const { authUser, authMessage, authConfigured, signInWithGoogle, signOutUser } =
@@ -405,19 +446,36 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 sm:text-base">
               <div className="summary-card">
                 <p className="summary-label">Check-ins</p>
-                <p className="summary-value">{weeklySummary.total}</p>
+                <p className="summary-value">
+                  <AnimatedCounter key={weeklySummary.total} value={weeklySummary.total} testId="weekly-total-count" />
+                </p>
               </div>
               <div className="summary-card">
                 <p className="summary-label">Completed</p>
-                <p className="summary-value">{weeklySummary.done}</p>
+                <p className="summary-value">
+                  <AnimatedCounter key={weeklySummary.done} value={weeklySummary.done} testId="weekly-done-count" />
+                </p>
               </div>
               <div className="summary-card">
                 <p className="summary-label">Skipped</p>
-                <p className="summary-value">{weeklySummary.skipped}</p>
+                <p className="summary-value">
+                  <AnimatedCounter
+                    key={weeklySummary.skipped}
+                    value={weeklySummary.skipped}
+                    testId="weekly-skipped-count"
+                  />
+                </p>
               </div>
               <div className="summary-card">
                 <p className="summary-label">Completion</p>
-                <p className="summary-value">{Math.round(weeklySummary.completionRate * 100)}%</p>
+                <p className="summary-value">
+                  <AnimatedCounter
+                    key={completionPercent}
+                    value={Math.round(weeklySummary.completionRate * 100)}
+                    suffix="%"
+                    testId="weekly-completion-percent"
+                  />
+                </p>
               </div>
             </div>
             <p className="mt-3 text-sm text-slate-700">
@@ -434,7 +492,12 @@ export default function Home() {
                     <div className="mb-1 flex items-center justify-between gap-2 text-xs sm:text-sm">
                       <span className="font-medium text-slate-700">{item.focusArea}</span>
                       <span className="text-slate-600">
-                        {item.done}/{item.total} complete
+                        <AnimatedCounter
+                          key={`${item.focusArea}-${item.done}`}
+                          value={item.done}
+                          testId={`focus-done-${item.focusArea}`}
+                        />
+                        /{item.total} complete
                       </span>
                     </div>
                     <div
