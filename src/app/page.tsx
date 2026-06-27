@@ -69,17 +69,17 @@ export default function Home() {
           <p className="eyebrow">Calm Daily Coach</p>
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
             <span
-              className={`rounded-full px-3 py-1 ${flowStep >= 1 ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
+              className={`flow-chip ${flowStep >= 1 ? "is-active" : "is-idle"}`}
             >
               1. Define
             </span>
             <span
-              className={`rounded-full px-3 py-1 ${flowStep >= 2 ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
+              className={`flow-chip ${flowStep >= 2 ? "is-active" : "is-idle"}`}
             >
               2. Execute
             </span>
             <span
-              className={`rounded-full px-3 py-1 ${flowStep >= 3 ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
+              className={`flow-chip ${flowStep >= 3 ? "is-active" : "is-idle"}`}
             >
               3. Close
             </span>
@@ -259,12 +259,21 @@ export default function Home() {
                 />
               </div>
               {checkinStatus.type === "ok" ? (
-                <p className="mt-2 text-sm text-emerald-700" aria-live="polite">
+                <p
+                  className={`status-banner mt-2 text-sm text-emerald-800 ${
+                    checkinStatus.message.startsWith("Great work") ? "status-celebrate" : ""
+                  }`}
+                  aria-live="polite"
+                >
                   {checkinStatus.message}
                 </p>
               ) : null}
               {checkinStatus.type === "error" ? (
-                <p className="mt-2 text-sm text-rose-700" role="alert" aria-live="assertive">
+                <p
+                  className="status-banner mt-2 text-sm text-rose-800"
+                  role="alert"
+                  aria-live="assertive"
+                >
                   {checkinStatus.message}
                 </p>
               ) : null}

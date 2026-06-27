@@ -153,7 +153,9 @@ describe("Home page", () => {
     await waitFor(() => {
       expect(vi.mocked(addCheckin)).toHaveBeenCalledTimes(1);
       expect(vi.mocked(getWeeklySummary)).toHaveBeenCalledTimes(2);
-      expect(screen.getByText("Great work. Check-in saved.")).toBeTruthy();
+      const feedback = screen.getByText("Great work. Check-in saved.");
+      expect(feedback).toBeTruthy();
+      expect(feedback.className).toContain("status-celebrate");
       expect(screen.getByText("3. Close")).toBeTruthy();
     });
   });

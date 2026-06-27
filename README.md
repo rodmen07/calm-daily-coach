@@ -19,6 +19,7 @@ Core principles:
 
 - Persistent check-in storage in [src/lib/browser-checkins.ts](src/lib/browser-checkins.ts)
 - Completion and skip controls plus weekly stats UI in [src/app/page.tsx](src/app/page.tsx)
+- Animated flow-state chips and celebratory completion feedback in [src/app/page.tsx](src/app/page.tsx)
 
 ## Added Google login
 
@@ -54,6 +55,7 @@ npm run test:coverage
 Current automated coverage focuses on core business logic in `src/lib/plan.ts` and `src/lib/browser-checkins.ts`.
 It also includes app behavior tests in `src/app/__tests__/page.test.tsx` for state hydration and auth-unconfigured UX.
 Interaction coverage includes generate-plan, mark-complete, and skip-validation actions in `src/app/page.tsx`.
+Completion feedback styling and success-state behavior are also covered in `src/app/__tests__/page.test.tsx`.
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
 ## Maintainability structure
