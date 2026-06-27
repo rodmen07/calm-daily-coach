@@ -34,6 +34,7 @@ export default function Home() {
     skipReason,
     setSkipReason,
     weeklySummary,
+    migrationStatus,
     topFocus,
     generatePlan,
   } = useCoachPlanner({
@@ -87,6 +88,16 @@ export default function Home() {
           {authMessage ? (
             <p className="mb-3 text-sm text-rose-700" role="alert" aria-live="assertive">
               {authMessage}
+            </p>
+          ) : null}
+          {migrationStatus.type === "ok" ? (
+            <p className="mb-3 text-sm text-emerald-700" aria-live="polite">
+              {migrationStatus.message}
+            </p>
+          ) : null}
+          {migrationStatus.type === "error" ? (
+            <p className="mb-3 text-sm text-rose-700" role="alert" aria-live="assertive">
+              {migrationStatus.message}
             </p>
           ) : null}
           <h1 className="mb-3 text-3xl font-semibold tracking-tight sm:text-4xl">

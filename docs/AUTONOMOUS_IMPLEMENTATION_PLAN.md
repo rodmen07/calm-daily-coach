@@ -149,3 +149,4 @@ Improve the product across six dimensions while maintaining release stability:
 - 2026-06-27: Added flow-step progress indicators and accessibility live regions in UI.
 - 2026-06-27: Added check-in storage adapter and migrated planner hook to backend-agnostic store API.
 - 2026-06-27: Implemented Firestore-backed check-in adapter path with automatic local fallback.
+- 2026-06-27: Added idempotent guest-to-account check-in migration with UI status feedback.

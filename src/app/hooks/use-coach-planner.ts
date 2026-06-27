@@ -25,6 +25,11 @@ type CheckinStatus =
   | { type: "ok"; message: string }
   | { type: "error"; message: string };
 
+type MigrationStatus =
+  | { type: "idle" }
+  | { type: "ok"; message: string }
+  | { type: "error"; message: string };
+
 const STORAGE_KEY = "calm-daily-coach";
 
 function scopedStorageKey(scopeKey: string) {
@@ -106,6 +111,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   const [checkinStatus, setCheckinStatus] = useState<CheckinStatus>({ type: "idle" });
   const [skipReason, setSkipReason] = useState("");
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
+  const [migrationStatus, setMigrationStatus] = useState<MigrationStatus>({ type: "idle" });
 
   useEffect(() => {
     let active = true;
@@ -118,6 +124,21 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       setEmail((prev) => prev || state.email || authEmail || "");
       setPlan(state.plan);
       setStateHydrated(true);
+
+      if (storageScope !== "guest") {
+        const migration = await checkinStore.migrateGuestCheckins(storageScope);
+        if (migration.status === "migrated" && migration.migratedCount > 0 && active) {
+          setMigrationStatus({
+            type: "ok",
+            message: `Migrated ${migration.migratedCount} guest check-in${migration.migratedCount === 1 ? "" : "s"} to your account.`,
+          });
+        } else if (migration.status === "error" && active) {
+          setMigrationStatus({
+            type: "error",
+            message: "Could not migrate guest check-ins to your account.",
+          });
+        }
+      }
 
       try {
         const summary = await checkinStore.getWeeklySummary(undefined, storageScope);
@@ -276,6 +297,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     skipReason,
     setSkipReason,
     weeklySummary,
+    migrationStatus,
     topFocus,
     generatePlan,
   };

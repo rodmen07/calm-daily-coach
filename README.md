@@ -68,6 +68,7 @@ Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.
 - Configure `NEXT_PUBLIC_CHECKIN_BACKEND` as `local` (default) or `firestore`.
 - In `firestore` mode, the app uses Firestore when available and automatically falls back to local storage on backend errors.
 - Firestore collection path is `users/{uid}/checkins`.
+- On sign-in, guest check-ins are migrated to the signed-in scope once per backend mode with an idempotent migration marker.
 
 ## Branch protection quality gate
 
