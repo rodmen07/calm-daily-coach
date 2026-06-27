@@ -45,6 +45,8 @@ Open http://localhost:3000
 
 ```bash
 npm run lint
+npm run typecheck
+npm run check
 npm run test
 npm run test:coverage
 ```
@@ -52,6 +54,7 @@ npm run test:coverage
 Current automated coverage focuses on core business logic in `src/lib/plan.ts` and `src/lib/browser-checkins.ts`.
 It also includes app behavior tests in `src/app/__tests__/page.test.tsx` for state hydration and auth-unconfigured UX.
 Interaction coverage includes generate-plan, mark-complete, and skip-validation actions in `src/app/page.tsx`.
+Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
 ## Maintainability structure
 

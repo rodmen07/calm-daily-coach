@@ -41,11 +41,30 @@ export default function Home() {
     authEmail: authUser?.email,
   });
 
+  const flowStep = plan ? (checkinStatus.type === "ok" ? 3 : 2) : 1;
+
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         <section className="panel mb-5">
           <p className="eyebrow">Calm Daily Coach</p>
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+            <span
+              className={`rounded-full px-3 py-1 ${flowStep >= 1 ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
+            >
+              1. Define
+            </span>
+            <span
+              className={`rounded-full px-3 py-1 ${flowStep >= 2 ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
+            >
+              2. Execute
+            </span>
+            <span
+              className={`rounded-full px-3 py-1 ${flowStep >= 3 ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}
+            >
+              3. Close
+            </span>
+          </div>
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
               {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
@@ -65,7 +84,11 @@ export default function Home() {
               Google login is not configured yet. Add Firebase environment variables to enable it.
             </p>
           ) : null}
-          {authMessage ? <p className="mb-3 text-sm text-rose-700">{authMessage}</p> : null}
+          {authMessage ? (
+            <p className="mb-3 text-sm text-rose-700" role="alert" aria-live="assertive">
+              {authMessage}
+            </p>
+          ) : null}
           <h1 className="mb-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Grow daily. Stop on purpose.
           </h1>
@@ -184,10 +207,14 @@ export default function Home() {
                 />
               </div>
               {checkinStatus.type === "ok" ? (
-                <p className="mt-2 text-sm text-emerald-700">{checkinStatus.message}</p>
+                <p className="mt-2 text-sm text-emerald-700" aria-live="polite">
+                  {checkinStatus.message}
+                </p>
               ) : null}
               {checkinStatus.type === "error" ? (
-                <p className="mt-2 text-sm text-rose-700">{checkinStatus.message}</p>
+                <p className="mt-2 text-sm text-rose-700" role="alert" aria-live="assertive">
+                  {checkinStatus.message}
+                </p>
               ) : null}
             </div>
 
@@ -209,10 +236,14 @@ export default function Home() {
                 </button>
               </div>
               {reminderStatus.type === "ok" ? (
-                <p className="mt-2 text-sm text-emerald-700">{reminderStatus.message}</p>
+                <p className="mt-2 text-sm text-emerald-700" aria-live="polite">
+                  {reminderStatus.message}
+                </p>
               ) : null}
               {reminderStatus.type === "error" ? (
-                <p className="mt-2 text-sm text-rose-700">{reminderStatus.message}</p>
+                <p className="mt-2 text-sm text-rose-700" role="alert" aria-live="assertive">
+                  {reminderStatus.message}
+                </p>
               ) : null}
             </div>
           </section>

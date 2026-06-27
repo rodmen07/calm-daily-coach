@@ -107,6 +107,10 @@ describe("Home page", () => {
   it("generates a plan from selected focus and dose", async () => {
     render(<Home />);
 
+    expect(screen.getByText("1. Define")).toBeTruthy();
+    expect(screen.getByText("2. Execute")).toBeTruthy();
+    expect(screen.getByText("3. Close")).toBeTruthy();
+
     fireEvent.change(screen.getByLabelText("Focus area"), {
       target: { value: "Fitness" },
     });
@@ -137,6 +141,7 @@ describe("Home page", () => {
       expect(vi.mocked(addCheckin)).toHaveBeenCalledTimes(1);
       expect(vi.mocked(getWeeklySummary)).toHaveBeenCalledTimes(2);
       expect(screen.getByText("Great work. Check-in saved.")).toBeTruthy();
+      expect(screen.getByText("3. Close")).toBeTruthy();
     });
   });
 
