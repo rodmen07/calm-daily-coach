@@ -251,6 +251,26 @@ body {
   font-weight: 700;
 }
 
+.summary-grid .summary-card {
+  animation: summary-card-rise 320ms ease-out both;
+}
+
+.summary-grid .summary-card:nth-child(1) {
+  animation-delay: 40ms;
+}
+
+.summary-grid .summary-card:nth-child(2) {
+  animation-delay: 100ms;
+}
+
+.summary-grid .summary-card:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.summary-grid .summary-card:nth-child(4) {
+  animation-delay: 220ms;
+}
+
 .progress-badge {
   color: #475467;
   transition: color 200ms ease, transform 200ms ease;
@@ -313,6 +333,26 @@ body {
 
 .focus-row.has-progress {
   animation: progress-badge-rise 220ms ease-out;
+}
+
+.focus-breakdown-list .focus-row {
+  animation: focus-row-rise 280ms ease-out both;
+}
+
+.focus-breakdown-list .focus-row:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.focus-breakdown-list .focus-row:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.focus-breakdown-list .focus-row:nth-child(4) {
+  animation-delay: 160ms;
+}
+
+.focus-breakdown-list .focus-row:nth-child(5) {
+  animation-delay: 220ms;
 }
 
 .plan-meta-grid {
@@ -464,6 +504,28 @@ body {
   }
 }
 
+@keyframes summary-card-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes focus-row-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .close-actions {
   display: flex;
   flex-direction: column;
@@ -502,6 +564,7 @@ body {
   .progress-fill,
   .progress-caption,
   .focus-row,
+  .summary-card,
   .status-banner,
   .primary-button,
   .secondary-button {

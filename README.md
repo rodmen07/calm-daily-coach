@@ -25,6 +25,7 @@ Core principles:
 - Animated weekly and focus progress feedback in [src/app/page.tsx](src/app/page.tsx)
 - Reduced-motion fallbacks for animated feedback in [src/app/globals.css](src/app/globals.css)
 - Animated count-up values for weekly summary totals in [src/app/page.tsx](src/app/page.tsx)
+- Staggered reveal motion for weekly summary cards and focus breakdown rows in [src/app/page.tsx](src/app/page.tsx)
 
 ## Added Google login
 
@@ -67,6 +68,7 @@ Planner lock/unlock behavior around daily check-in is also covered in `src/app/_
 Explicit Start next day reset behavior after review is also covered in `src/app/__tests__/page.test.tsx`.
 Animated feedback respects reduced-motion preferences through CSS fallbacks in `src/app/globals.css`.
 Weekly count-up values for totals, completion percentage, and focus counts are also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
+Staggered summary-card and focus-row animation coverage is kept lightweight through the same page interaction suite.
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
 ## Maintainability structure
