@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, type KeyboardEvent, type ReactNode, type TouchEvent } from "react";
+import { useId, useRef, type KeyboardEvent, type ReactNode, type TouchEvent } from "react";
 
 type SwipeStepCardProps = {
   stepLabel: string;
@@ -28,8 +28,19 @@ export function SwipeStepCard({
   children,
 }: SwipeStepCardProps) {
   const router = useRouter();
+  const titleId = useId();
+  const descriptionId = useId();
+  const hintId = useId();
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+
+  const swipeHint = previousHref && nextHref
+    ? "Swipe left or right to move between steps. Use ArrowLeft or ArrowRight too."
+    : nextHref
+      ? "Swipe left or press ArrowRight to continue."
+      : previousHref
+        ? "Swipe right or press ArrowLeft to go back."
+        : "This step is focused."
 
   function navigateBySwipe(deltaX: number) {
     if (deltaX < 0 && nextHref) {
@@ -91,14 +102,19 @@ export function SwipeStepCard({
       onTouchEnd={handleTouchEnd}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      aria-label={`${stepLabel} card`}
+      aria-labelledby={titleId}
+      aria-describedby={`${descriptionId} ${hintId}`}
     >
       <header className="step-card-header">
         <p className="eyebrow">{stepLabel}</p>
-        <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
-        <p className="mb-3 text-sm leading-6 text-slate-700 sm:text-base">{description}</p>
-        <div className="step-card-swipe-hint" aria-live="polite">
-          Swipe left or right to move between steps.
+        <h1 id={titleId} className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+          {title}
+        </h1>
+        <p id={descriptionId} className="mb-3 text-sm leading-6 text-slate-700 sm:text-base">
+          {description}
+        </p>
+        <div id={hintId} className="step-card-swipe-hint" aria-live="polite">
+          {swipeHint}
         </div>
       </header>
 

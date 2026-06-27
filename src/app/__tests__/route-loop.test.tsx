@@ -110,7 +110,7 @@ describe("route loop smoke test", () => {
     mockPlanner({ plan: null });
     render(<FocusPage />);
 
-    expect(screen.getByLabelText("Step 1 card")).toBeTruthy();
+    expect(screen.getByRole("article", { name: "Set your focus" })).toBeTruthy();
     expect(screen.getByText("Set your focus")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Next: Execute" }).getAttribute("href")).toBe("/execute");
 
@@ -119,7 +119,7 @@ describe("route loop smoke test", () => {
     mockPlanner({ plan: activePlan });
     render(<ExecutePage />);
 
-    expect(screen.getByLabelText("Step 2 card")).toBeTruthy();
+    expect(screen.getByRole("article", { name: "Execute your plan" })).toBeTruthy();
     expect(screen.getByText("Execute your plan")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Back: Focus" }).getAttribute("href")).toBe("/focus");
     expect(screen.getByRole("link", { name: "Next: Review" }).getAttribute("href")).toBe("/review");
@@ -135,7 +135,7 @@ describe("route loop smoke test", () => {
     });
     render(<ReviewPage />);
 
-    expect(screen.getByLabelText("Step 3 card")).toBeTruthy();
+    expect(screen.getByRole("article", { name: "Review and adjust" })).toBeTruthy();
     expect(screen.getByText("Review and adjust")).toBeTruthy();
     expect(screen.getByText("Weekly summary")).toBeTruthy();
     expect(screen.getByText("Top focus area")).toBeTruthy();

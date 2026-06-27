@@ -32,6 +32,7 @@ Core principles:
 - Route-based multi-page UX flow for Focus, Execute, and Review in [src/app/focus/page.tsx](src/app/focus/page.tsx), [src/app/execute/page.tsx](src/app/execute/page.tsx), and [src/app/review/page.tsx](src/app/review/page.tsx)
 - Shared top-level route navigation shell in [src/app/layout.tsx](src/app/layout.tsx) and [src/app/globals.css](src/app/globals.css)
 - Swipe-enabled step cards with left/right gesture navigation and arrow-key fallback in [src/app/components/swipe-step-card.tsx](src/app/components/swipe-step-card.tsx)
+- Swipe-enabled step cards now expose explicit accessible labels and contextual swipe hints in [src/app/components/swipe-step-card.tsx](src/app/components/swipe-step-card.tsx)
 - Dashboard now focuses on user metrics and cycle entry only, while step cards carry the primary progression and loop back to dashboard reflection in [src/app/page.tsx](src/app/page.tsx)
 
 ## Added Google login
@@ -79,6 +80,7 @@ Weekly count-up values for totals, completion percentage, and focus counts are a
 Staggered summary-card and focus-row animation coverage is kept lightweight through the same page interaction suite.
 The expanded focus-area set and 5/15/30-minute plan generation are covered in [src/lib/__tests__/plan.test.ts](src/lib/__tests__/plan.test.ts).
 The visible category strip is also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
+The route loop across Dashboard, Focus, Execute, and Review is covered in [src/app/__tests__/route-loop.test.tsx](src/app/__tests__/route-loop.test.tsx).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
 ## Maintainability structure

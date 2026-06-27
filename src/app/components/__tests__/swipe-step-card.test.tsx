@@ -29,7 +29,7 @@ describe("SwipeStepCard", () => {
       </SwipeStepCard>,
     );
 
-    expect(screen.getByLabelText("Step 1 card")).toBeTruthy();
+    expect(screen.getByRole("article", { name: "Set your focus" })).toBeTruthy();
     expect(screen.getByText("Body content")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Next: Execute" }).getAttribute("href")).toBe("/execute");
   });
@@ -49,11 +49,11 @@ describe("SwipeStepCard", () => {
       </SwipeStepCard>,
     );
 
-    fireEvent.keyDown(screen.getByLabelText("Step 2 card"), { key: "ArrowLeft" });
+    fireEvent.keyDown(screen.getByRole("article", { name: "Execute your plan" }), { key: "ArrowLeft" });
     expect(push).toHaveBeenCalledWith("/focus");
 
     push.mockReset();
-    fireEvent.keyDown(screen.getByLabelText("Step 2 card"), { key: "ArrowRight" });
+    fireEvent.keyDown(screen.getByRole("article", { name: "Execute your plan" }), { key: "ArrowRight" });
     expect(push).toHaveBeenCalledWith("/review");
   });
 
@@ -72,7 +72,7 @@ describe("SwipeStepCard", () => {
       </SwipeStepCard>,
     );
 
-    const card = screen.getByLabelText("Step 3 card");
+    const card = screen.getByRole("article", { name: "Review and adjust" });
 
     fireEvent.touchStart(card, {
       changedTouches: [{ clientX: 200, clientY: 100 }],
