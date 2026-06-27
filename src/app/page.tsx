@@ -98,6 +98,34 @@ export default function Home() {
             })}
           </div>
           <p className="flow-detail mb-3 text-xs sm:text-sm">{flowNarrative}</p>
+          <div className="flow-gates mb-3" aria-label="Daily workflow progress">
+            {flowSteps.map((step, index) => {
+              const stepNumber = index + 1;
+              const stateClass =
+                stepNumber < flowStep
+                  ? "is-complete"
+                  : stepNumber === flowStep
+                    ? "is-current"
+                    : "is-locked";
+              return (
+                <div key={`gate-${step.label}`} className={`flow-gate ${stateClass}`}>
+                  <p className="flow-gate-label">{step.label}</p>
+                  <p className="flow-gate-state">
+                    {stepNumber < flowStep
+                      ? "Complete"
+                      : stepNumber === flowStep
+                        ? "Current"
+                        : "Locked"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+          {!hasCheckedIn ? (
+            <p className="flow-lock-note text-xs sm:text-sm" aria-live="polite">
+              Step 4 review unlocks after you submit today&apos;s check-in.
+            </p>
+          ) : null}
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
               {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
@@ -327,6 +355,11 @@ export default function Home() {
         {weeklySummary ? (
           <section className="panel mt-5">
             <h2 className="mb-3 text-xl font-semibold">Weekly summary</h2>
+            {!hasCheckedIn ? (
+              <p className="mb-3 rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2 text-sm text-slate-700">
+                Today&apos;s review is waiting - close the day above to refresh this panel with your latest check-in.
+              </p>
+            ) : null}
             <div className="mb-4 rounded-xl border border-[var(--line)] bg-[var(--field)] p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">

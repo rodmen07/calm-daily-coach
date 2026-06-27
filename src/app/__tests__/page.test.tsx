@@ -117,10 +117,11 @@ describe("Home page", () => {
   it("generates a plan from selected focus and dose", async () => {
     render(<Home />);
 
-    expect(screen.getByText("1. Focus")).toBeTruthy();
-    expect(screen.getByText("2. Plan")).toBeTruthy();
-    expect(screen.getByText("3. Do")).toBeTruthy();
-    expect(screen.getByText("4. Review")).toBeTruthy();
+    expect(screen.getAllByText("1. Focus").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("2. Plan").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("3. Do").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("4. Review").length).toBeGreaterThan(0);
+    expect(screen.getByText("Step 4 review unlocks after you submit today's check-in.")).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText("Focus area"), {
       target: { value: "Fitness" },
@@ -157,8 +158,10 @@ describe("Home page", () => {
       const feedback = screen.getByText("Great work. Check-in saved.");
       expect(feedback).toBeTruthy();
       expect(feedback.className).toContain("status-celebrate");
-      expect(screen.getByText("4. Review")).toBeTruthy();
+      expect(screen.getAllByText("4. Review").length).toBeGreaterThan(0);
     });
+
+    expect(screen.queryByText("Step 4 review unlocks after you submit today's check-in.")).toBeNull();
   });
 
   it("requires skip reason before submitting skipped check-in", async () => {
