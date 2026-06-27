@@ -2,6 +2,8 @@
 
 A deliberate self-improvement app where users choose a daily content dose and receive exactly that amount.
 
+Live site: https://rodmen07.github.io/calm-daily-coach/
+
 Core principles:
 
 - No infinite feed.
