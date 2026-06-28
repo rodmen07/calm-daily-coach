@@ -87,6 +87,7 @@ The route loop across Dashboard, Focus, Execute, and Review is covered in [src/a
 The theme toggle and persistence behavior are covered in [src/app/components/__tests__/theme-toggle.test.tsx](src/app/components/__tests__/theme-toggle.test.tsx).
 Rust bridge request and fallback behavior are covered in [src/lib/__tests__/rust-coach-bridge.test.ts](src/lib/__tests__/rust-coach-bridge.test.ts).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
+The frontend-first functionality plan is tracked in [docs/FRONTEND_FUNCTIONALITY_PLAN.md](docs/FRONTEND_FUNCTIONALITY_PLAN.md).
 
 ## Maintainability structure
 

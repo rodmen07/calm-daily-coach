@@ -193,6 +193,43 @@ html[data-theme="dark"] .border-slate-200 {
   gap: 8px;
 }
 
+.action-rail {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.action-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-strong);
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(3, 8, 20, 0.12);
+}
+
+.action-card.is-primary {
+  border-color: color-mix(in srgb, var(--accent) 46%, var(--line));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-strong));
+}
+
+.action-card.is-locked {
+  opacity: 0.86;
+}
+
+.action-card-index {
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--field) 68%, var(--surface-strong));
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 4px 7px;
+}
+
+.action-card .eyebrow {
+  margin-bottom: 4px;
+}
+
 .step-card {
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -786,6 +823,10 @@ html[data-theme="dark"] .border-slate-200 {
   }
 
   .plan-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-rail {
     grid-template-columns: 1fr;
   }
 

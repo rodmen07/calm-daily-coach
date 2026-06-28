@@ -71,6 +71,42 @@ export default function Home() {
       ? "Continue to reflection"
       : "Continue active cycle";
 
+  const actionRail = [
+    {
+      label: "Focus",
+      state: hasPlan ? "Plan ready" : "Ready to start",
+      description: hasPlan
+        ? "Adjust today's focus or regenerate the deliberate plan."
+        : "Choose a focus area and dose to generate today's plan.",
+      href: "/focus",
+      buttonLabel: hasPlan ? "Edit focus" : "Start focus",
+      primary: !hasPlan,
+    },
+    {
+      label: "Execute",
+      state: hasPlan ? (hasCheckedIn ? "Done for today" : "Plan ready") : "Locked",
+      description: hasPlan
+        ? hasCheckedIn
+          ? "Your check-in is complete. Reopen the step only if you want to review it."
+          : "Work the plan, then mark the day done or skipped."
+        : "Generate a plan before the execution step becomes active.",
+      href: hasPlan ? "/execute" : "/focus",
+      buttonLabel: hasPlan ? (hasCheckedIn ? "Review execution" : "Open execute") : "Generate plan",
+      primary: hasPlan && !hasCheckedIn,
+      locked: !hasPlan,
+    },
+    {
+      label: "Review",
+      state: hasCheckedIn ? "Ready to reflect" : "Unlocked after check-in",
+      description: hasCheckedIn
+        ? "Read weekly progress and decide what to carry into the next cycle."
+        : "Complete today's check-in to unlock weekly reflection.",
+      href: "/review",
+      buttonLabel: hasCheckedIn ? "Open review" : "View review step",
+      primary: hasCheckedIn,
+    },
+  ];
+
   const completionPercent = weeklySummary ? Math.round(weeklySummary.completionRate * 100) : 0;
   const hasWeeklyProgress = completionPercent > 0;
   const weeklyMomentum =
@@ -119,6 +155,39 @@ export default function Home() {
           <p className="flow-detail text-xs sm:text-sm">
             Dashboard - Focus - Execute - Review - Dashboard
           </p>
+
+          <div className="mt-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Action rail
+              </p>
+              <p className="text-xs text-slate-600">
+                Jump straight to the next step in the cycle.
+              </p>
+            </div>
+            <div className="action-rail grid gap-3 md:grid-cols-3">
+              {actionRail.map((action) => (
+                <article
+                  key={action.label}
+                  className={`action-card ${action.primary ? "is-primary" : ""} ${action.locked ? "is-locked" : ""}`}
+                >
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <div>
+                      <p className="eyebrow mb-1">{action.label}</p>
+                      <h2 className="text-base font-semibold tracking-tight">{action.state}</h2>
+                    </div>
+                    <span className="action-card-index">0{action.label === "Focus" ? 1 : action.label === "Execute" ? 2 : 3}</span>
+                  </div>
+                  <p className="text-sm leading-6 text-slate-700">{action.description}</p>
+                  <div className="mt-4">
+                    <Link className={action.primary ? "primary-button" : "secondary-button"} href={action.href}>
+                      {action.buttonLabel}
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
 
           <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
