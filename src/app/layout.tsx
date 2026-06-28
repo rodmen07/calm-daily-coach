@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono } from "next/font/google";
 import Link from "next/link";
+import { ThemeToggle } from "@/app/components/theme-toggle";
 import "./globals.css";
 
 const sora = Sora({
@@ -27,18 +28,40 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-theme="dark"
       className={`${sora.variable} ${plexMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                try {
+                  var savedTheme = localStorage.getItem("calm-daily-coach:theme");
+                  var nextTheme = savedTheme === "light" ? "light" : "dark";
+                  document.documentElement.dataset.theme = nextTheme;
+                } catch (error) {
+                  document.documentElement.dataset.theme = "dark";
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <header className="site-nav-shell">
           <div className="site-nav-inner">
             <p className="site-nav-title">Calm Daily Coach</p>
-            <nav className="site-nav-links" aria-label="Primary">
-              <Link href="/">Dashboard</Link>
-              <Link href="/focus">Focus</Link>
-              <Link href="/execute">Execute</Link>
-              <Link href="/review">Review</Link>
-            </nav>
+            <div className="site-nav-actions">
+              <nav className="site-nav-links" aria-label="Primary">
+                <Link href="/">Dashboard</Link>
+                <Link href="/focus">Focus</Link>
+                <Link href="/execute">Execute</Link>
+                <Link href="/review">Review</Link>
+              </nav>
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         {children}
