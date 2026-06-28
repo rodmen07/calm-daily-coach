@@ -33,6 +33,7 @@ Core principles:
 - Shared top-level route navigation shell in [src/app/layout.tsx](src/app/layout.tsx) and [src/app/globals.css](src/app/globals.css)
 - Dark-mode-first theme system with a persisted light/dark toggle in [src/app/layout.tsx](src/app/layout.tsx), [src/app/components/theme-toggle.tsx](src/app/components/theme-toggle.tsx), and [src/app/globals.css](src/app/globals.css)
 - Switching to light mode now uses an inline confirmation panel so dark mode stays the default experience.
+- Shared navigation and card chrome now track the active theme instead of keeping hardcoded light-only surfaces.
 - Swipe-enabled step cards with left/right gesture navigation and arrow-key fallback in [src/app/components/swipe-step-card.tsx](src/app/components/swipe-step-card.tsx)
 - Swipe-enabled step cards now expose explicit accessible labels and contextual swipe hints in [src/app/components/swipe-step-card.tsx](src/app/components/swipe-step-card.tsx)
 - Dashboard now focuses on user metrics and cycle entry only, while step cards carry the primary progression and loop back to dashboard reflection in [src/app/page.tsx](src/app/page.tsx)
@@ -84,6 +85,7 @@ The expanded focus-area set and 5/15/30-minute plan generation are covered in [s
 The visible category strip is also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
 The route loop across Dashboard, Focus, Execute, and Review is covered in [src/app/__tests__/route-loop.test.tsx](src/app/__tests__/route-loop.test.tsx).
 The theme toggle and persistence behavior are covered in [src/app/components/__tests__/theme-toggle.test.tsx](src/app/components/__tests__/theme-toggle.test.tsx).
+Rust bridge request and fallback behavior are covered in [src/lib/__tests__/rust-coach-bridge.test.ts](src/lib/__tests__/rust-coach-bridge.test.ts).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 
 ## Maintainability structure
@@ -100,6 +102,13 @@ Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.
 - In `firestore` mode, the app uses Firestore when available and automatically falls back to local storage on backend errors.
 - Firestore collection path is `users/{uid}/checkins`.
 - On sign-in, guest check-ins are migrated to the signed-in scope once per backend mode with an idempotent migration marker.
+
+### Rust coaching bridge mode
+
+- Configure `NEXT_PUBLIC_RUST_COACH_BRIDGE_URL` to enable optional Rust-powered coaching hints.
+- When configured, planner flows call the bridge with JSON payloads compatible with `new-crate-project` stdin bridge semantics.
+- If the bridge is unavailable or returns an error, calm-daily-coach automatically falls back to its local planner/check-in logic.
+- GitHub Pages static deploy remains functional without this variable.
 
 ## Branch protection quality gate
 

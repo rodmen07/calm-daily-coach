@@ -15,6 +15,7 @@ export default function ExecutePage() {
     skipReason,
     setSkipReason,
     startNextDay,
+    checkinAdvice,
   } = useCoachPlanner({
     storageScope,
     authEmail: authUser?.email,
@@ -120,6 +121,12 @@ export default function ExecutePage() {
                   aria-live="polite"
                 >
                   {checkinStatus.message}
+                </p>
+              ) : null}
+
+              {checkinAdvice ? (
+                <p className="status-banner mt-2 text-sm text-slate-800" aria-live="polite">
+                  Coach suggestion: {checkinAdvice}
                 </p>
               ) : null}
 
