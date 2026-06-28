@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ThemeToggle } from "@/app/components/theme-toggle";
 
 describe("ThemeToggle", () => {
@@ -7,22 +7,45 @@ describe("ThemeToggle", () => {
     cleanup();
     window.localStorage.clear();
     document.documentElement.dataset.theme = "dark";
+    vi.restoreAllMocks();
   });
 
-  it("defaults to dark mode and lets the user switch to light mode", async () => {
-    document.documentElement.dataset.theme = "light";
-    window.localStorage.setItem("calm-daily-coach:theme", "light");
+  it("keeps dark mode when the user cancels the light-mode confirmation", async () => {
+    document.documentElement.dataset.theme = "dark";
+    window.localStorage.setItem("calm-daily-coach:theme", "dark");
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
 
     render(<ThemeToggle />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeTruthy();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Switch to dark mode" }));
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
 
-    expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeTruthy();
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Dark mode is the default because it is easier to read. Switch to light mode anyway?",
+    );
     expect(window.localStorage.getItem("calm-daily-coach:theme")).toBe("dark");
     expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeTruthy();
+  });
+
+  it("switches to light mode when the user confirms", async () => {
+    document.documentElement.dataset.theme = "dark";
+    window.localStorage.setItem("calm-daily-coach:theme", "dark");
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(<ThemeToggle />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
+
+    expect(window.localStorage.getItem("calm-daily-coach:theme")).toBe("light");
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
   });
 });

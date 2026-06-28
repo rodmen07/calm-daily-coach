@@ -34,6 +34,16 @@ export function ThemeToggle() {
   const theme = useSyncExternalStore(subscribe, getStoredTheme, () => "dark");
 
   function handleClick() {
+    if (theme === "dark") {
+      const shouldSwitch = window.confirm(
+        "Dark mode is the default because it is easier to read. Switch to light mode anyway?",
+      );
+
+      if (!shouldSwitch) {
+        return;
+      }
+    }
+
     const nextTheme = theme === "dark" ? "light" : "dark";
     applyTheme(nextTheme);
   }

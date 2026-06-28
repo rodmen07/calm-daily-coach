@@ -32,6 +32,7 @@ Core principles:
 - Route-based multi-page UX flow for Focus, Execute, and Review in [src/app/focus/page.tsx](src/app/focus/page.tsx), [src/app/execute/page.tsx](src/app/execute/page.tsx), and [src/app/review/page.tsx](src/app/review/page.tsx)
 - Shared top-level route navigation shell in [src/app/layout.tsx](src/app/layout.tsx) and [src/app/globals.css](src/app/globals.css)
 - Dark-mode-first theme system with a persisted light/dark toggle in [src/app/layout.tsx](src/app/layout.tsx), [src/app/components/theme-toggle.tsx](src/app/components/theme-toggle.tsx), and [src/app/globals.css](src/app/globals.css)
+- Switching to light mode now asks for confirmation so dark mode stays the default experience.
 - Swipe-enabled step cards with left/right gesture navigation and arrow-key fallback in [src/app/components/swipe-step-card.tsx](src/app/components/swipe-step-card.tsx)
 - Swipe-enabled step cards now expose explicit accessible labels and contextual swipe hints in [src/app/components/swipe-step-card.tsx](src/app/components/swipe-step-card.tsx)
 - Dashboard now focuses on user metrics and cycle entry only, while step cards carry the primary progression and loop back to dashboard reflection in [src/app/page.tsx](src/app/page.tsx)
