@@ -83,7 +83,7 @@ html[data-theme="dark"] .border-slate-200 {
 
 .site-nav-shell {
   border-bottom: 1px solid var(--line);
-  background: rgba(17, 26, 43, 0.94);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
   backdrop-filter: blur(4px);
   position: sticky;
   top: 0;
@@ -232,7 +232,7 @@ html[data-theme="dark"] .border-slate-200 {
 
 .step-card-footer {
   margin-top: 16px;
-  border-top: 1px solid #e6ddcd;
+  border-top: 1px solid var(--line);
   padding-top: 12px;
 }
 
