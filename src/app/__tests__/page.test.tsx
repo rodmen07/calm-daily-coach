@@ -39,6 +39,7 @@ describe("Dashboard page", () => {
   });
 
   it("shows dashboard framing and loop navigation", async () => {
+    window.localStorage.setItem("calm-daily-coach:plan-interest", "pro");
     render(<Home />);
 
     expect(screen.getByText("Dashboard")).toBeTruthy();
@@ -46,6 +47,8 @@ describe("Dashboard page", () => {
     expect(screen.getByText("Dashboard - Focus - Execute - Review - Dashboard")).toBeTruthy();
     expect(screen.getByText("Action rail")).toBeTruthy();
     expect(screen.getByText("Ready to start")).toBeTruthy();
+    expect(screen.getByText("Calm Daily Coach Pro")).toBeTruthy();
+    expect(screen.getByText("Selected plan interest: Pro")).toBeTruthy();
 
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Start today's cycle" }).getAttribute("href")).toBe("/focus");
@@ -53,6 +56,10 @@ describe("Dashboard page", () => {
       expect(screen.getByRole("link", { name: "Start focus" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "Generate plan" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "View review step" }).getAttribute("href")).toBe("/review");
+      expect(screen.getByRole("link", { name: "View plans" }).getAttribute("href")).toBe("/pricing");
+      expect(screen.getByRole("link", { name: "Join early access" }).getAttribute("href")).toContain(
+        "mailto:hello@calmdailycoach.com",
+      );
     });
   });
 

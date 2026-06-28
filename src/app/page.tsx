@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
+import { useMonetization } from "@/app/hooks/use-monetization";
+import { trackMonetizationEvent } from "@/lib/monetization";
+import { Onboarding } from "@/app/components/onboarding";
 
 function AnimatedCounter({
   value,
@@ -56,13 +59,50 @@ export default function Home() {
     weeklySummary,
     migrationStatus,
     topFocus,
+    setFocus,
+    setDose,
   } = useCoachPlanner({
     storageScope,
     authEmail: authUser?.email,
   });
 
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    const storedPrefs = window.localStorage.getItem("calm-daily-coach:onboarding");
+    return !storedPrefs;
+  });
+
+  const handleOnboardingComplete = (prefs: {
+    defaultFocus: import("@/lib/plan").FocusArea;
+    defaultDose: import("@/lib/plan").DailyDose;
+    defaultTheme: "light" | "dark";
+  }) => {
+    setShowOnboarding(false);
+    setFocus(prefs.defaultFocus);
+    setDose(prefs.defaultDose);
+    if (typeof window !== "undefined") {
+      document.documentElement.dataset.theme = prefs.defaultTheme;
+      localStorage.setItem("calm-daily-coach:theme", prefs.defaultTheme);
+    }
+  };
+
+  const handleOnboardingSkip = () => {
+    setShowOnboarding(false);
+    localStorage.setItem(
+      "calm-daily-coach:onboarding",
+      JSON.stringify({
+        defaultFocus: "Deep Work",
+        defaultDose: "light",
+        defaultTheme: "dark",
+      }),
+    );
+  };
+
   const hasCheckedIn = checkinStatus.type === "ok";
   const hasPlan = Boolean(plan);
+  const { planInterest } = useMonetization();
 
   const nextCycleHref = !hasPlan ? "/focus" : hasCheckedIn ? "/review" : "/execute";
   const nextCycleLabel = !hasPlan
@@ -135,6 +175,15 @@ export default function Home() {
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+        {showOnboarding && typeof window !== "undefined" && (
+          <div className="mb-6">
+            <Onboarding
+              onComplete={handleOnboardingComplete}
+              onSkip={handleOnboardingSkip}
+            />
+          </div>
+        )}
+
         <section className="panel mb-5">
           <p className="eyebrow">Dashboard</p>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -186,6 +235,41 @@ export default function Home() {
                   </div>
                 </article>
               ))}
+            </div>
+          </div>
+
+          <div className="monetization-panel mt-4" aria-label="Upgrade options">
+            <div className="monetization-copy">
+              <p className="eyebrow">Calm Daily Coach Pro</p>
+              <h2 className="text-lg font-semibold tracking-tight">Unlock deeper coaching, not more noise</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Pro adds weekly insight narratives, adaptive plan tuning, reminder automation, and cloud sync status.
+              </p>
+              <p className="monetization-status mt-2 text-xs font-semibold uppercase tracking-wide">
+                Selected plan interest: {planInterest === "starter" ? "Starter" : planInterest === "pro" ? "Pro" : "Team"}
+              </p>
+            </div>
+            <div className="monetization-actions">
+              <Link
+                className="primary-button"
+                href="/pricing"
+                onClick={() => trackMonetizationEvent("dashboard_pricing_clicked", planInterest, "dashboard")}
+              >
+                View plans
+              </Link>
+              <a
+                className="secondary-button"
+                href={`mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20${planInterest === "team" ? "Team" : "Pro"}%20early%20access`}
+                onClick={() =>
+                  trackMonetizationEvent(
+                    "dashboard_early_access_clicked",
+                    planInterest === "starter" ? "pro" : planInterest,
+                    "dashboard",
+                  )
+                }
+              >
+                Join early access
+              </a>
             </div>
           </div>
 

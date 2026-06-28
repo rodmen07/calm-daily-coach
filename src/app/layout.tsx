@@ -59,6 +59,8 @@ export default function RootLayout({
                 <Link href="/focus">Focus</Link>
                 <Link href="/execute">Execute</Link>
                 <Link href="/review">Review</Link>
+                <Link href="/pricing">Pricing</Link>
+                <Link href="/monetization">Monetization</Link>
               </nav>
               <ThemeToggle />
             </div>
