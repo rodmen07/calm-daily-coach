@@ -6,6 +6,7 @@ import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import { useMonetization } from "@/app/hooks/use-monetization";
 import { trackMonetizationEvent } from "@/lib/monetization";
+import { Onboarding } from "@/app/components/onboarding";
 
 function AnimatedCounter({
   value,
@@ -58,10 +59,47 @@ export default function Home() {
     weeklySummary,
     migrationStatus,
     topFocus,
+    setFocus,
+    setDose,
   } = useCoachPlanner({
     storageScope,
     authEmail: authUser?.email,
   });
+
+  const [onboardingFinished, setOnboardingFinished] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    // Check if onboarding needs to be shown (only on client mount)
+    const storedPrefs = localStorage.getItem("calm-daily-coach:onboarding");
+    if (!storedPrefs) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  const handleOnboardingComplete = (prefs: any) => {
+    setShowOnboarding(false);
+    setOnboardingFinished(true);
+    setFocus(prefs.defaultFocus);
+    setDose(prefs.defaultDose);
+    if (typeof window !== "undefined") {
+      document.documentElement.dataset.theme = prefs.defaultTheme;
+      localStorage.setItem("calm-daily-coach:theme", prefs.defaultTheme);
+    }
+  };
+
+  const handleOnboardingSkip = () => {
+    setShowOnboarding(false);
+    setOnboardingFinished(true);
+    localStorage.setItem(
+      "calm-daily-coach:onboarding",
+      JSON.stringify({
+        defaultFocus: "Deep Work",
+        defaultDose: "light",
+        defaultTheme: "dark",
+      }),
+    );
+  };
 
   const hasCheckedIn = checkinStatus.type === "ok";
   const hasPlan = Boolean(plan);
@@ -138,6 +176,15 @@ export default function Home() {
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+        {showOnboarding && typeof window !== "undefined" && (
+          <div className="mb-6">
+            <Onboarding
+              onComplete={handleOnboardingComplete}
+              onSkip={handleOnboardingSkip}
+            />
+          </div>
+        )}
+
         <section className="panel mb-5">
           <p className="eyebrow">Dashboard</p>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">

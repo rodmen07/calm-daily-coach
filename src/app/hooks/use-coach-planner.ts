@@ -68,6 +68,25 @@ function getInitialState(scopeKey: string): SavedState {
     return fallback;
   }
 
+  // If onboarding preferences exist, prefer them over the generic fallback values
+  const onboardingRaw = window.localStorage.getItem("calm-daily-coach:onboarding");
+  if (onboardingRaw) {
+    try {
+      const parsedPrefs = JSON.parse(onboardingRaw) as {
+        defaultFocus?: FocusArea;
+        defaultDose?: DailyDose;
+      };
+      if (parsedPrefs.defaultFocus && FOCUS_AREAS.includes(parsedPrefs.defaultFocus)) {
+        fallback.focus = parsedPrefs.defaultFocus;
+      }
+      if (parsedPrefs.defaultDose && DOSE_OPTIONS.includes(parsedPrefs.defaultDose)) {
+        fallback.dose = parsedPrefs.defaultDose;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   const raw = window.localStorage.getItem(scopedStorageKey(scopeKey));
   if (!raw) {
     return fallback;
