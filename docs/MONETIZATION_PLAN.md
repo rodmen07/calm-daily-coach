@@ -25,6 +25,7 @@ Introduce sustainable revenue without breaking the product promise of deliberate
 2. Capture demand before payments:
    - Early-access mailto flow.
    - Track click-through and interest by plan.
+   - Expose an in-app local analytics snapshot to validate conversion UX changes quickly.
 3. Add billing integration:
    - Stripe Checkout for Pro and Team.
    - Simple post-checkout confirmation state.

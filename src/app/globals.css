@@ -296,6 +296,12 @@ html[data-theme="dark"] .border-slate-200 {
   font-family: var(--font-plex-mono), monospace;
 }
 
+.monetization-analytics-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .step-card {
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -897,6 +903,10 @@ html[data-theme="dark"] .border-slate-200 {
   }
 
   .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .monetization-analytics-grid {
     grid-template-columns: 1fr;
   }
 

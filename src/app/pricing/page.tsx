@@ -136,7 +136,10 @@ export default function PricingPage() {
               Questions about monetization roadmap? Review the product plan in the docs, then return to your daily
               workflow from the dashboard.
             </p>
-            <div className="mt-3">
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link className="secondary-button" href="/monetization">
+                View conversion analytics
+              </Link>
               <Link className="secondary-button" href="/">
                 Back to dashboard
               </Link>

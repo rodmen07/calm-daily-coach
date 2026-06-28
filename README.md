@@ -39,6 +39,7 @@ Core principles:
 - Dashboard now focuses on user metrics and cycle entry only, while step cards carry the primary progression and loop back to dashboard reflection in [src/app/page.tsx](src/app/page.tsx)
 - Added monetization entry points with a dashboard Pro upsell panel and dedicated pricing route in [src/app/page.tsx](src/app/page.tsx), [src/app/pricing/page.tsx](src/app/pricing/page.tsx), and [src/app/layout.tsx](src/app/layout.tsx)
 - Added local monetization telemetry with plan-interest persistence and CTA click tracking in [src/lib/monetization.ts](src/lib/monetization.ts) and [src/app/hooks/use-monetization.ts](src/app/hooks/use-monetization.ts)
+- Added an in-app monetization analytics route for local conversion snapshots in [src/app/monetization/page.tsx](src/app/monetization/page.tsx)
 
 ## Added Google login
 
@@ -90,6 +91,7 @@ The theme toggle and persistence behavior are covered in [src/app/components/__t
 Rust bridge request and fallback behavior are covered in [src/lib/__tests__/rust-coach-bridge.test.ts](src/lib/__tests__/rust-coach-bridge.test.ts).
 Pricing route and monetization tier rendering are covered in [src/app/__tests__/pricing-page.test.tsx](src/app/__tests__/pricing-page.test.tsx).
 Dashboard and pricing monetization state behavior is covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx) and [src/app/__tests__/pricing-page.test.tsx](src/app/__tests__/pricing-page.test.tsx).
+Monetization summary calculations and analytics route rendering are covered in [src/lib/__tests__/monetization.test.ts](src/lib/__tests__/monetization.test.ts) and [src/app/__tests__/monetization-page.test.tsx](src/app/__tests__/monetization-page.test.tsx).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 The frontend-first functionality plan is tracked in [docs/FRONTEND_FUNCTIONALITY_PLAN.md](docs/FRONTEND_FUNCTIONALITY_PLAN.md).
 The monetization strategy is tracked in [docs/MONETIZATION_PLAN.md](docs/MONETIZATION_PLAN.md).
