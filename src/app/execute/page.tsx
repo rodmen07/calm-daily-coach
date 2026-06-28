@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import { SwipeStepCard } from "@/app/components/swipe-step-card";
@@ -16,10 +17,33 @@ export default function ExecutePage() {
     setSkipReason,
     startNextDay,
     checkinAdvice,
+    updatePlan,
   } = useCoachPlanner({
     storageScope,
     authEmail: authUser?.email,
   });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedAction, setEditedAction] = useState("");
+  const [editedReflection, setEditedReflection] = useState("");
+
+  const handleStartEdit = () => {
+    if (plan) {
+      setEditedAction(plan.action);
+      setEditedReflection(plan.reflection);
+      setIsEditing(true);
+    }
+  };
+
+  const handleSave = () => {
+    if (editedAction.trim() && editedReflection.trim()) {
+      updatePlan({
+        action: editedAction.trim(),
+        reflection: editedReflection.trim(),
+      });
+      setIsEditing(false);
+    }
+  };
 
   const hasCheckedIn = checkinStatus.type === "ok";
   const canSubmitCheckin = Boolean(plan) && !hasCheckedIn;
@@ -79,6 +103,64 @@ export default function ExecutePage() {
                 </li>
               ) : null}
             </ol>
+
+            {!hasCheckedIn && (
+              <div className="mt-4">
+                {isEditing ? (
+                  <div className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--field)] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                      Customize plan targets (constrained edits)
+                    </p>
+                    <div>
+                      <label htmlFor="edit-action" className="label text-xs">Action sprint description</label>
+                      <textarea
+                        id="edit-action"
+                        className="field min-h-16 text-sm"
+                        value={editedAction}
+                        onChange={(e) => setEditedAction(e.target.value)}
+                        maxLength={280}
+                      />
+                      <p className="text-[10px] text-slate-700 mt-1">Maximum 280 characters. Characterized effort window remains locked.</p>
+                    </div>
+                    <div>
+                      <label htmlFor="edit-reflection" className="label text-xs">Reflection checkpoint question</label>
+                      <input
+                        id="edit-reflection"
+                        className="field text-sm"
+                        value={editedReflection}
+                        onChange={(e) => setEditedReflection(e.target.value)}
+                        maxLength={180}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="primary-button text-xs py-1 px-3"
+                        disabled={!editedAction.trim() || !editedReflection.trim()}
+                        onClick={handleSave}
+                      >
+                        Save adjustments
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-button text-xs py-1 px-3"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="secondary-button text-xs py-1.5 px-3"
+                    onClick={handleStartEdit}
+                  >
+                    Adjust plan targets
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="mt-5 border-t border-slate-200 pt-5">
               <p className="label mb-2">Close today</p>

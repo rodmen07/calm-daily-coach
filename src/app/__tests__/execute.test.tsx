@@ -1,0 +1,81 @@
+import { cleanup, render, screen, fireEvent } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import ExecutePage from "@/app/execute/page";
+import { useCoachAuth } from "@/app/hooks/use-coach-auth";
+import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
+
+vi.mock("@/app/hooks/use-coach-auth", () => ({
+  useCoachAuth: vi.fn(),
+}));
+
+vi.mock("@/app/hooks/use-coach-planner", () => ({
+  useCoachPlanner: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
+const authMock = {
+  authUser: null,
+  authMessage: "",
+  authConfigured: false,
+  signInWithGoogle: vi.fn(),
+  signOutUser: vi.fn(),
+};
+
+const activePlan = {
+  date: "2026-06-27",
+  focus: "Deep Work",
+  dose: "medium",
+  minutes: 15,
+  action: "Run one 15-minute focus block with zero context switching.",
+  reflection: "What interrupted your focus, and how will you prevent it tomorrow?",
+  optionalResource: "Optional: Use a single-task timer for your next block.",
+  capMessage: "You reached today's plan. See you tomorrow.",
+};
+
+describe("Execute Page plan adjustments", () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it("allows starting plan adjustments and saving them", () => {
+    vi.mocked(useCoachAuth).mockReturnValue(authMock as never);
+    
+    const updatePlan = vi.fn();
+    vi.mocked(useCoachPlanner).mockReturnValue({
+      plan: activePlan,
+      checkinStatus: { type: "idle" },
+      submitCheckin: vi.fn(),
+      skipReason: "",
+      setSkipReason: vi.fn(),
+      startNextDay: vi.fn(),
+      updatePlan,
+    } as never);
+
+    render(<ExecutePage />);
+
+    expect(screen.getByText("Adjust plan targets")).toBeTruthy();
+    
+    // Toggle edit targets form
+    fireEvent.click(screen.getByText("Adjust plan targets"));
+
+    expect(screen.getByText("Customize plan targets (constrained edits)")).toBeTruthy();
+    
+    // Mock changing of description inputs
+    const actionInput = screen.getByLabelText("Action sprint description") as HTMLTextAreaElement;
+    fireEvent.change(actionInput, { target: { value: "Run 15 mins focus" } });
+
+    // Click save adjustments button
+    fireEvent.click(screen.getByText("Save adjustments"));
+
+    expect(updatePlan).toHaveBeenCalledWith({
+      action: "Run 15 mins focus",
+      reflection: activePlan.reflection,
+    });
+  });
+});
