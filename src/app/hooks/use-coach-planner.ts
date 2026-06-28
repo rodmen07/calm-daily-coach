@@ -14,6 +14,7 @@ import {
   type DailyPlan,
   type FocusArea,
 } from "@/lib/plan";
+import { getRustCheckinAdvice, getRustPlanBrief } from "@/lib/rust-coach-bridge";
 
 type ReminderStatus =
   | { type: "idle" }
@@ -34,6 +35,16 @@ const STORAGE_KEY = "calm-daily-coach";
 
 function scopedStorageKey(scopeKey: string) {
   return `${STORAGE_KEY}:${scopeKey}`;
+}
+
+function doseToRustEffort(dose: DailyDose): "low" | "medium" | "high" {
+  if (dose === "light") {
+    return "low";
+  }
+  if (dose === "deep") {
+    return "high";
+  }
+  return "medium";
 }
 
 type SavedState = {
@@ -112,6 +123,8 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   const [skipReason, setSkipReason] = useState("");
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<MigrationStatus>({ type: "idle" });
+  const [coachBrief, setCoachBrief] = useState<string | null>(null);
+  const [checkinAdvice, setCheckinAdvice] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -202,6 +215,13 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       const nextPlan = buildDailyPlan({ focus, dose, notes });
       setPlan(nextPlan);
       setCheckinStatus({ type: "idle" });
+
+      const rustBrief = await getRustPlanBrief({
+        priorities: [nextPlan.action, nextPlan.reflection, nextPlan.optionalResource ?? ""],
+        effort: doseToRustEffort(nextPlan.dose),
+        focus: `${nextPlan.focus}${notes ? ` | ${notes}` : ""}`,
+      });
+      setCoachBrief(rustBrief);
     } catch {
       setReminderStatus({ type: "error", message: "Could not generate today's plan." });
     } finally {
@@ -270,6 +290,16 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
         message:
           status === "done" ? "Great work. Check-in saved." : "Skip logged with context.",
       });
+
+      const derivedMood = status === "done" ? 4 : 2;
+      const derivedEnergy = status === "done" ? 4 : 2;
+      const rustAdvice = await getRustCheckinAdvice({
+        mood: derivedMood,
+        energy: derivedEnergy,
+        friction: status === "skipped" ? skipReason.trim() : undefined,
+      });
+      setCheckinAdvice(rustAdvice);
+
       setSkipReason("");
       const summary = await checkinStore.getWeeklySummary(undefined, storageScope);
       setWeeklySummary(summary);
@@ -283,6 +313,8 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     setCheckinStatus({ type: "idle" });
     setReminderStatus({ type: "idle" });
     setSkipReason("");
+    setCoachBrief(null);
+    setCheckinAdvice(null);
   }
 
   return {
@@ -308,5 +340,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     topFocus,
     generatePlan,
     startNextDay,
+    coachBrief,
+    checkinAdvice,
   };
 }

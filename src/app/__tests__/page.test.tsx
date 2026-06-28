@@ -44,10 +44,15 @@ describe("Dashboard page", () => {
     expect(screen.getByText("Dashboard")).toBeTruthy();
     expect(screen.getByText("Reflection loop")).toBeTruthy();
     expect(screen.getByText("Dashboard - Focus - Execute - Review - Dashboard")).toBeTruthy();
+    expect(screen.getByText("Action rail")).toBeTruthy();
+    expect(screen.getByText("Ready to start")).toBeTruthy();
 
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Start today's cycle" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "New cycle from Focus" }).getAttribute("href")).toBe("/focus");
+      expect(screen.getByRole("link", { name: "Start focus" }).getAttribute("href")).toBe("/focus");
+      expect(screen.getByRole("link", { name: "Generate plan" }).getAttribute("href")).toBe("/focus");
+      expect(screen.getByRole("link", { name: "View review step" }).getAttribute("href")).toBe("/review");
     });
   });
 
@@ -77,6 +82,10 @@ describe("Dashboard page", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Continue active cycle" }).getAttribute("href")).toBe("/execute");
+      expect(screen.getAllByText("Plan ready")).toHaveLength(2);
+      expect(screen.getByText("Work the plan, then mark the day done or skipped.")).toBeTruthy();
+      expect(screen.getByRole("link", { name: "Edit focus" }).getAttribute("href")).toBe("/focus");
+      expect(screen.getByRole("link", { name: "Open execute" }).getAttribute("href")).toBe("/execute");
     });
   });
 
