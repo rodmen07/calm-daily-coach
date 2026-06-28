@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FOCUS_AREAS, type FocusArea } from "@/lib/plan";
+import { FOCUS_AREAS } from "@/lib/plan";
 
 export const onboardingPreferencesSchema = z.object({
   defaultFocus: z.enum(FOCUS_AREAS),

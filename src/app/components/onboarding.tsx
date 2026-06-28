@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FOCUS_AREAS, type FocusArea, type DailyDose } from "@/lib/plan";
-import { type OnboardingPreferences, saveOnboardingPreferences, getOnboardingPreferences } from "@/lib/onboarding";
+import { type OnboardingPreferences, saveOnboardingPreferences } from "@/lib/onboarding";
 
 type OnboardingProps = {
   onComplete: (prefs: OnboardingPreferences) => void;

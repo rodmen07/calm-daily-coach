@@ -66,20 +66,20 @@ export default function Home() {
     authEmail: authUser?.email,
   });
 
-  const [onboardingFinished, setOnboardingFinished] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    // Check if onboarding needs to be shown (only on client mount)
-    const storedPrefs = localStorage.getItem("calm-daily-coach:onboarding");
-    if (!storedPrefs) {
-      setShowOnboarding(true);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
     }
-  }, []);
+    const storedPrefs = window.localStorage.getItem("calm-daily-coach:onboarding");
+    return !storedPrefs;
+  });
 
-  const handleOnboardingComplete = (prefs: any) => {
+  const handleOnboardingComplete = (prefs: {
+    defaultFocus: import("@/lib/plan").FocusArea;
+    defaultDose: import("@/lib/plan").DailyDose;
+    defaultTheme: "light" | "dark";
+  }) => {
     setShowOnboarding(false);
-    setOnboardingFinished(true);
     setFocus(prefs.defaultFocus);
     setDose(prefs.defaultDose);
     if (typeof window !== "undefined") {
@@ -90,7 +90,6 @@ export default function Home() {
 
   const handleOnboardingSkip = () => {
     setShowOnboarding(false);
-    setOnboardingFinished(true);
     localStorage.setItem(
       "calm-daily-coach:onboarding",
       JSON.stringify({
