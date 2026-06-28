@@ -1,7 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo } from "react";
+import { useMonetization } from "@/app/hooks/use-monetization";
+import { trackMonetizationEvent, type PlanInterest } from "@/lib/monetization";
 
 const plans = [
   {
+    tier: "starter" as const,
     name: "Starter",
     amount: "$0",
     cadence: "forever",
@@ -16,6 +22,7 @@ const plans = [
     featured: false,
   },
   {
+    tier: "pro" as const,
     name: "Pro",
     amount: "$8",
     cadence: "per month",
@@ -31,6 +38,7 @@ const plans = [
     featured: true,
   },
   {
+    tier: "team" as const,
     name: "Team",
     amount: "$24",
     cadence: "per month",
@@ -47,6 +55,25 @@ const plans = [
 ];
 
 export default function PricingPage() {
+  const { planInterest, setPlanInterest } = useMonetization();
+
+  const selectedPlanLabel = useMemo(() => {
+    if (planInterest === "pro") {
+      return "Pro";
+    }
+
+    if (planInterest === "team") {
+      return "Team";
+    }
+
+    return "Starter";
+  }, [planInterest]);
+
+  function handleSelectPlan(tier: PlanInterest) {
+    setPlanInterest(tier);
+    trackMonetizationEvent("pricing_plan_selected", tier, "pricing");
+  }
+
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
@@ -55,6 +82,9 @@ export default function PricingPage() {
           <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">Calm plans for deliberate growth</h1>
           <p className="mb-5 text-sm leading-6 text-slate-700 sm:text-base">
             Start free, then upgrade when you want coaching depth, automation, and resilient sync.
+          </p>
+          <p className="pricing-status mb-4 text-xs font-semibold uppercase tracking-wide">
+            Current plan interest: {selectedPlanLabel}
           </p>
 
           <div className="pricing-grid">
@@ -73,12 +103,27 @@ export default function PricingPage() {
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
+                <button
+                  className={plan.tier === planInterest ? "primary-button" : "secondary-button"}
+                  type="button"
+                  onClick={() => handleSelectPlan(plan.tier)}
+                >
+                  {plan.tier === planInterest ? `${plan.name} selected` : `Select ${plan.name}`}
+                </button>
                 {plan.ctaHref.startsWith("/") ? (
-                  <Link className={plan.featured ? "primary-button" : "secondary-button"} href={plan.ctaHref}>
+                  <Link
+                    className={plan.featured ? "primary-button" : "secondary-button"}
+                    href={plan.ctaHref}
+                    onClick={() => trackMonetizationEvent("pricing_cta_clicked", plan.tier, "pricing")}
+                  >
                     {plan.ctaLabel}
                   </Link>
                 ) : (
-                  <a className={plan.featured ? "primary-button" : "secondary-button"} href={plan.ctaHref}>
+                  <a
+                    className={plan.featured ? "primary-button" : "secondary-button"}
+                    href={plan.ctaHref}
+                    onClick={() => trackMonetizationEvent("pricing_cta_clicked", plan.tier, "pricing")}
+                  >
                     {plan.ctaLabel}
                   </a>
                 )}

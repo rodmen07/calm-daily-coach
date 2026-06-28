@@ -247,6 +247,11 @@ html[data-theme="dark"] .border-slate-200 {
   gap: 8px;
 }
 
+.monetization-status {
+  color: var(--accent-strong);
+  font-family: var(--font-plex-mono), monospace;
+}
+
 .pricing-grid {
   display: grid;
   gap: 12px;
@@ -284,6 +289,11 @@ html[data-theme="dark"] .border-slate-200 {
 
 .pricing-list li::marker {
   color: var(--accent);
+}
+
+.pricing-status {
+  color: var(--accent-strong);
+  font-family: var(--font-plex-mono), monospace;
 }
 
 .step-card {

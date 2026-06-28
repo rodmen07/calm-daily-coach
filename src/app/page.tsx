@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
+import { useMonetization } from "@/app/hooks/use-monetization";
+import { trackMonetizationEvent } from "@/lib/monetization";
 
 function AnimatedCounter({
   value,
@@ -63,6 +65,7 @@ export default function Home() {
 
   const hasCheckedIn = checkinStatus.type === "ok";
   const hasPlan = Boolean(plan);
+  const { planInterest } = useMonetization();
 
   const nextCycleHref = !hasPlan ? "/focus" : hasCheckedIn ? "/review" : "/execute";
   const nextCycleLabel = !hasPlan
@@ -196,12 +199,29 @@ export default function Home() {
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 Pro adds weekly insight narratives, adaptive plan tuning, reminder automation, and cloud sync status.
               </p>
+              <p className="monetization-status mt-2 text-xs font-semibold uppercase tracking-wide">
+                Selected plan interest: {planInterest === "starter" ? "Starter" : planInterest === "pro" ? "Pro" : "Team"}
+              </p>
             </div>
             <div className="monetization-actions">
-              <Link className="primary-button" href="/pricing">
+              <Link
+                className="primary-button"
+                href="/pricing"
+                onClick={() => trackMonetizationEvent("dashboard_pricing_clicked", planInterest, "dashboard")}
+              >
                 View plans
               </Link>
-              <a className="secondary-button" href="mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20Pro%20early%20access">
+              <a
+                className="secondary-button"
+                href={`mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20${planInterest === "team" ? "Team" : "Pro"}%20early%20access`}
+                onClick={() =>
+                  trackMonetizationEvent(
+                    "dashboard_early_access_clicked",
+                    planInterest === "starter" ? "pro" : planInterest,
+                    "dashboard",
+                  )
+                }
+              >
                 Join early access
               </a>
             </div>

@@ -21,6 +21,7 @@ Introduce sustainable revenue without breaking the product promise of deliberate
    - Pricing route.
    - Dashboard upgrade card.
    - Primary navigation access to pricing.
+   - Local plan-interest persistence and click-event logging for conversion analysis.
 2. Capture demand before payments:
    - Early-access mailto flow.
    - Track click-through and interest by plan.
@@ -54,6 +55,7 @@ Introduce sustainable revenue without breaking the product promise of deliberate
 
 - Pricing page visits.
 - Click-through rate on upgrade calls to action.
+- Selected plan-interest distribution (Starter/Pro/Team).
 - Early access sign-up rate.
 - Free to Pro conversion rate.
 - 30-day Pro retention.

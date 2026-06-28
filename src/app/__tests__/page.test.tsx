@@ -39,6 +39,7 @@ describe("Dashboard page", () => {
   });
 
   it("shows dashboard framing and loop navigation", async () => {
+    window.localStorage.setItem("calm-daily-coach:plan-interest", "pro");
     render(<Home />);
 
     expect(screen.getByText("Dashboard")).toBeTruthy();
@@ -47,6 +48,7 @@ describe("Dashboard page", () => {
     expect(screen.getByText("Action rail")).toBeTruthy();
     expect(screen.getByText("Ready to start")).toBeTruthy();
     expect(screen.getByText("Calm Daily Coach Pro")).toBeTruthy();
+    expect(screen.getByText("Selected plan interest: Pro")).toBeTruthy();
 
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Start today's cycle" }).getAttribute("href")).toBe("/focus");
