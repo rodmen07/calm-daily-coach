@@ -83,7 +83,7 @@ describe("Dashboard page", () => {
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Continue active cycle" }).getAttribute("href")).toBe("/execute");
       expect(screen.getAllByText("Plan ready")).toHaveLength(2);
-      expect(screen.getByText("Done for today")).toBeTruthy();
+      expect(screen.getByText("Work the plan, then mark the day done or skipped.")).toBeTruthy();
       expect(screen.getByRole("link", { name: "Edit focus" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "Open execute" }).getAttribute("href")).toBe("/execute");
     });
