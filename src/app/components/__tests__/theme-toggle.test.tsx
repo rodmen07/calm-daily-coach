@@ -63,4 +63,22 @@ describe("ThemeToggle", () => {
     expect(document.documentElement.dataset.theme).toBe("light");
     expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
   });
+
+  it("closes the confirmation panel when the user presses Escape", async () => {
+    document.documentElement.dataset.theme = "dark";
+    window.localStorage.setItem("calm-daily-coach:theme", "dark");
+
+    render(<ThemeToggle />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
+    fireEvent.keyDown(screen.getByRole("button", { name: "Switch to light mode" }), { key: "Escape" });
+
+    expect(screen.queryByText("Dark mode is the default because it is easier to read. Switch to light mode anyway?")).toBeNull();
+    expect(window.localStorage.getItem("calm-daily-coach:theme")).toBe("dark");
+    expect(document.documentElement.dataset.theme).toBe("dark");
+  });
 });

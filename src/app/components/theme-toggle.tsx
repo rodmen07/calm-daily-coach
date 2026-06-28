@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, type KeyboardEvent } from "react";
 
 const THEME_STORAGE_KEY = "calm-daily-coach:theme";
 
@@ -50,8 +50,15 @@ export function ThemeToggle() {
     setPendingLightMode(false);
   }
 
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape" && pendingLightMode) {
+      event.preventDefault();
+      setPendingLightMode(false);
+    }
+  }
+
   return (
-    <div className="theme-toggle-shell">
+    <div className="theme-toggle-shell" onKeyDown={handleKeyDown}>
       <button
         className="secondary-button theme-toggle"
         type="button"
