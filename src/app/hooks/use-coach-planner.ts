@@ -336,6 +336,16 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     setCheckinAdvice(null);
   }
 
+  function updatePlan(updated: Partial<DailyPlan>) {
+    if (!plan) {
+      return;
+    }
+    setPlan({
+      ...plan,
+      ...updated,
+    });
+  }
+
   return {
     focus,
     setFocus,
@@ -359,6 +369,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     topFocus,
     generatePlan,
     startNextDay,
+    updatePlan,
     coachBrief,
     checkinAdvice,
   };

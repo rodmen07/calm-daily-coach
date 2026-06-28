@@ -58,12 +58,14 @@ export function getPlanInterest(): PlanInterest {
     return "starter";
   }
 
-  const stored = window.localStorage.getItem(MONETIZATION_STORAGE_KEY);
+  const stored = typeof window !== "undefined" && typeof window.localStorage !== "undefined"
+    ? window.localStorage.getItem(MONETIZATION_STORAGE_KEY)
+    : null;
   return stored === "pro" || stored === "team" ? stored : "starter";
 }
 
 export function setPlanInterest(tier: PlanInterest) {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
     return;
   }
 
@@ -72,7 +74,7 @@ export function setPlanInterest(tier: PlanInterest) {
 }
 
 export function trackMonetizationEvent(name: MonetizationEventName, tier: PlanInterest, source: "pricing" | "dashboard") {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
     return;
   }
 
@@ -93,7 +95,7 @@ export function trackMonetizationEvent(name: MonetizationEventName, tier: PlanIn
 }
 
 export function getMonetizationEvents(): MonetizationEvent[] {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
     return [];
   }
 
