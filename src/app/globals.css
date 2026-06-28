@@ -230,6 +230,62 @@ html[data-theme="dark"] .border-slate-200 {
   margin-bottom: 4px;
 }
 
+.monetization-panel {
+  border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--line));
+  border-radius: 16px;
+  background:
+    linear-gradient(140deg, color-mix(in srgb, var(--accent) 18%, var(--surface-strong)) 0%, var(--surface-strong) 62%),
+    var(--surface-strong);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.monetization-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pricing-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pricing-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-strong);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.pricing-card.is-featured {
+  border-color: color-mix(in srgb, var(--accent) 54%, var(--line));
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface-strong));
+  box-shadow: 0 12px 28px rgba(3, 8, 20, 0.16);
+}
+
+.pricing-amount {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.pricing-list {
+  display: grid;
+  gap: 6px;
+  color: var(--muted-strong);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.pricing-list li::marker {
+  color: var(--accent);
+}
+
 .step-card {
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -827,6 +883,10 @@ html[data-theme="dark"] .border-slate-200 {
   }
 
   .action-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-grid {
     grid-template-columns: 1fr;
   }
 

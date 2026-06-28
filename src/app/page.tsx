@@ -189,6 +189,24 @@ export default function Home() {
             </div>
           </div>
 
+          <div className="monetization-panel mt-4" aria-label="Upgrade options">
+            <div className="monetization-copy">
+              <p className="eyebrow">Calm Daily Coach Pro</p>
+              <h2 className="text-lg font-semibold tracking-tight">Unlock deeper coaching, not more noise</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Pro adds weekly insight narratives, adaptive plan tuning, reminder automation, and cloud sync status.
+              </p>
+            </div>
+            <div className="monetization-actions">
+              <Link className="primary-button" href="/pricing">
+                View plans
+              </Link>
+              <a className="secondary-button" href="mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20Pro%20early%20access">
+                Join early access
+              </a>
+            </div>
+          </div>
+
           <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
               {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
