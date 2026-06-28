@@ -144,6 +144,36 @@ html[data-theme="dark"] .border-slate-200 {
   gap: 6px;
 }
 
+.theme-toggle-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.theme-toggle-confirmation {
+  max-width: 22rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 10px 12px;
+  box-shadow: 0 10px 24px rgba(3, 8, 20, 0.18);
+}
+
+.theme-toggle-confirmation p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted-strong);
+}
+
+.theme-toggle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .theme-toggle::before {
   content: "◐";
   font-size: 0.95rem;
