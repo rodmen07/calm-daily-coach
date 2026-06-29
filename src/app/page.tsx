@@ -42,12 +42,16 @@ function AnimatedCounter({
       setDisplayValue(Math.round(value * easedProgress));
 
       if (progress >= 1) {
-        window.clearInterval(intervalId);
+        if (typeof window !== "undefined") {
+          window.clearInterval(intervalId);
+        }
       }
     }, 16);
 
     return () => {
-      window.clearInterval(intervalId);
+      if (typeof window !== "undefined") {
+        window.clearInterval(intervalId);
+      }
     };
   }, [value]);
 
