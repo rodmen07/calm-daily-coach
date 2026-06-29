@@ -19,9 +19,20 @@ function AnimatedCounter({
   className?: string;
   testId?: string;
 }) {
-  const [displayValue, setDisplayValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(() => {
+    const win = typeof window !== "undefined" ? (window as unknown as { __ANIMATE_COUNTERS__?: boolean }) : undefined;
+    if (win && win.__ANIMATE_COUNTERS__ === false) {
+      return value;
+    }
+    return 0;
+  });
 
   useEffect(() => {
+    const win = typeof window !== "undefined" ? (window as unknown as { __ANIMATE_COUNTERS__?: boolean }) : undefined;
+    if (win && win.__ANIMATE_COUNTERS__ === false) {
+      return;
+    }
+
     const duration = 650;
     const startTime = Date.now();
 
