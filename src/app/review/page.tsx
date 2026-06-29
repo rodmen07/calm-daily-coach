@@ -197,22 +197,34 @@ export default function ReviewPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 mt-4">
-              <div className="rounded-xl border border-(--line) bg-(--field) p-3 text-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Top focus area</p>
-                <p className="font-semibold text-slate-800">{topFocus ? (topFocus as FocusArea) : "N/A"}</p>
+              <div className="rounded-xl border border-(--line) bg-(--field) p-3 text-sm flex items-start gap-2.5">
+                <div className="text-lg shrink-0 mt-0.5">🎯</div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-0.5">Top focus area</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">{topFocus ? (topFocus as FocusArea) : "N/A"}</p>
+                </div>
               </div>
-              <div className="rounded-xl border border-(--line) bg-(--field) p-3 text-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Most-used dose</p>
-                <p className="font-semibold capitalize text-slate-800">{mostUsedDose}</p>
+              <div className="rounded-xl border border-(--line) bg-(--field) p-3 text-sm flex items-start gap-2.5">
+                <span className="text-lg shrink-0 mt-0.5" aria-hidden="true">🔋</span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-0.5">Most-used dose</p>
+                  <p className="font-semibold capitalize text-slate-800 dark:text-slate-200">{mostUsedDose}</p>
+                </div>
               </div>
-              <div className="rounded-xl border border-(--line) bg-(--field) p-3 text-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Peak momentum window</p>
-                <p className="font-semibold text-slate-800">{completionWindow}</p>
+              <div className="rounded-xl border border-(--line) bg-(--field) p-3 text-sm flex items-start gap-2.5">
+                <span className="text-lg shrink-0 mt-0.5" aria-hidden="true">📈</span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-0.5">Peak momentum window</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">{completionWindow}</p>
+                </div>
               </div>
             </div>
 
-            <div className="rounded-xl border border-(--line) bg-(--field) p-4 mt-4 text-sm text-slate-700">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Coach insights & patterns</p>
+            <div className="rounded-xl border border-(--line) bg-(--field) p-4 mt-4 text-sm text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-sm shrink-0" aria-hidden="true">✨</span>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Coach insights & patterns</p>
+              </div>
               <p className="leading-6">{patternSummary}</p>
             </div>
 
