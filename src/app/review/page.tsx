@@ -156,24 +156,64 @@ export default function ReviewPage() {
               </p>
             ) : null}
 
-            <div className="mb-4 rounded-xl border border-(--line) bg-(--field) p-3">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Weekly completion trend
-                </p>
-                <p className={`progress-badge text-sm font-semibold ${hasWeeklyProgress ? "is-animated" : ""}`}>
-                  {completionPercent}%
-                </p>
+            <div className="mb-4 flex flex-col md:flex-row items-center gap-5 rounded-xl border border-(--line) bg-(--field) p-4">
+              {/* High-fidelity SVG Circular Progress Ring */}
+              <div className="relative flex h-24 w-24 items-center justify-center shrink-0">
+                <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 100 100">
+                  <circle
+                    className="text-slate-200 dark:text-slate-800"
+                    strokeWidth="10"
+                    stroke="currentColor"
+                    fill="transparent"
+                    r="40"
+                    cx="50"
+                    cy="50"
+                  />
+                  <circle
+                    className="text-[--accent] transition-all duration-700 ease-out"
+                    strokeWidth="10"
+                    strokeDasharray={`${2 * Math.PI * 40}`}
+                    strokeDashoffset={`${2 * Math.PI * 40 * (1 - completionPercent / 100)}`}
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="transparent"
+                    r="40"
+                    cx="50"
+                    cy="50"
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center justify-center text-center">
+                  <span className="text-xl font-bold font-mono tracking-tight text-slate-800 dark:text-slate-100">
+                    {completionPercent}%
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-400">
+                    Rate
+                  </span>
+                </div>
               </div>
-              <div
-                className={`progress-track ${hasWeeklyProgress ? "is-animated" : ""}`}
-                role="img"
-                aria-label={`Weekly completion ${completionPercent}%`}
-              >
+
+              <div className="flex-1 w-full">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+                    Weekly completion trend
+                  </p>
+                  <p className={`progress-badge text-sm font-semibold ${hasWeeklyProgress ? "is-animated" : ""}`}>
+                    {completionPercent}% Completion
+                  </p>
+                </div>
                 <div
-                  className={`progress-fill ${hasWeeklyProgress ? "is-animated" : ""}`}
-                  style={{ width: `${completionPercent}%` }}
-                />
+                  className={`progress-track ${hasWeeklyProgress ? "is-animated" : ""}`}
+                  role="img"
+                  aria-label={`Weekly completion ${completionPercent}%`}
+                >
+                  <div
+                    className={`progress-fill ${hasWeeklyProgress ? "is-animated" : ""}`}
+                    style={{ width: `${completionPercent}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-normal">
+                  Your rolling 7-day effort score. Maintain more than 70% to accumulate solid execution momentum.
+                </p>
               </div>
             </div>
 
