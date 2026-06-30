@@ -31,6 +31,7 @@ describe("Dashboard page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
+    (window as unknown as { __ANIMATE_COUNTERS__?: boolean }).__ANIMATE_COUNTERS__ = false;
     vi.useRealTimers();
   });
 
@@ -140,6 +141,7 @@ describe("Dashboard page", () => {
   });
 
   it("counts weekly summary values up to the final totals", async () => {
+    (window as unknown as { __ANIMATE_COUNTERS__?: boolean }).__ANIMATE_COUNTERS__ = true;
     vi.useFakeTimers();
     vi.mocked(getWeeklySummary).mockReturnValue({
       windowStart: "2026-06-21",

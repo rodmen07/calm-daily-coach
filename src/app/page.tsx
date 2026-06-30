@@ -19,9 +19,20 @@ function AnimatedCounter({
   className?: string;
   testId?: string;
 }) {
-  const [displayValue, setDisplayValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(() => {
+    const win = typeof window !== "undefined" ? (window as unknown as { __ANIMATE_COUNTERS__?: boolean }) : undefined;
+    if (win && win.__ANIMATE_COUNTERS__ === false) {
+      return value;
+    }
+    return 0;
+  });
 
   useEffect(() => {
+    const win = typeof window !== "undefined" ? (window as unknown as { __ANIMATE_COUNTERS__?: boolean }) : undefined;
+    if (win && win.__ANIMATE_COUNTERS__ === false) {
+      return;
+    }
+
     const duration = 650;
     const startTime = Date.now();
 
@@ -31,12 +42,16 @@ function AnimatedCounter({
       setDisplayValue(Math.round(value * easedProgress));
 
       if (progress >= 1) {
-        window.clearInterval(intervalId);
+        if (typeof window !== "undefined") {
+          window.clearInterval(intervalId);
+        }
       }
     }, 16);
 
     return () => {
-      window.clearInterval(intervalId);
+      if (typeof window !== "undefined") {
+        window.clearInterval(intervalId);
+      }
     };
   }, [value]);
 
@@ -201,9 +216,100 @@ export default function Home() {
               New cycle from Focus
             </Link>
           </div>
-          <p className="flow-detail text-xs sm:text-sm">
+          
+          <p className="flow-detail text-xs sm:text-sm sr-only">
             Dashboard - Focus - Execute - Review - Dashboard
           </p>
+
+          {/* Visual Loop Stepper Pipeline */}
+          <div className="my-6 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 rounded-2xl p-4 sm:p-5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 text-center sm:text-left flex items-center justify-center sm:justify-start gap-1.5">
+              <svg className="h-4 w-4 text-[--accent]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+              Continuous Growth Loop
+            </h3>
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-0 justify-between relative pl-3 pr-3">
+              {/* Step 1: Focus */}
+              <div className="flex flex-row sm:flex-col items-center gap-3 sm:gap-2 flex-1 w-full sm:w-auto">
+                <Link
+                  href="/focus"
+                  className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all duration-300 group ${
+                    !hasPlan
+                      ? "border-[--accent] bg-[--accent]/10 text-[--accent] shadow-[0_0_12px_rgba(122,214,183,0.25)] font-bold scale-105"
+                      : "border-emerald-500 bg-emerald-500/10 text-emerald-500 hover:border-emerald-400"
+                  }`}
+                  aria-label="Step 1: Focus"
+                >
+                  <svg className="h-5 w-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="12" r="6" />
+                    <circle cx="12" cy="12" r="2" />
+                  </svg>
+                </Link>
+                <div className="text-left sm:text-center">
+                  <p className={`text-xs font-semibold uppercase tracking-wider ${!hasPlan ? "text-[--accent]" : "text-slate-400"}`}>
+                    01. Focus
+                  </p>
+                  <p className="text-[10px] text-slate-500 hidden sm:block mt-0.5">Set daily routine & depth</p>
+                </div>
+              </div>
+
+              {/* Connecting Line 1 */}
+              <div className="hidden sm:block h-0.5 flex-1 mx-2 bg-gradient-to-r transition-all duration-500" style={{ backgroundImage: hasPlan ? 'linear-gradient(to right, var(--success-strong), var(--success-strong))' : 'linear-gradient(to right, var(--line), var(--line))' }} />
+
+              {/* Step 2: Execute */}
+              <div className="flex flex-row sm:flex-col items-center gap-3 sm:gap-2 flex-1 w-full sm:w-auto">
+                <Link
+                  href={hasPlan ? "/execute" : "/focus"}
+                  className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all duration-300 group ${
+                    hasPlan && !hasCheckedIn
+                      ? "border-[--accent] bg-[--accent]/10 text-[--accent] shadow-[0_0_12px_rgba(122,214,183,0.25)] font-bold scale-105"
+                      : hasCheckedIn
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-500 hover:border-emerald-400"
+                      : "border-[--line] bg-[--field] text-[--muted]"
+                  }`}
+                  aria-label="Step 2: Execute"
+                >
+                  <svg className="h-5 w-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </Link>
+                <div className="text-left sm:text-center">
+                  <p className={`text-xs font-semibold uppercase tracking-wider ${hasPlan && !hasCheckedIn ? "text-[--accent]" : "text-slate-400"}`}>
+                    02. Execute
+                  </p>
+                  <p className="text-[10px] text-slate-500 hidden sm:block mt-0.5">Run active sprint dose</p>
+                </div>
+              </div>
+
+              {/* Connecting Line 2 */}
+              <div className="hidden sm:block h-0.5 flex-1 mx-2 bg-gradient-to-r transition-all duration-500" style={{ backgroundImage: hasCheckedIn ? 'linear-gradient(to right, var(--success-strong), var(--success-strong))' : 'linear-gradient(to right, var(--line), var(--line))' }} />
+
+              {/* Step 3: Review */}
+              <div className="flex flex-row sm:flex-col items-center gap-3 sm:gap-2 flex-1 w-full sm:w-auto">
+                <Link
+                  href="/review"
+                  className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all duration-300 group ${
+                    hasCheckedIn
+                      ? "border-[--accent] bg-[--accent]/10 text-[--accent] shadow-[0_0_12px_rgba(122,214,183,0.25)] font-bold scale-105"
+                      : "border-[--line] bg-[--field] text-[--muted]"
+                  }`}
+                  aria-label="Step 3: Review"
+                >
+                  <svg className="h-5 w-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2zm0 0V5a2 2 0 012-2h2a2 2 0 012 2v14" />
+                  </svg>
+                </Link>
+                <div className="text-left sm:text-center">
+                  <p className={`text-xs font-semibold uppercase tracking-wider ${hasCheckedIn ? "text-[--accent]" : "text-slate-400"}`}>
+                    03. Review
+                  </p>
+                  <p className="text-[10px] text-slate-500 hidden sm:block mt-0.5">Analyze and optimize</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between gap-2">
@@ -222,7 +328,25 @@ export default function Home() {
                 >
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <div>
-                      <p className="eyebrow mb-1">{action.label}</p>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        {action.label === "Focus" && (
+                          <svg className="h-4 w-4 text-[--accent]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <circle cx="12" cy="12" r="10" />
+                            <circle cx="12" cy="12" r="4" />
+                          </svg>
+                        )}
+                        {action.label === "Execute" && (
+                          <svg className="h-4 w-4 text-[--accent]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        )}
+                        {action.label === "Review" && (
+                          <svg className="h-4 w-4 text-[--accent]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2zm0 0V5a2 2 0 012-2h2a2 2 0 012 2v14" />
+                          </svg>
+                        )}
+                        <p className="eyebrow !mb-0">{action.label}</p>
+                      </div>
                       <h2 className="text-base font-semibold tracking-tight">{action.state}</h2>
                     </div>
                     <span className="action-card-index">0{action.label === "Focus" ? 1 : action.label === "Execute" ? 2 : 3}</span>
@@ -240,7 +364,12 @@ export default function Home() {
 
           <div className="monetization-panel mt-4" aria-label="Upgrade options">
             <div className="monetization-copy">
-              <p className="eyebrow">Calm Daily Coach Pro</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <svg className="h-4 w-4 text-amber-500 fill-amber-500 animate-pulse" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.87L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                <p className="eyebrow !mb-0">Calm Daily Coach Pro</p>
+              </div>
               <h2 className="text-lg font-semibold tracking-tight">Unlock deeper coaching, not more noise</h2>
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 Pro adds weekly insight narratives, adaptive plan tuning, reminder automation, and cloud sync status.

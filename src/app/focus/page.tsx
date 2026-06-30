@@ -68,37 +68,71 @@ export default function FocusPage() {
             ) : null}
 
             <div>
-              <label htmlFor="focus" className="label">Focus area</label>
-              <select
-                id="focus"
-                className="field"
-                value={focus}
-                disabled={isPlanningLocked}
-                onChange={(event) => setFocus(event.target.value as FocusArea)}
-              >
-                {FOCUS_AREAS.map((area) => (
-                  <option key={area} value={area}>{area}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
               <p className="label mb-2">Improvement categories</p>
-              <ul className="category-grid" role="list" aria-label="Improvement categories">
-                {FOCUS_AREAS.map((area) => (
-                  <li key={area} className={`category-chip ${focus === area ? "is-selected" : ""}`}>
-                    {area}
-                  </li>
-                ))}
-              </ul>
+              <div className="category-grid" role="list" aria-label="Improvement categories">
+                {FOCUS_AREAS.map((area) => {
+                  let icon = "🎯";
+                  if (area === "Career") icon = "💼";
+                  else if (area === "Communication") icon = "📣";
+                  else if (area === "Creativity") icon = "🎨";
+                  else if (area === "Deep Work") icon = "💻";
+                  else if (area === "Finances") icon = "💵";
+                  else if (area === "Fitness") icon = "💪";
+                  else if (area === "Home") icon = "🏠";
+                  else if (area === "Learning") icon = "📚";
+                  else if (area === "Mindfulness") icon = "🧘";
+                  else if (area === "Nutrition") icon = "🍎";
+                  else if (area === "Organization") icon = "🗂️";
+                  else if (area === "Relationships") icon = "❤️";
+                  else if (area === "Sleep") icon = "😴";
+
+                  return (
+                    <button
+                      key={area}
+                      type="button"
+                      disabled={isPlanningLocked}
+                      className={`category-chip flex items-center gap-1.5 cursor-pointer hover:border-[--accent]/60 transition-all ${
+                        focus === area 
+                          ? "is-selected border-[--accent] shadow-[0_0_12px_rgba(122,214,183,0.2)]" 
+                          : "bg-[--field] border-transparent"
+                      }`}
+                      onClick={() => setFocus(area)}
+                    >
+                      <span className="text-sm" aria-hidden="true">{icon}</span>
+                      <span>{area}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="sr-only">
+                <label htmlFor="focus" className="label">Focus area</label>
+                <select
+                  id="focus"
+                  className="field"
+                  value={focus}
+                  disabled={isPlanningLocked}
+                  onChange={(event) => setFocus(event.target.value as FocusArea)}
+                >
+                  {FOCUS_AREAS.map((area) => (
+                    <option key={area} value={area}>{area}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>
-              <p className="label mb-2">Daily dose</p>
-              <p className="dose-hint">Pick the effort level you can complete today without overextending.</p>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <p className="label mb-1">Daily dose</p>
+              <p className="dose-hint mb-3">Pick the effort level you can complete today without overextending.</p>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                 {DOSE_OPTIONS.map((option) => (
-                  <label key={option} className="dose-card">
+                  <label 
+                    key={option} 
+                    className={`dose-card flex items-center gap-3 cursor-pointer p-3.5 rounded-xl border transition-all ${
+                      dose === option 
+                        ? "border-[--accent] bg-[--accent]/10" 
+                        : "border-[--line] bg-[--field] hover:border-slate-500"
+                    } ${isPlanningLocked ? "opacity-60 cursor-not-allowed" : ""}`}
+                  >
                     <input
                       checked={dose === option}
                       disabled={isPlanningLocked}
@@ -106,8 +140,27 @@ export default function FocusPage() {
                       type="radio"
                       name="dose"
                       value={option}
+                      className="accent-[--accent] h-4 w-4"
                     />
-                    <span>{doseLabels[option]}</span>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-sm">{doseLabels[option]}</span>
+                      {/* Visual Intensity Bars indicator */}
+                      <div className="flex gap-1 mt-1.5">
+                        <span className={`h-3 w-1.5 rounded-full transition-all duration-300 ${
+                          dose === option ? "bg-[--accent]" : "bg-[--line]"
+                        }`} />
+                        <span className={`h-3 w-1.5 rounded-full transition-all duration-300 ${
+                          option === "medium" || option === "deep"
+                            ? dose === option ? "bg-[--accent]" : "bg-[--line]"
+                            : "bg-transparent border border-dashed border-[--line] opacity-40"
+                        }`} />
+                        <span className={`h-3 w-1.5 rounded-full transition-all duration-300 ${
+                          option === "deep"
+                            ? dose === option ? "bg-[--accent]" : "bg-[--line]"
+                            : "bg-transparent border border-dashed border-[--line] opacity-40"
+                        }`} />
+                      </div>
+                    </div>
                   </label>
                 ))}
               </div>

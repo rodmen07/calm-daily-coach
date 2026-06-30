@@ -102,7 +102,7 @@ const actionVariantsMap: Record<FocusArea, Record<DailyDose, readonly string[]>>
       "Do a 15-minute concentration block and ship one tiny visible increment.",
     ],
     deep: [
-      "Run two 15-minute focus blocks and ship one meaningful deliverable.",
+      "Run two 15-minute focus blocks (30 minutes total) and ship one meaningful deliverable.",
       "Do a 30-minute deep work session with a strict single-task scope.",
       "Use 30 minutes to complete the hardest part of your top task.",
     ],

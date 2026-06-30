@@ -72,37 +72,99 @@ export default function ExecutePage() {
         ) : (
           <section>
             <h2 className="mb-4 text-xl font-semibold">Today&apos;s deliberate dose</h2>
-            <div className="plan-meta-grid mb-4 text-sm sm:text-base">
-              <p className="plan-pill">
-                <span className="plan-pill-label">Focus</span>
-                <span className="plan-pill-value">{plan.focus}</span>
-              </p>
-              <p className="plan-pill">
-                <span className="plan-pill-label">Dose</span>
-                <span className="plan-pill-value">{plan.dose}</span>
-              </p>
-              <p className="plan-pill">
-                <span className="plan-pill-label">Time</span>
-                <span className="plan-pill-value">{plan.minutes} min</span>
-              </p>
+            <div className="plan-meta-grid mb-5 text-sm">
+              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-slate-400 dark:text-slate-300">
+                <div className="rounded-lg bg-[--accent]/10 text-[--accent] p-1.5 shrink-0">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="12" r="4" />
+                  </svg>
+                </div>
+                <div className="flex flex-col">
+                  <span className="plan-pill-label text-[10px] font-bold uppercase tracking-wider text-slate-500">Focus</span>
+                  <span className="plan-pill-value text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{plan.focus}</span>
+                </div>
+              </div>
+
+              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-slate-400 dark:text-slate-300">
+                <div className="rounded-lg bg-[--accent]/10 text-[--accent] p-1.5 shrink-0">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div className="flex flex-col">
+                  <span className="plan-pill-label text-[10px] font-bold uppercase tracking-wider text-slate-500">Dose</span>
+                  <span className="plan-pill-value text-sm font-semibold capitalize text-slate-800 dark:text-slate-200 mt-0.5">{plan.dose}</span>
+                </div>
+              </div>
+
+              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-slate-400 dark:text-slate-300">
+                <div className="rounded-lg bg-[--accent]/10 text-[--accent] p-1.5 shrink-0">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div className="flex flex-col">
+                  <span className="plan-pill-label text-[10px] font-bold uppercase tracking-wider text-slate-500">Time Limit</span>
+                  <span className="plan-pill-value text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{plan.minutes} min</span>
+                </div>
+              </div>
             </div>
 
-            <ol className="plan-steps text-sm leading-6 sm:text-base">
-              <li className="plan-step">
-                <p className="plan-step-title">1. Action sprint</p>
-                <p className="plan-step-body">{plan.action}</p>
-              </li>
-              <li className="plan-step">
-                <p className="plan-step-title">2. Reflection checkpoint</p>
-                <p className="plan-step-body">{plan.reflection}</p>
-              </li>
+            <div className="relative pl-6 border-l border-[var(--line)] space-y-6 my-6">
+              {/* Step 1 */}
+              <div className="relative plan-step bg-transparent border-0 !p-0">
+                <span className="absolute -left-[35px] top-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-[--panel] border border-[--accent] text-[10px] font-bold text-[--accent]">
+                  1
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[--accent] mb-1 flex items-center gap-1.5">
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Action sprint
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-800 dark:text-[--muted-strong] leading-relaxed font-semibold">{plan.action}</p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="relative plan-step bg-transparent border-0 !p-0">
+                <span className="absolute -left-[35px] top-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-[--panel] border border-[--accent] text-[10px] font-bold text-[--accent]">
+                  2
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[--accent] mb-1 flex items-center gap-1.5">
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <circle cx="12" cy="12" r="4" />
+                    </svg>
+                    Reflection checkpoint
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-800 dark:text-[--muted-strong] leading-relaxed font-semibold">{plan.reflection}</p>
+                </div>
+              </div>
+
+              {/* Step 3 Optional */}
               {plan.optionalResource ? (
-                <li className="plan-step">
-                  <p className="plan-step-title">3. Optional extra</p>
-                  <p className="plan-step-body">{plan.optionalResource}</p>
-                </li>
+                <div className="relative plan-step bg-transparent border-0 !p-0">
+                  <span className="absolute -left-[35px] top-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-[--panel] border border-slate-500 text-[10px] font-bold text-slate-500">
+                    3
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
+                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
+                      </svg>
+                      Optional extra
+                    </h3>
+                    <p className="text-sm sm:text-base text-slate-850 dark:text-[--muted-strong] leading-relaxed">{plan.optionalResource}</p>
+                  </div>
+                </div>
               ) : null}
-            </ol>
+            </div>
 
             {!hasCheckedIn && (
               <div className="mt-4">
