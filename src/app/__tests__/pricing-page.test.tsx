@@ -1,9 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import PricingPage from "@/app/pricing/page";
 
 afterEach(() => {
-  document.body.innerHTML = "";
+  cleanup();
 });
 
 describe("Pricing page", () => {

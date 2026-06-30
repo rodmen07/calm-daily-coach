@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import MonetizationPage from "@/app/monetization/page";
 
 afterEach(() => {
-  document.body.innerHTML = "";
+  cleanup();
   window.localStorage.clear();
 });
 
