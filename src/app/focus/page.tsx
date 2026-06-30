@@ -78,6 +78,7 @@ export default function FocusPage() {
                   else if (area === "Deep Work") icon = "💻";
                   else if (area === "Finances") icon = "💵";
                   else if (area === "Fitness") icon = "💪";
+                  else if (area === "Hobbies") icon = "🎮";
                   else if (area === "Home") icon = "🏠";
                   else if (area === "Learning") icon = "📚";
                   else if (area === "Mindfulness") icon = "🧘";
@@ -85,6 +86,7 @@ export default function FocusPage() {
                   else if (area === "Organization") icon = "🗂️";
                   else if (area === "Relationships") icon = "❤️";
                   else if (area === "Sleep") icon = "😴";
+                  else if (area === "Writing") icon = "✍️";
 
                   return (
                     <button

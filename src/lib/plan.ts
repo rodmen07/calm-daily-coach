@@ -7,6 +7,7 @@ const focusAreas = [
   "Deep Work",
   "Finances",
   "Fitness",
+  "Hobbies",
   "Home",
   "Learning",
   "Mindfulness",
@@ -14,6 +15,7 @@ const focusAreas = [
   "Organization",
   "Relationships",
   "Sleep",
+  "Writing",
 ] as const;
 
 const doseOptions = ["light", "medium", "deep"] as const;
@@ -141,6 +143,23 @@ const actionVariantsMap: Record<FocusArea, Record<DailyDose, readonly string[]>>
       "Run a 30-minute mixed cardio and mobility session, then note recovery level.",
     ],
   },
+  Hobbies: {
+    light: [
+      "Spend 5 minutes organizing your gear, instruments, or materials for your favorite hobby.",
+      "Take 5 minutes to read about or discover one new technique.",
+      "Use 5 minutes to practice a single tiny skill or movement.",
+    ],
+    medium: [
+      "Spend 15 minutes practicing or working on your current hobby project without distraction.",
+      "Use 15 minutes to jam, sketch, or test one new technique.",
+      "Spend 15 minutes detailing notes on one hobby challenge to solve.",
+    ],
+    deep: [
+      "Carve out 30 minutes of deep practice, play, or making on your favorite hobby.",
+      "Use 30 minutes to complete a meaningful milestone step on your hobby project.",
+      "Dedicate 30 minutes to experiment freely with new setups, patterns, or strategies.",
+    ],
+  },
   Home: {
     light: [
       "Use 5 minutes to reset one small home area you use daily.",
@@ -260,6 +279,23 @@ const actionVariantsMap: Record<FocusArea, Record<DailyDose, readonly string[]>>
       "Use 30 minutes to map sleep blockers and create one concrete nightly protocol.",
     ],
   },
+  Writing: {
+    light: [
+      "Spend 5 minutes drafting a single paragraph or brain-dumping ideas for a draft.",
+      "Take 5 minutes to outline three core talking points for your next piece.",
+      "Spend 5 minutes listing five writing topics or article headlines.",
+    ],
+    medium: [
+      "Write without editing for 15 minutes to build drafting momentum.",
+      "Use 15 minutes to revise, polish, and structure a draft's intro block.",
+      "Spend 15 minutes mapping headlines, quotes, and research points.",
+    ],
+    deep: [
+      "Dedicate 30 minutes of deep focus to draft or complete a major section.",
+      "Run a 30-minute polishing sprint to format, edit, and finish your piece.",
+      "Spend 30 minutes editing complex sections and refining tone clarity.",
+    ],
+  },
 };
 
 const reflectionMap: Record<FocusArea, string> = {
@@ -269,6 +305,7 @@ const reflectionMap: Record<FocusArea, string> = {
   "Deep Work": "What interrupted your focus, and how will you prevent it tomorrow?",
   Finances: "What spending decision today aligns with your long-term goals?",
   Fitness: "What changed in your energy after completing this?",
+  Hobbies: "What new trick, technique, or moment during play did you appreciate most?",
   Home: "What home routine now feels easier because of this effort?",
   Learning: "What concept became clearer, and what still needs review?",
   Mindfulness: "What emotion showed up most strongly, and what triggered it?",
@@ -276,6 +313,7 @@ const reflectionMap: Record<FocusArea, string> = {
   Organization: "What system or space now feels easier to maintain?",
   Relationships: "What made the connection feel more thoughtful or complete?",
   Sleep: "What is one adjustment that would improve tonight's sleep by 10%?",
+  Writing: "What section or concept drafted today feels most compelling?",
 };
 
 const resourceMap: Record<FocusArea, string> = {
@@ -286,6 +324,7 @@ const resourceMap: Record<FocusArea, string> = {
   "Deep Work": "Optional: Use a single-task timer for your next block.",
   Finances: "Optional: Create one spending category alert for this week.",
   Fitness: "Optional: Save a 30-minute bodyweight routine you can repeat tomorrow.",
+  Hobbies: "Optional: Follow one high-quality tutorials video on your target skill.",
   Home: "Optional: Save a short daily home reset checklist.",
   Learning: "Optional: Bookmark one course, article, or practice prompt for later.",
   Mindfulness: "Optional: Use a guided breathing app for your next session.",
@@ -293,6 +332,7 @@ const resourceMap: Record<FocusArea, string> = {
   Organization: "Optional: Save one repeatable cleanup checklist for your workspace.",
   Relationships: "Optional: Write one appreciation message you can send later today.",
   Sleep: "Optional: Write a 5-step wind-down checklist in your notes app.",
+  Writing: "Optional: Free-write in a distraction-free notepad for 5 minutes.",
 };
 
 export const FOCUS_AREAS = focusAreas;
