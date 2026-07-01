@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const isGithubActions = process.env.GITHUB_ACTIONS === "true";
+const isProduction = process.env.NODE_ENV === "production";
 const repoName = "calm-daily-coach";
 
 const nextConfig: NextConfig = {
@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: isGithubActions ? `/${repoName}` : "",
-  assetPrefix: isGithubActions ? `/${repoName}/` : undefined,
+  basePath: isProduction ? `/${repoName}` : "",
+  assetPrefix: isProduction ? `/${repoName}/` : undefined,
 };
 
 export default nextConfig;
