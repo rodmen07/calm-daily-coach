@@ -48,7 +48,7 @@ export default function FocusPage() {
         >
           <div className="mb-5 flex flex-col gap-2 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
-              {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
+              {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Account Mode"}
             </p>
             {authUser ? (
               <button className="secondary-button" type="button" onClick={signOutUser}>

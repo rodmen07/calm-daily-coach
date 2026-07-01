@@ -97,12 +97,12 @@ describe("Dashboard page", () => {
     });
   });
 
-  it("shows guest mode and auth configuration warning when Firebase auth is unavailable", async () => {
+  it("shows account mode and auth configuration warning when Firebase auth is unavailable", async () => {
     vi.mocked(getFirebaseAuth).mockReturnValue(null);
 
     render(<Home />);
 
-    expect(screen.getByText("Guest mode")).toBeTruthy();
+    expect(screen.getByText("Account Mode")).toBeTruthy();
     expect(
       screen.getByText(
         "Google login is not configured yet. Add Firebase environment variables to enable it.",

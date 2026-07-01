@@ -26,11 +26,11 @@ describe("monetization utils", () => {
     expect(summary.pricingCtaClicks).toBe(1);
     expect(summary.dashboardPricingClicks).toBe(1);
     expect(summary.dashboardEarlyAccessClicks).toBe(1);
-    expect(summary.byTier.pro).toBe(2);
-    expect(summary.byTier.starter).toBe(1);
-    expect(summary.byTier.team).toBe(1);
-    expect(summary.ctaByTier.pro).toBe(1);
-    expect(summary.ctaByTier.team).toBe(1);
+    // pro/team are mapped to premium, starter is mapped to free
+    expect(summary.byTier.premium).toBe(3);
+    expect(summary.byTier.free).toBe(1);
+    expect(summary.ctaByTier.premium).toBe(2);
+    expect(summary.ctaByTier.free).toBe(0);
     expect(summary.latestTimestamp).toBeTruthy();
   });
 });

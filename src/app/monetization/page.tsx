@@ -38,7 +38,7 @@ export default function MonetizationPage() {
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-        <section className="panel">
+        <section className="panel animate-status-rise">
           <p className="eyebrow">Monetization</p>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">Conversion analytics snapshot</h1>
           <p className="mb-5 text-sm leading-6 text-slate-700 sm:text-base">
@@ -67,19 +67,17 @@ export default function MonetizationPage() {
 
           <div className="pricing-grid">
             <article className="pricing-card">
-              <p className="eyebrow">Tier interest</p>
+              <p className="eyebrow">Membership Interest</p>
               <ul className="pricing-list list-disc pl-5">
-                <li>Starter events: {summary.byTier.starter}</li>
-                <li>Pro events: {summary.byTier.pro}</li>
-                <li>Team events: {summary.byTier.team}</li>
+                <li>Free Trial logs: {summary.byTier.free ?? 0}</li>
+                <li>Premium Membership logs: {summary.byTier.premium ?? 0}</li>
               </ul>
             </article>
             <article className="pricing-card">
-              <p className="eyebrow">CTA mix</p>
+              <p className="eyebrow">CTA Click Mix</p>
               <ul className="pricing-list list-disc pl-5">
-                <li>Starter CTA clicks: {summary.ctaByTier.starter}</li>
-                <li>Pro CTA clicks: {summary.ctaByTier.pro}</li>
-                <li>Team CTA clicks: {summary.ctaByTier.team}</li>
+                <li>Free Trial CTA clicks: {summary.ctaByTier.free ?? 0}</li>
+                <li>Premium Upgrade CTA clicks: {summary.ctaByTier.premium ?? 0}</li>
               </ul>
             </article>
             <article className="pricing-card">

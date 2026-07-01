@@ -404,7 +404,7 @@ export default function Home() {
 
           <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
-              {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
+              {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Account Mode"}
             </p>
             {authUser ? (
               <button className="secondary-button" type="button" onClick={signOutUser}>

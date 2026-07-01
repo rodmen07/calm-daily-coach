@@ -8,7 +8,7 @@ export type MonetizationEventName =
 
 export type MonetizationEvent = {
   name: MonetizationEventName;
-  tier: PlanInterest;
+  tier: "premium" | "free" | "pro"; // Backwards-compatible fallback mapping
   source: "pricing" | "dashboard";
   timestamp: string;
 };
@@ -19,8 +19,8 @@ export type MonetizationSummary = {
   pricingCtaClicks: number;
   dashboardPricingClicks: number;
   dashboardEarlyAccessClicks: number;
-  byTier: Record<PlanInterest, number>;
-  ctaByTier: Record<PlanInterest, number>;
+  byTier: Record<string, number>;
+  ctaByTier: Record<string, number>;
   latestTimestamp: string | null;
 };
 
@@ -79,9 +79,11 @@ export function trackMonetizationEvent(name: MonetizationEventName, tier: PlanIn
   }
 
   const existing = safeParseEvents(window.localStorage.getItem(MONETIZATION_EVENTS_KEY));
+  const mappedTier: "premium" | "free" | "pro" = tier === "pro" || tier === "team" ? "premium" : "free";
+
   const nextEvent: MonetizationEvent = {
     name,
-    tier,
+    tier: mappedTier,
     source,
     timestamp: new Date().toISOString(),
   };
@@ -122,16 +124,14 @@ export function clearMonetizationEvents() {
 }
 
 export function summarizeMonetizationEvents(events: MonetizationEvent[]): MonetizationSummary {
-  const byTier: Record<PlanInterest, number> = {
-    starter: 0,
-    pro: 0,
-    team: 0,
+  const byTier: Record<string, number> = {
+    free: 0,
+    premium: 0,
   };
 
-  const ctaByTier: Record<PlanInterest, number> = {
-    starter: 0,
-    pro: 0,
-    team: 0,
+  const ctaByTier: Record<string, number> = {
+    free: 0,
+    premium: 0,
   };
 
   let planSelections = 0;
@@ -140,7 +140,10 @@ export function summarizeMonetizationEvents(events: MonetizationEvent[]): Moneti
   let dashboardEarlyAccessClicks = 0;
 
   for (const event of events) {
-    byTier[event.tier] += 1;
+    const canonicalTier = event.tier === "pro" || event.tier === "premium" ? "premium" : "free";
+    if (byTier[canonicalTier] !== undefined) {
+      byTier[canonicalTier] += 1;
+    }
 
     if (event.name === "pricing_plan_selected") {
       planSelections += 1;
@@ -148,7 +151,9 @@ export function summarizeMonetizationEvents(events: MonetizationEvent[]): Moneti
 
     if (event.name === "pricing_cta_clicked") {
       pricingCtaClicks += 1;
-      ctaByTier[event.tier] += 1;
+      if (ctaByTier[canonicalTier] !== undefined) {
+        ctaByTier[canonicalTier] += 1;
+      }
     }
 
     if (event.name === "dashboard_pricing_clicked") {
@@ -157,7 +162,9 @@ export function summarizeMonetizationEvents(events: MonetizationEvent[]): Moneti
 
     if (event.name === "dashboard_early_access_clicked") {
       dashboardEarlyAccessClicks += 1;
-      ctaByTier[event.tier] += 1;
+      if (ctaByTier[canonicalTier] !== undefined) {
+        ctaByTier[canonicalTier] += 1;
+      }
     }
   }
 
