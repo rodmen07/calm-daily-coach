@@ -116,7 +116,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
                 />
                 <path
                   fill="currentColor"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09(14.97 1 12 1 7.63 1 3.82 3.82 2.01 7.69l3.87 3.01c1.14-2.59 3.56-5.32 6.12-5.32z"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.63 1 3.82 3.82 2.01 7.69l3.87 3.01c1.14-2.59 3.56-5.32 6.12-5.32z"
                 />
               </svg>
               <span>Continue with Google</span>
