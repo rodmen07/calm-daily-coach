@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { getFirebaseFirestore } from "@/lib/firebase";
-import { getUserAccount, getTrialDaysRemaining, type UserAccount } from "@/lib/firestore-user";
+import { upsertUserAccount, getTrialDaysRemaining, type UserAccount } from "@/lib/firestore-user";
 import Link from "next/link";
 
 interface SubscriptionGuardProps {
@@ -47,7 +47,10 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
       return;
     }
 
-    getUserAccount(db, authUser.uid)
+    // Upsert (create-or-fetch) rather than read-only get. This guarantees the account
+    // record exists before we evaluate the trial, eliminating the first-login race where
+    // a read could resolve before the account was written and wrongly report no trial.
+    upsertUserAccount(db, authUser.uid, authUser.email ?? "", authUser.displayName ?? null)
       .then((acc) => {
         if (active) {
           setAccount(acc);
@@ -131,7 +134,10 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const isTrialFinished = daysLeft <= 0;
   const isSubscribed = account?.subscriptionStatus === "active";
 
-  const isBlocked = isTrialFinished && !isSubscribed;
+  // Fail open: only block when we have a real account whose trial is genuinely finished.
+  // A null account (still provisioning, or a transient Firestore read issue) must never be
+  // treated as an expired trial, otherwise brand-new users get locked out on first login.
+  const isBlocked = account !== null && isTrialFinished && !isSubscribed;
 
   if (isBlocked) {
     return (
