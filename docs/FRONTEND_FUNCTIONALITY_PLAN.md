@@ -11,6 +11,14 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 - Dashboard CTA language was simplified to align with one $5/month membership after a 30-day free trial.
 - Dashboard tests were updated to cover the new copy and call-to-action behavior.
 
+## Completed (2026-07-02)
+
+- Focused onboarding UX pass shipped to reduce first-session friction.
+- Added a quick-start preset path that configures focus, dose, and theme in one action.
+- Added finish-early actions so users can save onboarding defaults from step 1 or step 2.
+- Added a live defaults summary panel during onboarding for clearer decision confidence.
+- Updated onboarding component tests to cover quick-start completion and persisted preferences.
+
 ## Guiding Rule
 
 - Prefer frontend changes first.

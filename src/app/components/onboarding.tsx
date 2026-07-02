@@ -9,11 +9,55 @@ type OnboardingProps = {
   onSkip: () => void;
 };
 
+type OnboardingPreset = {
+  id: string;
+  label: string;
+  description: string;
+  defaultFocus: FocusArea;
+  defaultDose: DailyDose;
+  defaultTheme: "light" | "dark";
+};
+
+const ONBOARDING_PRESETS: OnboardingPreset[] = [
+  {
+    id: "balanced",
+    label: "Balanced start",
+    description: "Sustainable daily progress without overload.",
+    defaultFocus: "Deep Work",
+    defaultDose: "medium",
+    defaultTheme: "dark",
+  },
+  {
+    id: "light-reset",
+    label: "Light reset",
+    description: "Low-friction consistency to rebuild momentum.",
+    defaultFocus: "Mindfulness",
+    defaultDose: "light",
+    defaultTheme: "light",
+  },
+  {
+    id: "deep-builder",
+    label: "Deep builder",
+    description: "High-intensity sessions for major outcomes.",
+    defaultFocus: "Career",
+    defaultDose: "deep",
+    defaultTheme: "dark",
+  },
+];
+
 export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
   const [defaultFocus, setDefaultFocus] = useState<FocusArea>("Deep Work");
   const [defaultDose, setDefaultDose] = useState<DailyDose>("light");
   const [defaultTheme, setDefaultTheme] = useState<"light" | "dark">("dark");
   const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+
+  function applyPreset(preset: OnboardingPreset) {
+    setDefaultFocus(preset.defaultFocus);
+    setDefaultDose(preset.defaultDose);
+    setDefaultTheme(preset.defaultTheme);
+    setSelectedPresetId(preset.id);
+  }
 
   function handleComplete() {
     const prefs: OnboardingPreferences = {
@@ -31,6 +75,7 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
         <div>
           <p className="eyebrow">Onboarding</p>
           <h2 className="text-xl font-semibold tracking-tight">Personalize your coach</h2>
+          <p className="mt-1 text-xs text-[--muted]">Takes about 30 seconds. You can finish from any step.</p>
         </div>
         <button
           className="text-xs font-semibold uppercase tracking-wider text-[--muted] hover:text-[--foreground]"
@@ -56,12 +101,41 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
         ))}
       </div>
 
+      <div className="mb-5 rounded-xl border border-[--line] bg-[--field] px-3 py-2.5 text-xs sm:text-sm">
+        <p className="font-semibold uppercase tracking-wide text-[--muted]">Your defaults</p>
+        <p className="mt-1 text-[--muted-strong]">
+          Focus: <span className="font-semibold">{defaultFocus}</span> | Dose: <span className="font-semibold capitalize">{defaultDose}</span> | Theme: <span className="font-semibold capitalize">{defaultTheme}</span>
+        </p>
+      </div>
+
       {activeStep === 1 && (
         <section className="space-y-4 animate-fade-in" aria-label="Step 1: Core Focus selection">
           <div>
             <h3 className="text-base font-semibold">Select your primary focus area</h3>
             <p className="dose-hint mt-1 text-xs">This becomes your default category when preparing daily routines.</p>
           </div>
+
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            {ONBOARDING_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className={`rounded-xl border p-3 text-left transition-all ${
+                  selectedPresetId === preset.id
+                    ? "border-[--accent] bg-[--accent]/10"
+                    : "border-[--line] bg-[--field] hover:border-[--muted]"
+                }`}
+                onClick={() => applyPreset(preset)}
+              >
+                <p className="text-sm font-semibold">{preset.label}</p>
+                <p className="mt-1 text-xs text-[--muted]">{preset.description}</p>
+                <p className="mt-2 text-[10px] uppercase tracking-wide text-[--muted]">
+                  {preset.defaultFocus} • {preset.defaultDose} • {preset.defaultTheme}
+                </p>
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 max-h-56 overflow-y-auto pr-1">
             {FOCUS_AREAS.map((area) => (
               <button
@@ -70,19 +144,29 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
                 className={`category-chip justify-center text-center w-full focus:ring-2 focus:ring-[--accent] ${
                   defaultFocus === area ? "is-selected border-[--accent]" : "bg-[--field] border-transparent"
                 }`}
-                onClick={() => setDefaultFocus(area)}
+                onClick={() => {
+                  setDefaultFocus(area);
+                  setSelectedPresetId(null);
+                }}
               >
                 {area}
               </button>
             ))}
           </div>
-          <div className="flex justify-end pt-3">
+          <div className="flex flex-wrap justify-end gap-2 pt-3">
             <button
-              className="primary-button"
+              className="secondary-button"
               type="button"
               onClick={() => setActiveStep(2)}
             >
-              Continue
+              Continue customizing
+            </button>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={handleComplete}
+            >
+              Save and start now
             </button>
           </div>
         </section>
@@ -129,7 +213,7 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
               </button>
             ))}
           </div>
-          <div className="flex justify-between pt-3">
+          <div className="flex flex-wrap justify-between gap-2 pt-3">
             <button
               className="secondary-button"
               type="button"
@@ -137,13 +221,22 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
             >
               Back
             </button>
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => setActiveStep(3)}
-            >
-              Continue
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => setActiveStep(3)}
+              >
+                Continue
+              </button>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={handleComplete}
+              >
+                Save and start now
+              </button>
+            </div>
           </div>
         </section>
       )}
@@ -175,7 +268,7 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
               </button>
             ))}
           </div>
-          <div className="flex justify-between pt-3">
+          <div className="flex flex-wrap justify-between gap-2 pt-3">
             <button
               className="secondary-button"
               type="button"
@@ -188,7 +281,7 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
               type="button"
               onClick={handleComplete}
             >
-              Complete onboarding
+              Save and start now
             </button>
           </div>
         </section>
