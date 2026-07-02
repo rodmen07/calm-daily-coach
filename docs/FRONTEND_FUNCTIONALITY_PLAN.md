@@ -4,6 +4,13 @@
 
 Grow the site from a polished flow shell into a more useful daily coaching product while keeping the work frontend-first.
 
+## Latest Iteration (2026-07-02)
+
+- Dashboard membership panel now reflects the real single-plan model instead of legacy multi-tier messaging.
+- Membership status messaging is now state-aware: signed out, checking, trial days remaining, active, or expired.
+- Dashboard CTA language was simplified to align with one $5/month membership after a 30-day free trial.
+- Dashboard tests were updated to cover the new copy and call-to-action behavior.
+
 ## Guiding Rule
 
 - Prefer frontend changes first.
