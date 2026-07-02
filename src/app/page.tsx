@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
-import { useMonetization } from "@/app/hooks/use-monetization";
+import { getFirebaseFirestore } from "@/lib/firebase";
+import { getTrialDaysRemaining, getUserAccount } from "@/lib/firestore-user";
 import { trackMonetizationEvent } from "@/lib/monetization";
 import { Onboarding } from "@/app/components/onboarding";
 
@@ -81,6 +82,12 @@ export default function Home() {
     authEmail: authUser?.email,
   });
 
+  const [membershipLookup, setMembershipLookup] = useState<{
+    uid: string;
+    account: import("@/lib/firestore-user").UserAccount | null;
+    fallbackTrial: boolean;
+  } | null>(null);
+
   const [showOnboarding, setShowOnboarding] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -115,9 +122,87 @@ export default function Home() {
     );
   };
 
+  useEffect(() => {
+    let active = true;
+
+    if (!authConfigured || !authUser) {
+      return () => {
+        active = false;
+      };
+    }
+
+    const db = getFirebaseFirestore();
+    if (!db) {
+      return () => {
+        active = false;
+      };
+    }
+
+    getUserAccount(db, authUser.uid)
+      .then((account) => {
+        if (!active) {
+          return;
+        }
+        setMembershipLookup({
+          uid: authUser.uid,
+          account,
+          fallbackTrial: false,
+        });
+      })
+      .catch(() => {
+        if (!active) {
+          return;
+        }
+        setMembershipLookup({
+          uid: authUser.uid,
+          account: null,
+          fallbackTrial: true,
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authConfigured, authUser]);
+
+  const membershipView = useMemo(() => {
+    if (!authConfigured || !authUser) {
+      return {
+        status: "signed_out" as const,
+        trialDaysRemaining: null as number | null,
+      };
+    }
+
+    if (!membershipLookup || membershipLookup.uid !== authUser.uid) {
+      return {
+        status: "checking" as const,
+        trialDaysRemaining: null as number | null,
+      };
+    }
+
+    if (membershipLookup.fallbackTrial || !membershipLookup.account) {
+      return {
+        status: "trial" as const,
+        trialDaysRemaining: 30,
+      };
+    }
+
+    if (membershipLookup.account.subscriptionStatus === "active") {
+      return {
+        status: "active" as const,
+        trialDaysRemaining: null as number | null,
+      };
+    }
+
+    const daysLeft = getTrialDaysRemaining(membershipLookup.account.createdAt);
+    return {
+      status: daysLeft > 0 ? ("trial" as const) : ("expired" as const),
+      trialDaysRemaining: daysLeft,
+    };
+  }, [authConfigured, authUser, membershipLookup]);
+
   const hasCheckedIn = checkinStatus.type === "ok";
   const hasPlan = Boolean(plan);
-  const { planInterest } = useMonetization();
 
   const nextCycleHref = !hasPlan ? "/focus" : hasCheckedIn ? "/review" : "/execute";
   const nextCycleLabel = !hasPlan
@@ -362,43 +447,50 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="monetization-panel mt-4" aria-label="Upgrade options">
+          <div className="monetization-panel mt-4" aria-label="Membership status">
             <div className="monetization-copy">
               <div className="flex items-center gap-1.5 mb-1">
                 <svg className="h-4 w-4 text-amber-500 fill-amber-500 animate-pulse" viewBox="0 0 24 24">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.87L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
-                <p className="eyebrow !mb-0">Calm Daily Coach Pro</p>
+                <p className="eyebrow !mb-0">Membership</p>
               </div>
-              <h2 className="text-lg font-semibold tracking-tight">Unlock deeper coaching, not more noise</h2>
+              <h2 className="text-lg font-semibold tracking-tight">One plan. Full access.</h2>
               <p className="mt-2 text-sm leading-6 text-slate-700">
-                Pro adds weekly insight narratives, adaptive plan tuning, reminder automation, and cloud sync status.
+                Calm Daily Coach includes every feature in one membership after a 30-day free trial at $5/month.
               </p>
               <p className="monetization-status mt-2 text-xs font-semibold uppercase tracking-wide">
-                Selected plan interest: {planInterest === "starter" ? "Starter" : planInterest === "pro" ? "Pro" : "Team"}
+                {membershipView.status === "signed_out" && "Sign in to start your 30-day trial"}
+                {membershipView.status === "checking" && "Checking membership status..."}
+                {membershipView.status === "active" && "Membership active"}
+                {membershipView.status === "expired" && "Trial ended - membership required"}
+                {membershipView.status === "trial" &&
+                  `${membershipView.trialDaysRemaining ?? 30} day${
+                    (membershipView.trialDaysRemaining ?? 30) === 1 ? "" : "s"
+                  } left in trial`}
               </p>
             </div>
             <div className="monetization-actions">
               <Link
                 className="primary-button"
                 href="/pricing"
-                onClick={() => trackMonetizationEvent("dashboard_pricing_clicked", planInterest, "dashboard")}
+                onClick={() => trackMonetizationEvent("dashboard_pricing_clicked", "pro", "dashboard")}
               >
-                View plans
+                Open membership
               </Link>
-              <a
-                className="secondary-button"
-                href={`mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20${planInterest === "team" ? "Team" : "Pro"}%20early%20access`}
-                onClick={() =>
-                  trackMonetizationEvent(
-                    "dashboard_early_access_clicked",
-                    planInterest === "starter" ? "pro" : planInterest,
-                    "dashboard",
-                  )
-                }
-              >
-                Join early access
-              </a>
+              {authUser ? (
+                <a
+                  className="secondary-button"
+                  href={`mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20Membership%20support&body=Hi%2CCoach!%20My%20account%20uid%20is%20${authUser.uid}.%20I%20need%20help%20with%20membership.`}
+                  onClick={() => trackMonetizationEvent("dashboard_early_access_clicked", "pro", "dashboard")}
+                >
+                  Contact support
+                </a>
+              ) : (
+                <button className="secondary-button" type="button" onClick={signInWithGoogle}>
+                  Sign in with Google
+                </button>
+              )}
             </div>
           </div>
 
