@@ -176,14 +176,12 @@ class UnifiedLLMClient:
 
     def _call_auto(self, messages: List[Dict[str, str]], tools: Optional[List[Dict[str, Any]]], system_prompt: Optional[str]) -> Dict[str, Any]:
         """
-        Invoke the Copilot CLI (or another configured CLI) via shell to get a response.
-        Expects `COPILOT_CMD` env var to contain the base command that accepts stdin
-        for the prompt and returns JSON when `--output-format json` is provided.
-        Falls back to plain text parsing if JSON isn't produced.
+        Invoke the Copilot CLI via list process arguments to get a response.
+        Bypasses command line shell parsing and stdin redirection.
+        Parses JSONL output looking for type == 'assistant.message'.
         """
         import subprocess
-
-        cmd = os.environ.get("COPILOT_CMD", "copilot compose --prompt - --output-format json --silent --allow-all-tools --allow-all-paths")
+        import os
 
         # Build a simple textual prompt combining system + recent messages
         prompt_parts = []
@@ -195,8 +193,13 @@ class UnifiedLLMClient:
 
         prompt_text = "\n".join(prompt_parts)
 
+        # Call copilot directly with list arguments to bypass shell limits and quotes
+        copilot_bin = "copilot.cmd" if os.name == "nt" else "copilot"
+        cmd = [copilot_bin, "-p", prompt_text, "--output-format", "json", "--allow-all"]
+
         try:
-            proc = subprocess.run(cmd, input=prompt_text.encode("utf-8"), shell=True, capture_output=True, timeout=120)
+            log.info("Invoking Copilot CLI...")
+            proc = subprocess.run(cmd, capture_output=True, timeout=120)
             out = proc.stdout.decode("utf-8", errors="ignore").strip()
 
             # Try parse JSONL output (one JSON object per line)
@@ -204,15 +207,25 @@ class UnifiedLLMClient:
             for line in reversed(lines):
                 try:
                     obj = json.loads(line)
-                    # Attempt to find text content in common fields
-                    content = obj.get("content") or obj.get("text") or obj.get("assistant") or ""
-                    tool_calls = obj.get("tool_calls", []) if isinstance(obj, dict) else []
-                    return {"content": content, "tool_calls": tool_calls}
+                    if obj.get("type") == "assistant.message":
+                        data = obj.get("data", {})
+                        content = data.get("content") or ""
+                        tool_requests = data.get("toolRequests", [])
+                        
+                        tool_calls = []
+                        for tr in tool_requests:
+                            tool_calls.append({
+                                "id": tr.get("toolCallId"),
+                                "name": tr.get("name"),
+                                "arguments": tr.get("arguments")
+                            })
+                        log.info(f"Copilot CLI returned success: content length={len(content)}, tool_calls={len(tool_calls)}")
+                        return {"content": content, "tool_calls": tool_calls}
                 except Exception:
                     continue
 
-            # Fallback: return raw text as content
+            # Fallback: return raw text if no JSON assistant message matched
             return {"content": out, "tool_calls": []}
         except Exception as e:
-            log.error(f"Error calling COPILOT_CMD: {e}")
+            log.error(f"Error calling Copilot CLI: {e}")
             return {"content": "", "tool_calls": []}
