@@ -35,6 +35,21 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 
 - Add a compact onboarding funnel health badge to the dashboard for at-a-glance adoption visibility. Completed.
 
+## In Progress (2026-07-03) - Code Quality and Maintainability Pass
+
+- Extract focus category metadata into a shared typed module so page-level UI does not embed icon selection logic.
+- Extract weekly review insight derivations into pure helper functions with focused tests.
+- Reduce route component complexity in `focus/page.tsx` and `review/page.tsx` by moving non-render business logic into `src/lib`.
+- Introduce a reusable async status type for planner operation states to remove repeated union definitions.
+- Keep behavior stable while improving readability and modular boundaries.
+
+## Completed (2026-07-03) - Code Quality and Maintainability Pass
+
+- Extracted focus category metadata into `src/lib/focus-metadata.ts` and removed inline icon-selection branching from the Focus route.
+- Extracted weekly review derivation logic into `src/lib/review-insights.ts` and simplified `src/app/review/page.tsx` to consume pure helpers.
+- Added focused unit coverage for review insight derivations in `src/lib/__tests__/review-insights.test.ts`.
+- Introduced a shared async operation status type in `src/lib/async-status.ts` and updated planner hook state typing to reduce repeated union definitions.
+
 ## Completed (2026-07-02) - Dashboard Onboarding Health
 
 - Added a dashboard onboarding health badge with starts, completions, skips, and conversion rate.

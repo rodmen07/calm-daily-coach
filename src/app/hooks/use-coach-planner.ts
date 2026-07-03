@@ -3,6 +3,7 @@ import {
   createCheckinStore,
   type CheckinStoreAdapter,
 } from "@/lib/checkin-store";
+import type { AsyncStatus } from "@/lib/async-status";
 import {
   type WeeklySummary,
 } from "@/lib/browser-checkins";
@@ -15,21 +16,6 @@ import {
   type FocusArea,
 } from "@/lib/plan";
 import { getRustCheckinAdvice, getRustPlanBrief } from "@/lib/rust-coach-bridge";
-
-type ReminderStatus =
-  | { type: "idle" }
-  | { type: "ok"; message: string }
-  | { type: "error"; message: string };
-
-type CheckinStatus =
-  | { type: "idle" }
-  | { type: "ok"; message: string }
-  | { type: "error"; message: string };
-
-type MigrationStatus =
-  | { type: "idle" }
-  | { type: "ok"; message: string }
-  | { type: "error"; message: string };
 
 const STORAGE_KEY = "calm-daily-coach";
 
@@ -137,11 +123,11 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   const [email, setEmail] = useState("");
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [loading, setLoading] = useState(false);
-  const [reminderStatus, setReminderStatus] = useState<ReminderStatus>({ type: "idle" });
-  const [checkinStatus, setCheckinStatus] = useState<CheckinStatus>({ type: "idle" });
+  const [reminderStatus, setReminderStatus] = useState<AsyncStatus>({ type: "idle" });
+  const [checkinStatus, setCheckinStatus] = useState<AsyncStatus>({ type: "idle" });
   const [skipReason, setSkipReason] = useState("");
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
-  const [migrationStatus, setMigrationStatus] = useState<MigrationStatus>({ type: "idle" });
+  const [migrationStatus, setMigrationStatus] = useState<AsyncStatus>({ type: "idle" });
   const [coachBrief, setCoachBrief] = useState<string | null>(null);
   const [checkinAdvice, setCheckinAdvice] = useState<string | null>(null);
 
