@@ -42,6 +42,11 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 - Added dashboard shortcut to the detailed onboarding funnel analytics page.
 - Updated dashboard tests to validate onboarding health badge rendering and conversion state display.
 
+## Completed (2026-07-02) - Daily Plan Editor
+
+- Added constrained edit flow to the Execute view so users can update the text of their action sprints and reflection questions without altering the configured category and dose.
+- Added a `resetPlan` option directly exposed on the locked Focus generator so users can clear yesterday's unsaved check-in or cancel out of an incomplete day.
+
 ## Guiding Rule
 
 - Prefer frontend changes first.
@@ -89,14 +94,14 @@ Success criteria:
 - The weekly view helps users make a next-cycle decision.
 - Insights are easy to scan on mobile.
 
-### 4. Daily Plan Editor
+### 4. Daily Plan Editor (Completed)
 
 Allow small, constrained edits to today’s generated plan so users can adapt it without opening the door to unlimited editing.
 
 Deliverables:
-- Edit action and limited plan fields.
-- Guardrails that keep the plan deliberate.
-- Clear reset behavior when the plan is regenerated.
+- [x] Edit action and limited plan fields.
+- [x] Guardrails that keep the plan deliberate.
+- [x] Clear reset behavior when the plan is regenerated.
 
 Success criteria:
 - Users can adjust today’s plan when reality changes.
