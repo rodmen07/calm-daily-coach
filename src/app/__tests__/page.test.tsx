@@ -41,6 +41,10 @@ describe("Dashboard page", () => {
 
   it("shows dashboard framing and loop navigation", async () => {
     window.localStorage.setItem("calm-daily-coach:plan-interest", "pro");
+    window.localStorage.setItem(
+      "calm-daily-coach:onboarding",
+      JSON.stringify({ defaultFocus: "Deep Work", defaultDose: "light", defaultTheme: "dark" }),
+    );
     render(<Home />);
 
     expect(screen.getByText("Dashboard")).toBeTruthy();
@@ -51,6 +55,8 @@ describe("Dashboard page", () => {
     expect(screen.getByText("Membership")).toBeTruthy();
     expect(screen.getByText("One plan. Full access.")).toBeTruthy();
     expect(screen.getByText("Sign in to start your 30-day trial")).toBeTruthy();
+    expect(screen.getByText("Onboarding health")).toBeTruthy();
+    expect(screen.getByText("No onboarding runs yet")).toBeTruthy();
 
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Start today's cycle" }).getAttribute("href")).toBe("/focus");
@@ -59,7 +65,40 @@ describe("Dashboard page", () => {
       expect(screen.getByRole("link", { name: "Generate plan" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "View review step" }).getAttribute("href")).toBe("/review");
       expect(screen.getByRole("link", { name: "Open membership" }).getAttribute("href")).toBe("/pricing");
+      expect(screen.getByRole("link", { name: "Open funnel analytics" }).getAttribute("href")).toBe("/monetization");
       expect(screen.getByRole("button", { name: "Sign in with Google" })).toBeTruthy();
+    });
+  });
+
+  it("shows onboarding health conversion status from local funnel events", async () => {
+    window.localStorage.setItem(
+      "calm-daily-coach:onboarding",
+      JSON.stringify({ defaultFocus: "Deep Work", defaultDose: "light", defaultTheme: "dark" }),
+    );
+    window.localStorage.setItem(
+      "calm-daily-coach:monetization-events",
+      JSON.stringify([
+        {
+          name: "onboarding_started",
+          tier: "free",
+          source: "onboarding",
+          timestamp: "2026-06-27T12:00:00.000Z",
+        },
+        {
+          name: "onboarding_completed",
+          tier: "free",
+          source: "onboarding",
+          detail: "step_1:balanced",
+          timestamp: "2026-06-27T12:01:00.000Z",
+        },
+      ]),
+    );
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Strong completion")).toBeTruthy();
+      expect(screen.getByText("100%")).toBeTruthy();
     });
   });
 

@@ -31,6 +31,17 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 - Extended analytics dashboard cards with onboarding starts, completions, step views, and preset usage detail.
 - Updated monetization analytics tests for onboarding funnel summary expectations.
 
+## In Progress (2026-07-02) - Dashboard UX
+
+- Add a compact onboarding funnel health badge to the dashboard for at-a-glance adoption visibility. Completed.
+
+## Completed (2026-07-02) - Dashboard Onboarding Health
+
+- Added a dashboard onboarding health badge with starts, completions, skips, and conversion rate.
+- Added status labels for onboarding funnel quality (no runs, strong, moderate, needs iteration).
+- Added dashboard shortcut to the detailed onboarding funnel analytics page.
+- Updated dashboard tests to validate onboarding health badge rendering and conversion state display.
+
 ## Guiding Rule
 
 - Prefer frontend changes first.

@@ -1,13 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import { getFirebaseFirestore } from "@/lib/firebase";
 import { getTrialDaysRemaining, getUserAccount } from "@/lib/firestore-user";
-import { trackMonetizationEvent } from "@/lib/monetization";
+import { getMonetizationEvents, summarizeMonetizationEvents, trackMonetizationEvent } from "@/lib/monetization";
 import { Onboarding } from "@/app/components/onboarding";
+
+function subscribeMonetization(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", callback);
+  window.addEventListener("monetizationchange", callback);
+
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("monetizationchange", callback);
+  };
+}
 
 function AnimatedCounter({
   value,
@@ -272,6 +286,33 @@ export default function Home() {
       .sort((a, b) => b.done - a.done);
   }, [weeklySummary]);
 
+  const monetizationEvents = useSyncExternalStore(subscribeMonetization, getMonetizationEvents, () => []);
+
+  const onboardingFunnelSummary = useMemo(() => {
+    const summary = summarizeMonetizationEvents(monetizationEvents);
+    const starts = summary.onboardingStarted;
+    const completions = summary.onboardingCompleted;
+    const skips = summary.onboardingSkipped;
+    const conversionRate = starts > 0 ? Math.round((completions / starts) * 100) : 0;
+
+    const statusLabel =
+      starts === 0
+        ? "No onboarding runs yet"
+        : conversionRate >= 70
+          ? "Strong completion"
+          : conversionRate >= 40
+            ? "Moderate conversion"
+            : "Needs iteration";
+
+    return {
+      starts,
+      completions,
+      skips,
+      conversionRate,
+      statusLabel,
+    };
+  }, [monetizationEvents]);
+
   return (
     <div className="page-shell">
       <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
@@ -300,6 +341,36 @@ export default function Home() {
             <Link className="secondary-button" href="/focus">
               New cycle from Focus
             </Link>
+          </div>
+
+          <div className="mb-4 rounded-xl border border-[var(--line)] bg-[var(--field)] px-3 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Onboarding health</p>
+              <p className="text-xs font-semibold text-[--accent]">{onboardingFunnelSummary.statusLabel}</p>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
+                <p className="text-slate-500">Starts</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.starts}</p>
+              </div>
+              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
+                <p className="text-slate-500">Completions</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.completions}</p>
+              </div>
+              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
+                <p className="text-slate-500">Skips</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.skips}</p>
+              </div>
+              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
+                <p className="text-slate-500">Conversion</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.conversionRate}%</p>
+              </div>
+            </div>
+            <div className="mt-2">
+              <Link className="secondary-button" href="/monetization">
+                Open funnel analytics
+              </Link>
+            </div>
           </div>
           
           <p className="flow-detail text-xs sm:text-sm sr-only">
