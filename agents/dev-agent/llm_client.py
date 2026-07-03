@@ -182,6 +182,10 @@ class UnifiedLLMClient:
         """
         import subprocess
         import os
+        import pathlib
+
+        # Resolve repository root
+        workspace_root = pathlib.Path(__file__).parent.parent.parent.resolve()
 
         # Build a simple textual prompt combining system + recent messages
         prompt_parts = []
@@ -195,11 +199,17 @@ class UnifiedLLMClient:
 
         # Call copilot directly with list arguments to bypass shell limits and quotes
         copilot_bin = "copilot.cmd" if os.name == "nt" else "copilot"
-        cmd = [copilot_bin, "-p", prompt_text, "--output-format", "json", "--allow-all"]
+        cmd = [
+            copilot_bin, 
+            "-p", prompt_text, 
+            "--output-format", "json", 
+            "--allow-all",
+            "--allow-all-paths"
+        ]
 
         try:
-            log.info("Invoking Copilot CLI...")
-            proc = subprocess.run(cmd, capture_output=True, timeout=120)
+            log.info(f"Invoking Copilot CLI at workspace root: {workspace_root}...")
+            proc = subprocess.run(cmd, capture_output=True, timeout=300, cwd=str(workspace_root))
             out = proc.stdout.decode("utf-8", errors="ignore").strip()
 
             # Try parse JSONL output (one JSON object per line)
@@ -218,6 +228,17 @@ class UnifiedLLMClient:
                                 "id": tr.get("toolCallId"),
                                 "name": tr.get("name"),
                                 "arguments": tr.get("arguments")
+                            })
+                        log.info(f"Copilot CLI returned success: content length={len(content)}, tool_calls={len(tool_calls)}")
+                        return {"content": content, "tool_calls": tool_calls}
+                except Exception:
+                    continue
+
+            # Fallback: return raw text if no JSON assistant message matched
+            return {"content": out, "tool_calls": []}
+        except Exception as e:
+            log.error(f"Error calling Copilot CLI: {e}")
+            return {"content": "", "tool_calls": []}
                             })
                         log.info(f"Copilot CLI returned success: content length={len(content)}, tool_calls={len(tool_calls)}")
                         return {"content": content, "tool_calls": tool_calls}
