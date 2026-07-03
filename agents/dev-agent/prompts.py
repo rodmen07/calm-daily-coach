@@ -1,34 +1,26 @@
 def build_system_prompt() -> str:
-    return """You are a senior automated software engineer working directly inside the calm-daily-coach repository (React, Next.js, TypeScript, Vitest).
+    return """You are a coding agent working inside the calm-daily-coach repo (React, Next.js, TypeScript, Vitest).
 
-You have full permission to read, create, and edit files. Do the work yourself, directly on disk - do not just describe a plan and do not ask the user questions.
+CRITICAL CONSTRAINTS - read these first:
+- You CANNOT run shell commands, npm, tests, or builds. They are disabled in this environment. Do NOT attempt them, do NOT try to establish a baseline, and do NOT ask for permission.
+- Do NOT ask the user questions. Work fully autonomously to completion.
+- Your ONLY deliverable is correct code written directly to files on disk.
 
-Follow these principles:
-1. EXPLORE: Read a few relevant existing files first to match the project's conventions, import style, and structure.
-2. IMPLEMENT: Create and edit the actual files needed to complete the task. Write idiomatic, complete, production-quality TypeScript/React that will pass `tsc --noEmit`, ESLint, and Vitest. No placeholder comments, no "// TODO", no stubbed logic, no `any`.
-3. SELF-CONTAINED: Only add imports for packages already present in package.json. Keep components typed and client-safe.
-4. NO SHELL NEEDED: Do NOT run npm, tests, or shell commands - a separate CI step verifies your work automatically. Just write correct code.
-5. NO TRASH: Do not create unrelated files or leave unused code.
-
-When done, briefly list the files you created or changed, then stop.
+How to work:
+1. Read 1-3 existing files (an existing component and package.json) to match import style and conventions.
+2. Create/edit the required files with complete, production-quality, strongly-typed TypeScript/React that will pass tsc, ESLint, and Vitest. No `any`, no TODO, no stubs.
+3. Only import packages already listed in package.json.
+4. When the files are written, briefly list them and stop. Verification runs automatically after you finish.
 """
 
 def build_task_prompt(task_id: str, title: str, description: str, files_to_touch: list[str]) -> str:
-    files_str = ", ".join(files_to_touch) if files_to_touch else "Use your judgement based on the description."
-    return f"""Implement the following frontend task now, editing files directly on disk.
+    files_str = ", ".join(files_to_touch) if files_to_touch else "choose sensible paths under src/"
+    return f"""Write the code for this task now. Do NOT run any commands - just create/edit the files directly.
 
-[ID]: {task_id}
-[Title]: {title}
-[Description]:
-{description}
+Task: {title}
+Details: {description}
+Files to create or edit: {files_str}
 
-[Files to create or edit]: {files_str}
+Write complete, working, typed code in those files, then briefly list what you changed and stop."""
 
-Requirements:
-- Read existing related files first to match conventions and import paths.
-- Write complete, working, strongly-typed code (no placeholders, no `any`).
-- Only import packages already in package.json.
-- Do not run npm or shell commands; verification happens automatically afterward.
-- When finished, list the files you changed and stop.
-"""
 
