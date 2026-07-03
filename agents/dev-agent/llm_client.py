@@ -40,6 +40,8 @@ class UnifiedLLMClient:
             return self._call_anthropic(messages, tools, system_prompt)
         elif self.provider == "gemini":
             return self._call_gemini(messages, tools, system_prompt)
+        elif self.provider == "auto":
+            return self._call_auto(messages, tools, system_prompt)
         else:
             raise ValueError(f"Unsupported provider: {self.provider}")
 
@@ -171,3 +173,46 @@ class UnifiedLLMClient:
         
         # Return purely text completion for the simple scaffold configuration
         return {"content": response.text, "tool_calls": []}
+
+    def _call_auto(self, messages: List[Dict[str, str]], tools: Optional[List[Dict[str, Any]]], system_prompt: Optional[str]) -> Dict[str, Any]:
+        """
+        Invoke the Copilot CLI (or another configured CLI) via shell to get a response.
+        Expects `COPILOT_CMD` env var to contain the base command that accepts stdin
+        for the prompt and returns JSON when `--output-format json` is provided.
+        Falls back to plain text parsing if JSON isn't produced.
+        """
+        import subprocess
+
+        cmd = os.environ.get("COPILOT_CMD", "copilot compose --prompt - --output-format json --silent --allow-all-tools --allow-all-paths")
+
+        # Build a simple textual prompt combining system + recent messages
+        prompt_parts = []
+        if system_prompt:
+            prompt_parts.append(system_prompt)
+        for m in messages:
+            role = m.get("role", "user")
+            prompt_parts.append(f"[{role}] {m.get('content','')}\n")
+
+        prompt_text = "\n".join(prompt_parts)
+
+        try:
+            proc = subprocess.run(cmd, input=prompt_text.encode("utf-8"), shell=True, capture_output=True, timeout=120)
+            out = proc.stdout.decode("utf-8", errors="ignore").strip()
+
+            # Try parse JSONL output (one JSON object per line)
+            lines = [l for l in out.splitlines() if l.strip()]
+            for line in reversed(lines):
+                try:
+                    obj = json.loads(line)
+                    # Attempt to find text content in common fields
+                    content = obj.get("content") or obj.get("text") or obj.get("assistant") or ""
+                    tool_calls = obj.get("tool_calls", []) if isinstance(obj, dict) else []
+                    return {"content": content, "tool_calls": tool_calls}
+                except Exception:
+                    continue
+
+            # Fallback: return raw text as content
+            return {"content": out, "tool_calls": []}
+        except Exception as e:
+            log.error(f"Error calling COPILOT_CMD: {e}")
+            return {"content": "", "tool_calls": []}
