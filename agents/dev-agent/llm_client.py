@@ -187,15 +187,18 @@ class UnifiedLLMClient:
         # Resolve repository root
         workspace_root = pathlib.Path(__file__).parent.parent.parent.resolve()
 
-        # Build a simple textual prompt combining system + recent messages
+        # Build one clean instruction for the single-shot CLI call. Role tags
+        # like "[user]" confuse the model into a generic greeting, so we join the
+        # system guidance and the actual task content as plain prose.
         prompt_parts = []
         if system_prompt:
-            prompt_parts.append(system_prompt)
+            prompt_parts.append(system_prompt.strip())
         for m in messages:
-            role = m.get("role", "user")
-            prompt_parts.append(f"[{role}] {m.get('content','')}\n")
+            content = (m.get("content") or "").strip()
+            if content:
+                prompt_parts.append(content)
 
-        prompt_text = "\n".join(prompt_parts)
+        prompt_text = "\n\n".join(prompt_parts)
 
         # Call copilot directly with list arguments to bypass shell limits and quotes
         copilot_bin = "copilot.cmd" if os.name == "nt" else "copilot"
