@@ -4,14 +4,27 @@
       "id": "cdc-001",
       "title": "Add helper method for parsing dates in planner",
       "description": "Create a unified utility function within src/lib/planner-derivations.ts to parse date inputs safely. This function should accept a string or Date, handle invalid formats, and return a clean ISO-8601 substring format (YYYY-MM-DD).",
-      "files_to_touch": ["src/lib/planner-derivations.ts"],
+      "files_to_touch": [
+        "src/lib/planner-derivations.ts"
+      ],
       "status": "completed"
     },
     {
       "id": "cdc-002",
       "title": "Add test coverage for parsed date parser utility",
       "description": "Add comprehensive unit tests in src/lib/__tests__/planner-derivations.test.ts to verify the date parsing utility handles typical dates, edge cases, empty values, and invalid formats correctly.",
-      "files_to_touch": ["src/lib/__tests__/planner-derivations.test.ts"],
+      "files_to_touch": [
+        "src/lib/__tests__/planner-derivations.test.ts"
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "cdc-003",
+      "title": "Dry-run: annotate planner derivations README",
+      "description": "Supervised dry-run task to update agents/dev-agent/README.md with notes about supervised runs and safety. This task is for testing the interactive provider in DRY_RUN mode.",
+      "files_to_touch": [
+        "agents/dev-agent/README.md"
+      ],
       "status": "completed"
     }
   ]
