@@ -20,11 +20,11 @@ describe("Onboarding Component", () => {
     render(<Onboarding onComplete={handleComplete} onSkip={handleSkip} />);
 
     expect(screen.getByText("Personalize your coach")).toBeTruthy();
-    expect(screen.getByText("Select your primary focus area")).toBeTruthy();
-    expect(screen.getByText("Takes about 30 seconds. You can finish from any step.")).toBeTruthy();
+    expect(screen.getByText("Pick your starting path")).toBeTruthy();
+    expect(screen.getByText("Pick a path now. You can fine-tune anytime after your first loop.")).toBeTruthy();
     expect(screen.getAllByText("Deep Work").length).toBeGreaterThan(0);
-    expect(screen.getByText("Continue customizing")).toBeTruthy();
-    expect(screen.getByText("Save and start now")).toBeTruthy();
+    expect(screen.getByText("Customize step-by-step")).toBeTruthy();
+    expect(screen.getByText("Quick start now")).toBeTruthy();
   });
 
   it("applies a quick-start preset and completes onboarding from step 1", () => {
@@ -34,7 +34,7 @@ describe("Onboarding Component", () => {
     render(<Onboarding onComplete={handleComplete} onSkip={handleSkip} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Balanced start/i }));
-    fireEvent.click(screen.getByRole("button", { name: "Save and start now" }));
+  fireEvent.click(screen.getByRole("button", { name: "Quick start now" }));
 
     expect(handleComplete).toHaveBeenCalledWith({
       defaultFocus: "Deep Work",

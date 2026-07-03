@@ -193,6 +193,37 @@ html[data-theme="dark"] .border-slate-200 {
   gap: 8px;
 }
 
+.today-spotlight {
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at right top, color-mix(in srgb, var(--accent) 20%, transparent), transparent 58%),
+    color-mix(in srgb, var(--surface-strong) 86%, var(--field));
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.insights-collapsible {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-strong) 90%, var(--field));
+  padding: 10px 12px;
+}
+
+.insights-collapsible summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+}
+
+.insights-collapsible summary::marker {
+  color: var(--accent);
+}
+
 .action-rail {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -332,6 +363,32 @@ html[data-theme="dark"] .border-slate-200 {
   padding: 5px 10px;
   font-size: 0.76rem;
   font-family: var(--font-plex-mono), monospace;
+}
+
+.step-card-direction-hints {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.direction-chip {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 5px 9px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.direction-chip.is-active {
+  color: var(--accent-strong);
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--line));
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-strong));
+}
+
+.direction-chip.is-disabled {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface-strong) 90%, var(--field));
 }
 
 .step-card-body {

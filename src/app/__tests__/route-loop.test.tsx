@@ -100,10 +100,10 @@ describe("route loop smoke test", () => {
     render(<Home />);
 
     expect(screen.getByText("Dashboard")).toBeTruthy();
-    expect(screen.getByText("Reflection loop")).toBeTruthy();
+    expect(screen.getByText("Today-first coaching")).toBeTruthy();
     expect(screen.getByText("Dashboard - Focus - Execute - Review - Dashboard")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Start today's cycle" }).getAttribute("href")).toBe("/focus");
-    expect(screen.getByRole("link", { name: "New cycle from Focus" }).getAttribute("href")).toBe("/focus");
+    expect(screen.getByRole("link", { name: "Start today's session" }).getAttribute("href")).toBe("/focus");
+    expect(screen.getByRole("link", { name: "Start a fresh plan" }).getAttribute("href")).toBe("/focus");
 
     cleanup();
 

@@ -220,10 +220,20 @@ export default function Home() {
 
   const nextCycleHref = !hasPlan ? "/focus" : hasCheckedIn ? "/review" : "/execute";
   const nextCycleLabel = !hasPlan
-    ? "Start today\'s cycle"
+    ? "Start today\'s session"
     : hasCheckedIn
-      ? "Continue to reflection"
-      : "Continue active cycle";
+      ? "Open today\'s reflection"
+      : "Continue today\'s session";
+  const todayStatus = !hasPlan
+    ? "No plan yet"
+    : hasCheckedIn
+      ? "Session complete"
+      : "Plan in progress";
+  const todayStatusDetail = !hasPlan
+    ? "Pick a focus and a dose, then start your first deliberate step."
+    : hasCheckedIn
+      ? "Your check-in is done. Use reflection to close the loop with intent."
+      : "You already have a plan. Execute the session and check in when done.";
 
   const actionRail = [
     {
@@ -233,7 +243,7 @@ export default function Home() {
         ? "Adjust today's focus or regenerate the deliberate plan."
         : "Choose a focus area and dose to generate today's plan.",
       href: "/focus",
-      buttonLabel: hasPlan ? "Edit focus" : "Start focus",
+      buttonLabel: hasPlan ? "Tune focus" : "Start focus",
       primary: !hasPlan,
     },
     {
@@ -241,11 +251,11 @@ export default function Home() {
       state: hasPlan ? (hasCheckedIn ? "Done for today" : "Plan ready") : "Locked",
       description: hasPlan
         ? hasCheckedIn
-          ? "Your check-in is complete. Reopen the step only if you want to review it."
-          : "Work the plan, then mark the day done or skipped."
+          ? "Your check-in is complete. Reopen execution if you want to review the work."
+          : "Run your active plan, then mark the day done or skipped."
         : "Generate a plan before the execution step becomes active.",
       href: hasPlan ? "/execute" : "/focus",
-      buttonLabel: hasPlan ? (hasCheckedIn ? "Review execution" : "Open execute") : "Generate plan",
+      buttonLabel: hasPlan ? (hasCheckedIn ? "See check-in" : "Open execute") : "Generate plan",
       primary: hasPlan && !hasCheckedIn,
       locked: !hasPlan,
     },
@@ -256,7 +266,7 @@ export default function Home() {
         ? "Read weekly progress and decide what to carry into the next cycle."
         : "Complete today's check-in to unlock weekly reflection.",
       href: "/review",
-      buttonLabel: hasCheckedIn ? "Open review" : "View review step",
+      buttonLabel: hasCheckedIn ? "Open reflection" : "Preview reflection",
       primary: hasCheckedIn,
     },
   ];
@@ -328,47 +338,23 @@ export default function Home() {
         <section className="panel mb-5">
           <p className="eyebrow">Dashboard</p>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Reflection loop
+            Today-first coaching
           </h1>
           <p className="mb-3 text-sm leading-6 text-slate-700 sm:text-base">
-            This dashboard stays focused on progress metrics. The daily flow now lives in the swipe cards: Focus,
-            Execute, and Review.
+            Start with one clear action, then move through Focus, Execute, and Review at your own pace.
           </p>
-          <div className="flow-route-links mb-3 text-sm">
-            <Link className="primary-button" href={nextCycleHref}>
-              {nextCycleLabel}
-            </Link>
-            <Link className="secondary-button" href="/focus">
-              New cycle from Focus
-            </Link>
-          </div>
-
-          <div className="mb-4 rounded-xl border border-[var(--line)] bg-[var(--field)] px-3 py-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Onboarding health</p>
-              <p className="text-xs font-semibold text-[--accent]">{onboardingFunnelSummary.statusLabel}</p>
+          <div className="today-spotlight mb-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Today status</p>
+              <h2 className="mt-1 text-xl font-semibold tracking-tight">{todayStatus}</h2>
+              <p className="mt-1 text-sm text-slate-700">{todayStatusDetail}</p>
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
-                <p className="text-slate-500">Starts</p>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.starts}</p>
-              </div>
-              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
-                <p className="text-slate-500">Completions</p>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.completions}</p>
-              </div>
-              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
-                <p className="text-slate-500">Skips</p>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.skips}</p>
-              </div>
-              <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
-                <p className="text-slate-500">Conversion</p>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.conversionRate}%</p>
-              </div>
-            </div>
-            <div className="mt-2">
-              <Link className="secondary-button" href="/monetization">
-                Open funnel analytics
+            <div className="flow-route-links text-sm">
+              <Link className="primary-button" href={nextCycleHref}>
+                {nextCycleLabel}
+              </Link>
+              <Link className="secondary-button" href="/focus">
+                Start a fresh plan
               </Link>
             </div>
           </div>
@@ -473,7 +459,7 @@ export default function Home() {
                 Action rail
               </p>
               <p className="text-xs text-slate-600">
-                Jump straight to the next step in the cycle.
+                Pick the next deliberate step.
               </p>
             </div>
             <div className="action-rail grid gap-3 md:grid-cols-3">
@@ -526,7 +512,7 @@ export default function Home() {
                 </svg>
                 <p className="eyebrow !mb-0">Membership</p>
               </div>
-              <h2 className="text-lg font-semibold tracking-tight">One plan. Full access.</h2>
+              <h2 className="text-lg font-semibold tracking-tight">Your coach plan</h2>
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 Calm Daily Coach includes every feature in one membership after a 30-day free trial at $5/month.
               </p>
@@ -547,7 +533,7 @@ export default function Home() {
                 href="/pricing"
                 onClick={() => trackMonetizationEvent("dashboard_pricing_clicked", "pro", "dashboard")}
               >
-                Open membership
+                Manage plan
               </Link>
               {authUser ? (
                 <a
@@ -564,6 +550,39 @@ export default function Home() {
               )}
             </div>
           </div>
+
+          <details className="insights-collapsible mt-4">
+            <summary>Workspace insights</summary>
+            <div className="mt-3 rounded-xl border border-[var(--line)] bg-[var(--field)] px-3 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Onboarding health</p>
+                <p className="text-xs font-semibold text-[--accent]">{onboardingFunnelSummary.statusLabel}</p>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
+                  <p className="text-slate-500">Starts</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.starts}</p>
+                </div>
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
+                  <p className="text-slate-500">Completions</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.completions}</p>
+                </div>
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
+                  <p className="text-slate-500">Skips</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.skips}</p>
+                </div>
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] p-2">
+                  <p className="text-slate-500">Conversion</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{onboardingFunnelSummary.conversionRate}%</p>
+                </div>
+              </div>
+              <div className="mt-2">
+                <Link className="secondary-button" href="/monetization">
+                  View analytics
+                </Link>
+              </div>
+            </div>
+          </details>
 
           <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">

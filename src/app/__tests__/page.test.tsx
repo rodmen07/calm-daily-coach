@@ -48,24 +48,22 @@ describe("Dashboard page", () => {
     render(<Home />);
 
     expect(screen.getByText("Dashboard")).toBeTruthy();
-    expect(screen.getByText("Reflection loop")).toBeTruthy();
+    expect(screen.getByText("Today-first coaching")).toBeTruthy();
     expect(screen.getByText("Dashboard - Focus - Execute - Review - Dashboard")).toBeTruthy();
     expect(screen.getByText("Action rail")).toBeTruthy();
     expect(screen.getByText("Ready to start")).toBeTruthy();
     expect(screen.getByText("Membership")).toBeTruthy();
-    expect(screen.getByText("One plan. Full access.")).toBeTruthy();
+    expect(screen.getByText("Your coach plan")).toBeTruthy();
     expect(screen.getByText("Sign in to start your 30-day trial")).toBeTruthy();
-    expect(screen.getByText("Onboarding health")).toBeTruthy();
-    expect(screen.getByText("No onboarding runs yet")).toBeTruthy();
+    expect(screen.getByText("Workspace insights")).toBeTruthy();
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Start today's cycle" }).getAttribute("href")).toBe("/focus");
-      expect(screen.getByRole("link", { name: "New cycle from Focus" }).getAttribute("href")).toBe("/focus");
+      expect(screen.getByRole("link", { name: "Start today's session" }).getAttribute("href")).toBe("/focus");
+      expect(screen.getByRole("link", { name: "Start a fresh plan" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "Start focus" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "Generate plan" }).getAttribute("href")).toBe("/focus");
-      expect(screen.getByRole("link", { name: "View review step" }).getAttribute("href")).toBe("/review");
-      expect(screen.getByRole("link", { name: "Open membership" }).getAttribute("href")).toBe("/pricing");
-      expect(screen.getByRole("link", { name: "Open funnel analytics" }).getAttribute("href")).toBe("/monetization");
+      expect(screen.getByRole("link", { name: "Preview reflection" }).getAttribute("href")).toBe("/review");
+      expect(screen.getByRole("link", { name: "Manage plan" }).getAttribute("href")).toBe("/pricing");
       expect(screen.getByRole("button", { name: "Sign in with Google" })).toBeTruthy();
     });
   });
@@ -127,10 +125,10 @@ describe("Dashboard page", () => {
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Continue active cycle" }).getAttribute("href")).toBe("/execute");
+      expect(screen.getByRole("link", { name: "Continue today's session" }).getAttribute("href")).toBe("/execute");
       expect(screen.getAllByText("Plan ready")).toHaveLength(2);
-      expect(screen.getByText("Work the plan, then mark the day done or skipped.")).toBeTruthy();
-      expect(screen.getByRole("link", { name: "Edit focus" }).getAttribute("href")).toBe("/focus");
+      expect(screen.getByText("Run your active plan, then mark the day done or skipped.")).toBeTruthy();
+      expect(screen.getByRole("link", { name: "Tune focus" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "Open execute" }).getAttribute("href")).toBe("/execute");
     });
   });
