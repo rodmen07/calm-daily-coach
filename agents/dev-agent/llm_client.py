@@ -187,18 +187,21 @@ class UnifiedLLMClient:
         # Resolve repository root
         workspace_root = pathlib.Path(__file__).parent.parent.parent.resolve()
 
-        # Build one clean instruction for the single-shot CLI call. Role tags
-        # like "[user]" confuse the model into a generic greeting, so we join the
-        # system guidance and the actual task content as plain prose.
-        prompt_parts = []
-        if system_prompt:
-            prompt_parts.append(system_prompt.strip())
-        for m in messages:
-            content = (m.get("content") or "").strip()
-            if content:
-                prompt_parts.append(content)
-
-        prompt_text = "\n\n".join(prompt_parts)
+        # Build one clean instruction for the single-shot CLI call.
+        # IMPORTANT: do NOT prepend the system/persona preamble. When the -p input
+        # starts with "You are a coding agent...", gpt-5-mini treats the whole
+        # prompt as persona setup and replies with a generic greeting instead of
+        # doing the work. Sending only the concrete task instruction (the user
+        # message) makes it act immediately. System guidance is folded into the
+        # task prompt itself by prompts.py.
+        user_parts = [
+            (m.get("content") or "").strip()
+            for m in messages
+            if m.get("role") != "system" and (m.get("content") or "").strip()
+        ]
+        prompt_text = "\n\n".join(user_parts)
+        if not prompt_text and system_prompt:
+            prompt_text = system_prompt.strip()
 
         # Call copilot directly with list arguments to bypass shell limits and quotes
         copilot_bin = "copilot.cmd" if os.name == "nt" else "copilot"

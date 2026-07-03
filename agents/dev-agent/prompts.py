@@ -7,10 +7,11 @@ def build_task_prompt(task_id: str, title: str, description: str, files_to_touch
     files_str = ", ".join(files_to_touch) if files_to_touch else "sensible paths under src/"
     return f"""Implement: {title}. {description}
 
-Create/edit these files with complete, typed, working code:
+Create/edit these files in the calm-daily-coach repo with complete, working, strongly-typed TypeScript/React (no `any`, no TODO, no stubs), importing only packages already in package.json:
 {files_str}
 
-Write the code now, then briefly list the files you changed and stop."""
+Read one or two existing files under src/ first to match conventions. Write the code now, then briefly list the files you changed and stop."""
+
 
 
 
