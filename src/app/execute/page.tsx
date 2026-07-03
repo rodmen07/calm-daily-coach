@@ -194,10 +194,10 @@ export default function ExecutePage() {
                         maxLength={180}
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <button
                         type="button"
-                        className="primary-button text-xs py-1 px-3"
+                        className="primary-button text-xs py-1.5 px-4"
                         disabled={!editedAction.trim() || !editedReflection.trim()}
                         onClick={handleSave}
                       >
@@ -205,7 +205,7 @@ export default function ExecutePage() {
                       </button>
                       <button
                         type="button"
-                        className="secondary-button text-xs py-1 px-3"
+                        className="secondary-button text-xs py-1.5 px-4"
                         onClick={() => setIsEditing(false)}
                       >
                         Cancel
@@ -215,7 +215,7 @@ export default function ExecutePage() {
                 ) : (
                   <button
                     type="button"
-                    className="secondary-button text-xs py-1.5 px-3"
+                    className="secondary-button text-xs py-1.5 px-4"
                     onClick={handleStartEdit}
                   >
                     Adjust plan targets
@@ -224,8 +224,8 @@ export default function ExecutePage() {
               </div>
             )}
 
-            <div className="mt-5 border-t border-slate-200 pt-5">
-              <p className="label mb-2">Close today</p>
+            <div className="mt-6 border-t border-[--line] pt-6">
+              <p className="label mb-3">Close today</p>
               <div className="close-actions">
                 <button
                   type="button"

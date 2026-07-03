@@ -28,6 +28,7 @@ export default function FocusPage() {
     checkinStatus,
     generatePlan,
     coachBrief,
+    resetPlan,
   } = useCoachPlanner({
     storageScope,
     authEmail: authUser?.email,
@@ -62,9 +63,16 @@ export default function FocusPage() {
           </div>
           <form className="space-y-4" onSubmit={generatePlan}>
             {isPlanningLocked ? (
-              <p className="flow-lock-note rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2" aria-live="polite">
-                Planning is locked until you close today. Complete or skip in Execute to unlock.
-              </p>
+              <div className="flow-lock-note rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2 flex sm:items-center justify-between flex-col sm:flex-row gap-2" aria-live="polite">
+                <p>Planning is locked until you close today. Complete or skip in Execute to unlock.</p>
+                <button
+                  type="button"
+                  className="secondary-button text-xs py-1 px-3 whitespace-nowrap self-start sm:self-auto"
+                  onClick={resetPlan}
+                >
+                  Reset today&apos;s plan
+                </button>
+              </div>
             ) : null}
 
             <div>
