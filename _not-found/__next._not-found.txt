@@ -2,4 +2,4 @@
 2:I[39756,["/calm-daily-coach/_next/static/chunks/30qwsanhzhpgw.js","/calm-daily-coach/_next/static/chunks/2gjgdydgsrig4.js","/calm-daily-coach/_next/static/chunks/14mrh2-p_w84d.js"],"default"]
 3:I[37457,["/calm-daily-coach/_next/static/chunks/30qwsanhzhpgw.js","/calm-daily-coach/_next/static/chunks/2gjgdydgsrig4.js","/calm-daily-coach/_next/static/chunks/14mrh2-p_w84d.js"],"default"]
 4:[]
-0:{"rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"isPartial":false,"staleTime":300,"varyParams":"$W4","buildId":"uVoUxP59kN7rb5204hUA5"}
+0:{"rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"isPartial":false,"staleTime":300,"varyParams":"$W4","buildId":"gSKbTcPb2xcDQvKAPeCeB"}

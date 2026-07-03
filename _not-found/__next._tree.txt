@@ -1,2 +1,2 @@
-:HL["/calm-daily-coach/_next/static/chunks/3-63rdf2ofqhh.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"uVoUxP59kN7rb5204hUA5"}
+:HL["/calm-daily-coach/_next/static/chunks/1kzjnh_rlwbap.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"gSKbTcPb2xcDQvKAPeCeB"}
