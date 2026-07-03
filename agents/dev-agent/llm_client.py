@@ -213,8 +213,12 @@ class UnifiedLLMClient:
             "--allow-all-paths",
             # Force fully autonomous operation: never pause to ask the user.
             "--no-ask-user",
-            # Shell/npm is not available in this sandbox; deny it so the agent
-            # writes the code directly instead of stalling on a baseline test run.
+            # Shell execution is sandbox-blocked here, and when the agent tries a
+            # baseline test run it stalls. Deny every shell tool name (the tool is
+            # called "powershell" on Windows, "bash"/"shell" elsewhere) so the
+            # agent writes the code directly instead of trying to run npm.
+            "--deny-tool", "powershell",
+            "--deny-tool", "bash",
             "--deny-tool", "shell",
         ]
 
