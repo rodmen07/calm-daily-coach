@@ -1,0 +1,68 @@
+name: Dev Agent Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Model override (optional)'
+        required: false
+        default: ''
+      force_task_id:
+        description: 'Force a specific task id from agents/dev-agent/backlog.json'
+        required: false
+        default: ''
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: dev-agent-runner
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r agents/dev-agent/requirements.txt
+
+      - name: Install Node (for verification)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install npm deps
+        run: |
+          npm ci
+
+      - name: Configure environment
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Environment configured"
+
+      - name: Run dev-agent runner
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          FORCE_TASK_ID: ${{ github.event.inputs.force_task_id }}
+          LLM_MODEL: ${{ github.event.inputs.model }}
+          IN_GITHUB_ACTIONS: true
+        run: |
+          python agents/dev-agent/runner.py

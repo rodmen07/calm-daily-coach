@@ -25,3 +25,18 @@ export function deriveTopFocus(weeklySummary: WeeklySummary | null): FocusArea |
 
   return ranked[0]?.completed > 0 ? ranked[0].focus : null;
 }
+
+export function parsePlannerDate(input: string | Date | null | undefined): string | null {
+  if (!input) {
+    return null;
+  }
+  try {
+    const date = typeof input === "string" ? new Date(input) : input;
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    return date.toISOString().split("T")[0];
+  } catch {
+    return null;
+  }
+}

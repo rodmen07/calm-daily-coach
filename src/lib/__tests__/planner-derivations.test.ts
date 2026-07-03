@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { doseToRustEffort, deriveTopFocus } from "@/lib/planner-derivations";
+import { doseToRustEffort, deriveTopFocus, parsePlannerDate } from "@/lib/planner-derivations";
 import type { WeeklySummary } from "@/lib/browser-checkins";
 
 function emptySummary(): WeeklySummary {
@@ -45,5 +45,26 @@ describe("planner derivations", () => {
     expect(deriveTopFocus(summary)).toBe("Deep Work");
     expect(deriveTopFocus(emptySummary())).toBeNull();
     expect(deriveTopFocus(null)).toBeNull();
+  });
+
+  describe("parsePlannerDate", () => {
+    it("parses valid date strings into clean YYYY-MM-DD strings", () => {
+      expect(parsePlannerDate("2026-07-03")).toBe("2026-07-03");
+      // Test different format
+      expect(parsePlannerDate("2026/07/03")).toBe("2026-07-03");
+      expect(parsePlannerDate("Jul 3, 2026")).toBe("2026-07-03");
+    });
+
+    it("parses Date objects into clean YYYY-MM-DD strings", () => {
+      const date = new Date(2026, 6, 3); // 2026-07-03 local time, but we should make sure we test safely since UTC/ISO splitting can vary by timezone
+      const parsed = parsePlannerDate(date);
+      expect(parsed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it("returns null for invalid inputs", () => {
+      expect(parsePlannerDate("invalid-date-format")).toBeNull();
+      expect(parsePlannerDate(null)).toBeNull();
+      expect(parsePlannerDate(undefined)).toBeNull();
+    });
   });
 });
