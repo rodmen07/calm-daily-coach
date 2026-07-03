@@ -66,6 +66,18 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 - Updated `use-coach-planner` to consume these modules while preserving the hook's public API.
 - Added focused tests for each extracted module: `planner-state.test.ts`, `planner-derivations.test.ts`, and `reminder-draft.test.ts`.
 
+## In Progress (2026-07-03) - Check-in Flow Extraction
+
+- Extract check-in submit and advisory orchestration from `use-coach-planner` into a dedicated lib module.
+- Preserve route behavior and hook API while reducing hook-level side-effect complexity.
+- Add focused unit coverage for success/error check-in paths.
+
+## Completed (2026-07-03) - Check-in Flow Extraction
+
+- Extracted check-in submission workflow into `src/lib/checkin-workflow.ts`.
+- Updated `use-coach-planner` to consume the extracted module while preserving public hook behavior.
+- Added focused test coverage in `src/lib/__tests__/checkin-workflow.test.ts` for validation, done/skipped success paths, and storage failures.
+
 ## Completed (2026-07-02) - Dashboard Onboarding Health
 
 - Added a dashboard onboarding health badge with starts, completions, skips, and conversion rate.

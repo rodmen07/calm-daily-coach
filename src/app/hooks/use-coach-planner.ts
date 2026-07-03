@@ -15,10 +15,12 @@ import {
 } from "@/lib/browser-checkins";
 import {
   buildDailyPlan,
+  type DailyDose,
   type DailyPlan,
   type FocusArea,
 } from "@/lib/plan";
 import { getRustCheckinAdvice, getRustPlanBrief } from "@/lib/rust-coach-bridge";
+import { submitCheckinFlow } from "@/lib/checkin-workflow";
 
 type UseCoachPlannerArgs = {
   storageScope: string;
@@ -149,47 +151,26 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       return;
     }
 
-    if (status === "skipped" && !skipReason.trim()) {
-      setCheckinStatus({ type: "error", message: "Add a short reason before skipping." });
+    setCheckinStatus({ type: "idle" });
+
+    const result = await submitCheckinFlow({
+      plan,
+      status,
+      skipReason,
+      storageScope,
+      checkinStore,
+      getAdvice: getRustCheckinAdvice,
+    });
+
+    if (!result.ok) {
+      setCheckinStatus({ type: "error", message: result.errorMessage });
       return;
     }
 
-    setCheckinStatus({ type: "idle" });
-
-    try {
-      await checkinStore.addCheckin(
-        {
-          date: plan.date,
-          focus: plan.focus,
-          dose: plan.dose,
-          minutes: plan.minutes,
-          status,
-          skipReason: status === "skipped" ? skipReason.trim() : undefined,
-        },
-        storageScope,
-      );
-
-      setCheckinStatus({
-        type: "ok",
-        message:
-          status === "done" ? "Great work. Check-in saved." : "Skip logged with context.",
-      });
-
-      const derivedMood = status === "done" ? 4 : 2;
-      const derivedEnergy = status === "done" ? 4 : 2;
-      const rustAdvice = await getRustCheckinAdvice({
-        mood: derivedMood,
-        energy: derivedEnergy,
-        friction: status === "skipped" ? skipReason.trim() : undefined,
-      });
-      setCheckinAdvice(rustAdvice);
-
-      setSkipReason("");
-      const summary = await checkinStore.getWeeklySummary(undefined, storageScope);
-      setWeeklySummary(summary);
-    } catch {
-      setCheckinStatus({ type: "error", message: "Could not save check-in." });
-    }
+    setCheckinStatus({ type: "ok", message: result.statusMessage });
+    setCheckinAdvice(result.checkinAdvice);
+    setSkipReason(result.nextSkipReason);
+    setWeeklySummary(result.weeklySummary);
   }
 
   function startNextDay() {
