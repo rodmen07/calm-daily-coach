@@ -212,7 +212,8 @@ class UnifiedLLMClient:
 
         try:
             log.info(f"Invoking Copilot CLI at workspace root: {workspace_root}...")
-            proc = subprocess.run(cmd, capture_output=True, timeout=300, cwd=str(workspace_root))
+            timeout_s = int(os.environ.get("COPILOT_TIMEOUT", "600"))
+            proc = subprocess.run(cmd, capture_output=True, timeout=timeout_s, cwd=str(workspace_root))
             out = proc.stdout.decode("utf-8", errors="ignore").strip()
 
             # Try parse JSONL output (one JSON object per line)
