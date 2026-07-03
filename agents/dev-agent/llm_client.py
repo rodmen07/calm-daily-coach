@@ -199,9 +199,12 @@ class UnifiedLLMClient:
 
         # Call copilot directly with list arguments to bypass shell limits and quotes
         copilot_bin = "copilot.cmd" if os.name == "nt" else "copilot"
+        # Default to the cheapest included model (0x premium multiplier) for maximum uptime.
+        model = os.environ.get("COPILOT_MODEL", "gpt-5-mini")
         cmd = [
             copilot_bin, 
             "-p", prompt_text, 
+            "--model", model,
             "--output-format", "json", 
             "--allow-all",
             "--allow-all-paths"
