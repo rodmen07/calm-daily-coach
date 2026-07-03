@@ -6,6 +6,14 @@ import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import type { FocusArea } from "@/lib/plan";
 import { SwipeStepCard } from "@/app/components/swipe-step-card";
 import { listCheckins } from "@/lib/browser-checkins";
+import {
+  filterCheckinsInWindow,
+  getCompletionPercent,
+  getMostUsedDose,
+  getPatternSummary,
+  getPeakCompletionWindow,
+  getSkipReasonInsights,
+} from "@/lib/review-insights";
 
 export default function ReviewPage() {
   const { authUser } = useCoachAuth();
@@ -15,103 +23,22 @@ export default function ReviewPage() {
     authEmail: authUser?.email,
   });
 
-  const completionPercent = useMemo(() => {
-    if (!weeklySummary || weeklySummary.total === 0) {
-      return 0;
-    }
-    return Math.round((weeklySummary.done / weeklySummary.total) * 100);
-  }, [weeklySummary]);
+  const completionPercent = useMemo(() => getCompletionPercent(weeklySummary), [weeklySummary]);
 
   const hasWeeklyProgress = completionPercent > 0;
 
   const checkinsInWindow = useMemo(() => {
-    if (!weeklySummary) return [];
     const allCheckins = listCheckins(storageScope);
-    const start = weeklySummary.windowStart;
-    const end = weeklySummary.windowEnd;
-    return allCheckins.filter((c) => c.date >= start && c.date <= end);
+    return filterCheckinsInWindow(allCheckins, weeklySummary);
   }, [storageScope, weeklySummary]);
 
-  const mostUsedDose = useMemo(() => {
-    if (checkinsInWindow.length === 0) return "N/A";
-    const counts: Record<string, number> = { light: 0, medium: 0, deep: 0 };
-    checkinsInWindow.forEach((c) => {
-      counts[c.dose] = (counts[c.dose] || 0) + 1;
-    });
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    return sorted[0][1] > 0 ? sorted[0][0] : "N/A";
-  }, [checkinsInWindow]);
+  const mostUsedDose = useMemo(() => getMostUsedDose(checkinsInWindow), [checkinsInWindow]);
 
-  const completionWindow = useMemo(() => {
-    const doneCheckins = checkinsInWindow.filter((c) => c.status === "done");
-    if (doneCheckins.length === 0) return "N/A";
+  const completionWindow = useMemo(() => getPeakCompletionWindow(checkinsInWindow), [checkinsInWindow]);
 
-    const windows = {
-      Morning: 0,   // 5:00 - 11:59
-      Afternoon: 0, // 12:00 - 16:59
-      Evening: 0,   // 17:00 - 20:59
-      Night: 0,     // 21:00 - 4:59
-    };
+  const patternSummary = useMemo(() => getPatternSummary(completionPercent), [completionPercent]);
 
-    doneCheckins.forEach((c) => {
-      if (!c.createdAt) return;
-      const d = new Date(c.createdAt);
-      const hour = d.getHours();
-      if (hour >= 5 && hour < 12) {
-        windows.Morning += 1;
-      } else if (hour >= 12 && hour < 17) {
-        windows.Afternoon += 1;
-      } else if (hour >= 17 && hour < 21) {
-        windows.Evening += 1;
-      } else {
-        windows.Night += 1;
-      }
-    });
-
-    const sorted = Object.entries(windows).sort((a, b) => b[1] - a[1]);
-    return sorted[0][1] > 0 ? `${sorted[0][0]} (${sorted[0][1]} complete)` : "N/A";
-  }, [checkinsInWindow]);
-
-  const patternSummary = useMemo(() => {
-    if (completionPercent === 100) {
-      return "Incredible discipline! You executed every single daily dose this week with zero skips. Plan details and doses matched your target energy perfectly.";
-    }
-    if (completionPercent >= 70) {
-      return "Excellent consistency. You are building strong momentum, protecting your focus across most sessions while keeping skipped items minimal.";
-    }
-    if (completionPercent >= 40) {
-      return "Steady progress. You are balancing execution with intentional skips when reality intervenes. Try keeping notes detailed to help adapt tomorrow's focus.";
-    }
-    if (completionPercent > 0) {
-      return "Early momentum. Focus on setting light doses (5 minutes) until the habit of logging feels frictionless and natural.";
-    }
-    return "No completions yet in this window. Choose focus areas that fit your current energy limits and begin with light doses.";
-  }, [completionPercent]);
-
-  const skipReasonsList = useMemo(() => {
-    return checkinsInWindow
-      .filter((c) => c.status === "skipped" && c.skipReason)
-      .map((c) => {
-        const reasonLower = (c.skipReason || "").toLowerCase();
-        let recommendation = "Simplify action steps or scale down the duration.";
-        if (reasonLower.includes("switching") || reasonLower.includes("context") || reasonLower.includes("task")) {
-          recommendation = "Try a 3-minute warm-up transition before starting your focus task.";
-        } else if (reasonLower.includes("time") || reasonLower.includes("busy") || reasonLower.includes("schedule")) {
-          recommendation = "Default to a light (5-minute) dose tomorrow to guard against crowded calendar blocks.";
-        } else if (reasonLower.includes("distract") || reasonLower.includes("interrupted") || reasonLower.includes("phone")) {
-          recommendation = "Enable quiet modes or use full-screen focus timers for this session.";
-        } else if (reasonLower.includes("energy") || reasonLower.includes("tired") || reasonLower.includes("exhausted")) {
-          recommendation = "Choose restorative focus steps or reduce the session's friction.";
-        }
-
-        return {
-          date: c.date,
-          focus: c.focus,
-          reason: c.skipReason,
-          recommendation,
-        };
-      });
-  }, [checkinsInWindow]);
+  const skipReasonsList = useMemo(() => getSkipReasonInsights(checkinsInWindow), [checkinsInWindow]);
 
   const focusBreakdown = useMemo(() => {
     if (!weeklySummary) {

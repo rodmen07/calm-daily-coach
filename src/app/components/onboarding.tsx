@@ -14,6 +14,7 @@ type OnboardingPreset = {
   id: string;
   label: string;
   description: string;
+  recommended?: boolean;
   defaultFocus: FocusArea;
   defaultDose: DailyDose;
   defaultTheme: "light" | "dark";
@@ -24,6 +25,7 @@ const ONBOARDING_PRESETS: OnboardingPreset[] = [
     id: "balanced",
     label: "Balanced start",
     description: "Sustainable daily progress without overload.",
+    recommended: true,
     defaultFocus: "Deep Work",
     defaultDose: "medium",
     defaultTheme: "dark",
@@ -48,10 +50,10 @@ const ONBOARDING_PRESETS: OnboardingPreset[] = [
 
 export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
   const [defaultFocus, setDefaultFocus] = useState<FocusArea>("Deep Work");
-  const [defaultDose, setDefaultDose] = useState<DailyDose>("light");
+  const [defaultDose, setDefaultDose] = useState<DailyDose>("medium");
   const [defaultTheme, setDefaultTheme] = useState<"light" | "dark">("dark");
   const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>("balanced");
 
   useEffect(() => {
     trackMonetizationEvent("onboarding_started", "starter", "onboarding");
@@ -96,7 +98,7 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
         <div>
           <p className="eyebrow">Onboarding</p>
           <h2 className="text-xl font-semibold tracking-tight">Personalize your coach</h2>
-          <p className="mt-1 text-xs text-[--muted]">Takes about 30 seconds. You can finish from any step.</p>
+          <p className="mt-1 text-xs text-[--muted]">Pick a path now. You can fine-tune anytime after your first loop.</p>
         </div>
         <button
           className="text-xs font-semibold uppercase tracking-wider text-[--muted] hover:text-[--foreground]"
@@ -132,7 +134,7 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
       {activeStep === 1 && (
         <section className="space-y-4 animate-fade-in" aria-label="Step 1: Core Focus selection">
           <div>
-            <h3 className="text-base font-semibold">Select your primary focus area</h3>
+            <h3 className="text-base font-semibold">Pick your starting path</h3>
             <p className="dose-hint mt-1 text-xs">This becomes your default category when preparing daily routines.</p>
           </div>
 
@@ -148,7 +150,14 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
                 }`}
                 onClick={() => applyPreset(preset)}
               >
-                <p className="text-sm font-semibold">{preset.label}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold">{preset.label}</p>
+                  {preset.recommended ? (
+                    <span className="rounded-full border border-[--accent] bg-[--accent]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[--accent]">
+                      Recommended
+                    </span>
+                  ) : null}
+                </div>
                 <p className="mt-1 text-xs text-[--muted]">{preset.description}</p>
                 <p className="mt-2 text-[10px] uppercase tracking-wide text-[--muted]">
                   {preset.defaultFocus} • {preset.defaultDose} • {preset.defaultTheme}
@@ -180,16 +189,17 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
               type="button"
               onClick={() => setActiveStep(2)}
             >
-              Continue customizing
+              Customize step-by-step
             </button>
             <button
               className="primary-button"
               type="button"
               onClick={handleComplete}
             >
-              Save and start now
+              Quick start now
             </button>
           </div>
+          <p className="text-xs text-[--muted]">You can adjust focus, dose, or theme anytime from Focus.</p>
         </section>
       )}
 

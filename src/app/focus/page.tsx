@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { DOSE_OPTIONS, FOCUS_AREAS, type DailyDose, type FocusArea } from "@/lib/plan";
+import { FOCUS_METADATA } from "@/lib/focus-metadata";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import { SwipeStepCard } from "@/app/components/swipe-step-card";
@@ -63,7 +64,7 @@ export default function FocusPage() {
           </div>
           <form className="space-y-4" onSubmit={generatePlan}>
             {isPlanningLocked ? (
-              <div className="flow-lock-note rounded-lg border border-[var(--line)] bg-[var(--field)] px-3 py-2 flex sm:items-center justify-between flex-col sm:flex-row gap-2" aria-live="polite">
+              <div className="flow-lock-note rounded-lg border border-(--line) bg-(--field) px-3 py-2 flex sm:items-center justify-between flex-col sm:flex-row gap-2" aria-live="polite">
                 <p>Planning is locked until you close today. Complete or skip in Execute to unlock.</p>
                 <button
                   type="button"
@@ -79,22 +80,7 @@ export default function FocusPage() {
               <p className="label mb-2">Improvement categories</p>
               <div className="category-grid" role="list" aria-label="Improvement categories">
                 {FOCUS_AREAS.map((area) => {
-                  let icon = "🎯";
-                  if (area === "Career") icon = "💼";
-                  else if (area === "Communication") icon = "📣";
-                  else if (area === "Creativity") icon = "🎨";
-                  else if (area === "Deep Work") icon = "💻";
-                  else if (area === "Finances") icon = "💵";
-                  else if (area === "Fitness") icon = "💪";
-                  else if (area === "Hobbies") icon = "🎮";
-                  else if (area === "Home") icon = "🏠";
-                  else if (area === "Learning") icon = "📚";
-                  else if (area === "Mindfulness") icon = "🧘";
-                  else if (area === "Nutrition") icon = "🍎";
-                  else if (area === "Organization") icon = "🗂️";
-                  else if (area === "Relationships") icon = "❤️";
-                  else if (area === "Sleep") icon = "😴";
-                  else if (area === "Writing") icon = "✍️";
+                  const icon = FOCUS_METADATA[area].icon;
 
                   return (
                     <button
@@ -198,13 +184,13 @@ export default function FocusPage() {
           </form>
 
         {plan ? (
-          <section className="mt-5 rounded-xl border border-[var(--line)] bg-[var(--field)] p-4">
+          <section className="mt-5 rounded-xl border border-(--line) bg-(--field) p-4">
             <h2 className="mb-2 text-xl font-semibold">Plan ready</h2>
             <p className="text-sm text-slate-700">
               Your {plan.minutes}-minute {plan.focus} plan is ready. Continue to Execute to close the day.
             </p>
             {coachBrief ? (
-              <div className="mt-3 rounded-lg border border-[var(--line)] bg-white/70 px-3 py-2 text-sm text-slate-700">
+              <div className="mt-3 rounded-lg border border-(--line) bg-white/70 px-3 py-2 text-sm text-slate-700">
                 <p className="font-semibold text-slate-900">Coach brief</p>
                 <p className="mt-1 whitespace-pre-line">{coachBrief}</p>
               </div>

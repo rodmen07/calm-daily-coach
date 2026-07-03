@@ -35,6 +35,61 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 
 - Add a compact onboarding funnel health badge to the dashboard for at-a-glance adoption visibility. Completed.
 
+## In Progress (2026-07-03) - Code Quality and Maintainability Pass
+
+- Extract focus category metadata into a shared typed module so page-level UI does not embed icon selection logic.
+- Extract weekly review insight derivations into pure helper functions with focused tests.
+- Reduce route component complexity in `focus/page.tsx` and `review/page.tsx` by moving non-render business logic into `src/lib`.
+- Introduce a reusable async status type for planner operation states to remove repeated union definitions.
+- Keep behavior stable while improving readability and modular boundaries.
+
+## Completed (2026-07-03) - Code Quality and Maintainability Pass
+
+- Extracted focus category metadata into `src/lib/focus-metadata.ts` and removed inline icon-selection branching from the Focus route.
+- Extracted weekly review derivation logic into `src/lib/review-insights.ts` and simplified `src/app/review/page.tsx` to consume pure helpers.
+- Added focused unit coverage for review insight derivations in `src/lib/__tests__/review-insights.test.ts`.
+- Introduced a shared async operation status type in `src/lib/async-status.ts` and updated planner hook state typing to reduce repeated union definitions.
+
+## In Progress (2026-07-03) - Planner Hook Decomposition
+
+- Decompose `use-coach-planner` internals into focused lib modules while preserving its external API.
+- Extract planner state hydration/persistence helpers.
+- Extract reminder draft URL generation.
+- Extract planner-derived analytics helpers.
+- Add focused unit tests for extracted helper modules.
+
+## Completed (2026-07-03) - Planner Hook Decomposition
+
+- Extracted planner hydration/persistence logic to `src/lib/planner-state.ts`.
+- Extracted planner derivation helpers (`doseToRustEffort`, `deriveTopFocus`) to `src/lib/planner-derivations.ts`.
+- Extracted reminder draft generation to `src/lib/reminder-draft.ts`.
+- Updated `use-coach-planner` to consume these modules while preserving the hook's public API.
+- Added focused tests for each extracted module: `planner-state.test.ts`, `planner-derivations.test.ts`, and `reminder-draft.test.ts`.
+
+## In Progress (2026-07-03) - Check-in Flow Extraction
+
+- Extract check-in submit and advisory orchestration from `use-coach-planner` into a dedicated lib module.
+- Preserve route behavior and hook API while reducing hook-level side-effect complexity.
+- Add focused unit coverage for success/error check-in paths.
+
+## Completed (2026-07-03) - Check-in Flow Extraction
+
+- Extracted check-in submission workflow into `src/lib/checkin-workflow.ts`.
+- Updated `use-coach-planner` to consume the extracted module while preserving public hook behavior.
+- Added focused test coverage in `src/lib/__tests__/checkin-workflow.test.ts` for validation, done/skipped success paths, and storage failures.
+
+## In Progress (2026-07-03) - Planner Session Hydration Extraction
+
+- Extract hydration, migration status, and weekly summary bootstrap orchestration from `use-coach-planner` into a focused session module.
+- Preserve current route behavior and keep hook API stable.
+- Add focused tests for migrated, error, and summary-fallback hydration scenarios.
+
+## Completed (2026-07-03) - Planner Session Hydration Extraction
+
+- Extracted hydration, migration messaging, and weekly summary bootstrap flow to `src/lib/planner-session.ts`.
+- Updated `use-coach-planner` to consume the session module while preserving route behavior and hook API.
+- Added focused tests in `src/lib/__tests__/planner-session.test.ts` for guest scope, migration success, and summary failure fallback scenarios.
+
 ## Completed (2026-07-02) - Dashboard Onboarding Health
 
 - Added a dashboard onboarding health badge with starts, completions, skips, and conversion rate.

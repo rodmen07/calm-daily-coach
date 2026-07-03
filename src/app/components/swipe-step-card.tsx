@@ -116,6 +116,14 @@ export function SwipeStepCard({
         <div id={hintId} className="step-card-swipe-hint" aria-live="polite">
           {swipeHint}
         </div>
+        <div className="step-card-direction-hints" aria-hidden="true">
+          <span className={`direction-chip ${previousHref ? "is-active" : "is-disabled"}`}>
+            {previousLabel ?? "Previous"}
+          </span>
+          <span className={`direction-chip ${nextHref ? "is-active" : "is-disabled"}`}>
+            {nextLabel ?? "Next"}
+          </span>
+        </div>
       </header>
 
       <div className="step-card-body">{children}</div>
