@@ -59,7 +59,9 @@ def commit_changes(task_id: str, title: str):
     """Commits modifications to git."""
     log.info("Committing task modifications to git...")
     try:
-        subprocess.run(["git", "add", "src/"], cwd=str(WORKSPACE_ROOT))
+        # Stage everything the agent produced. Runtime bookkeeping files
+        # (backlog.json, state.json, logs, __pycache__) are git-ignored.
+        subprocess.run(["git", "add", "-A"], cwd=str(WORKSPACE_ROOT))
         msg = f"feat({task_id}): {title}"
         subprocess.run(["git", "commit", "-m", msg], cwd=str(WORKSPACE_ROOT))
         log.info(f"Task committed successfully: '{msg}'")
@@ -185,6 +187,18 @@ def main():
     success = run_agentic_loop(task_to_run)
     
     if success:
+        # Only a real change counts. If the agent produced nothing, treat it as a
+        # failure so the task is retried instead of falsely marked complete.
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(WORKSPACE_ROOT), capture_output=True, text=True,
+        )
+        if not status.stdout.strip():
+            log.error("Agent reported success but produced no file changes. Treating as failure.")
+            task_to_run["status"] = "failed"
+            save_backlog(backlog_data)
+            sys.exit(1)
+
         log.info("Agent succeeded! Committing...")
         commit_changes(task_to_run["id"], task_to_run["title"])
         
