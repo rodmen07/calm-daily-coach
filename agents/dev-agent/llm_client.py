@@ -202,12 +202,17 @@ class UnifiedLLMClient:
         # Default to the cheapest included model (0x premium multiplier) for maximum uptime.
         model = os.environ.get("COPILOT_MODEL", "gpt-5-mini")
         cmd = [
-            copilot_bin, 
-            "-p", prompt_text, 
+            copilot_bin,
+            "-p", prompt_text,
             "--model", model,
-            "--output-format", "json", 
+            "--output-format", "json",
             "--allow-all",
-            "--allow-all-paths"
+            "--allow-all-paths",
+            # Force fully autonomous operation: never pause to ask the user.
+            "--no-ask-user",
+            # Shell/npm is not available in this sandbox; deny it so the agent
+            # writes the code directly instead of stalling on a baseline test run.
+            "--deny-tool", "shell",
         ]
 
         try:
