@@ -85,7 +85,11 @@ def replenish_backlog(data):
 
 
 def clean_git_state():
-    """Reset the repo to a clean main so a fresh task branch can be created."""
+    """Reset the repo to a clean main so a fresh task branch can be created.
+
+    backlog.json and state.json are git-ignored runtime files; they live on disk
+    and are untouched by the reset, so task status and replenishment persist.
+    """
     try:
         lock = REPO_ROOT / ".git" / "index.lock"
         if lock.exists():
