@@ -26,6 +26,203 @@
         "agents/dev-agent/README.md"
       ],
       "status": "completed"
+    },
+    {
+      "id": "cdc-004",
+      "title": "Add Planner component UI",
+      "description": "Implement the Planner React component to display upcoming items, with responsive layout and basic interactions.",
+      "files_to_touch": [
+        "src/components/Planner.tsx",
+        "src/styles/planner.css",
+        "src/lib/planner-derivations.ts"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-005",
+      "title": "Add Planner unit tests",
+      "description": "Add unit tests for Planner component and `parsePlannerDate` integration tests using Vitest and React Testing Library.",
+      "files_to_touch": [
+        "src/components/__tests__/Planner.test.tsx",
+        "src/lib/__tests__/planner-derivations.test.ts"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-006",
+      "title": "Improve header and navigation",
+      "description": "Make the site header responsive, add accessible navigation links and mobile hamburger menu behavior.",
+      "files_to_touch": [
+        "src/components/Header.tsx",
+        "src/styles/header.css"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-007",
+      "title": "Add E2E smoke test",
+      "description": "Add a simple Playwright or Cypress smoke test that loads the index page and checks core UI elements are present.",
+      "files_to_touch": [
+        "e2e/smoke.spec.ts"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-008",
+      "title": "Create Dashboard layout",
+      "description": "Implement the main Dashboard page layout with grid sections for stats and recent activity.",
+      "files_to_touch": [
+        "src/pages/dashboard.tsx",
+        "src/styles/dashboard.css"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-009",
+      "title": "Implement Activity feed component",
+      "description": "Add ActivityFeed component to display recent events with pagination support.",
+      "files_to_touch": [
+        "src/components/ActivityFeed.tsx",
+        "src/styles/activity-feed.css"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-010",
+      "title": "Add settings page",
+      "description": "Create a Settings page allowing users to toggle preferences and save to local storage.",
+      "files_to_touch": [
+        "src/pages/settings.tsx",
+        "src/components/SettingsForm.tsx"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-011",
+      "title": "Responsive card UI",
+      "description": "Build a reusable Card component with responsive behavior and tests.",
+      "files_to_touch": [
+        "src/components/Card.tsx",
+        "src/components/__tests__/Card.test.tsx"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-012",
+      "title": "Add search input with debounce",
+      "description": "Implement a SearchBar component with debounce and keyboard accessibility.",
+      "files_to_touch": [
+        "src/components/SearchBar.tsx",
+        "src/styles/search.css"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-013",
+      "title": "Optimize image loading",
+      "description": "Add responsive image components and lazy loading for key assets to improve performance.",
+      "files_to_touch": [
+        "src/components/ResponsiveImage.tsx",
+        "public/images/"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-014",
+      "title": "Implement notification toast",
+      "description": "Add a toast notification system used across the app with unit tests.",
+      "files_to_touch": [
+        "src/components/Toast.tsx",
+        "src/lib/toast.ts"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-015",
+      "title": "Add form validation helpers",
+      "description": "Create reusable form validation utilities and integrate with SettingsForm.",
+      "files_to_touch": [
+        "src/lib/validation.ts",
+        "src/components/SettingsForm.tsx"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-016",
+      "title": "Implement dark mode",
+      "description": "Add dark mode toggle and CSS variables theme support across the site.",
+      "files_to_touch": [
+        "src/styles/variables.css",
+        "src/components/ThemeToggle.tsx"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-017",
+      "title": "Add accessibility audit fixes",
+      "description": "Run axe/core checks and fix top accessibility issues (aria labels, color contrast).",
+      "files_to_touch": [
+        "src/components/**/*",
+        "src/pages/**/*"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-018",
+      "title": "Improve header performance",
+      "description": "Refactor Header to reduce re-renders and improve bundle size (memoization, code-splitting).",
+      "files_to_touch": [
+        "src/components/Header.tsx"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-019",
+      "title": "Add localization support",
+      "description": "Introduce i18n scaffold, add English strings and infrastructure for translations.",
+      "files_to_touch": [
+        "src/i18n/en.json",
+        "src/lib/i18n.ts"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-020",
+      "title": "Add skeleton loaders",
+      "description": "Add skeleton loading states for Dashboard and Planner while fetching data.",
+      "files_to_touch": [
+        "src/components/Skeleton.tsx",
+        "src/pages/dashboard.tsx"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-021",
+      "title": "Implement pagination API client",
+      "description": "Add a lightweight client utility to request paginated endpoints and handle cursors.",
+      "files_to_touch": [
+        "src/lib/api-client.ts"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-022",
+      "title": "Add analytics event hooks",
+      "description": "Add an analytics hook and fire key UI events (page view, button click) for telemetry.",
+      "files_to_touch": [
+        "src/lib/analytics.ts",
+        "src/hooks/useAnalytics.ts"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "cdc-023",
+      "title": "Create contribution guide",
+      "description": "Add CONTRIBUTING.md focused on frontend development, testing, and committing conventions.",
+      "files_to_touch": [
+        "CONTRIBUTING.md"
+      ],
+      "status": "pending"
     }
   ]
 }
