@@ -4,12 +4,18 @@ export type MonetizationEventName =
   | "pricing_plan_selected"
   | "pricing_cta_clicked"
   | "dashboard_pricing_clicked"
-  | "dashboard_early_access_clicked";
+  | "dashboard_early_access_clicked"
+  | "onboarding_started"
+  | "onboarding_step_viewed"
+  | "onboarding_preset_selected"
+  | "onboarding_skipped"
+  | "onboarding_completed";
 
 export type MonetizationEvent = {
   name: MonetizationEventName;
   tier: "premium" | "free" | "pro"; // Backwards-compatible fallback mapping
-  source: "pricing" | "dashboard";
+  source: "pricing" | "dashboard" | "onboarding";
+  detail?: string;
   timestamp: string;
 };
 
@@ -19,6 +25,13 @@ export type MonetizationSummary = {
   pricingCtaClicks: number;
   dashboardPricingClicks: number;
   dashboardEarlyAccessClicks: number;
+  onboardingStarted: number;
+  onboardingStepViews: number;
+  onboardingPresetSelections: number;
+  onboardingSkipped: number;
+  onboardingCompleted: number;
+  onboardingStepViewByStep: Record<string, number>;
+  onboardingPresetById: Record<string, number>;
   byTier: Record<string, number>;
   ctaByTier: Record<string, number>;
   latestTimestamp: string | null;
@@ -46,6 +59,7 @@ function safeParseEvents(raw: string | null): MonetizationEvent[] {
         typeof event?.name === "string" &&
         typeof event?.tier === "string" &&
         typeof event?.source === "string" &&
+        (event?.detail === undefined || typeof event?.detail === "string") &&
         typeof event?.timestamp === "string",
     );
   } catch {
@@ -73,7 +87,12 @@ export function setPlanInterest(tier: PlanInterest) {
   window.dispatchEvent(new Event("monetizationchange"));
 }
 
-export function trackMonetizationEvent(name: MonetizationEventName, tier: PlanInterest, source: "pricing" | "dashboard") {
+export function trackMonetizationEvent(
+  name: MonetizationEventName,
+  tier: PlanInterest,
+  source: "pricing" | "dashboard" | "onboarding",
+  detail?: string,
+) {
   if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
     return;
   }
@@ -85,6 +104,7 @@ export function trackMonetizationEvent(name: MonetizationEventName, tier: PlanIn
     name,
     tier: mappedTier,
     source,
+    detail,
     timestamp: new Date().toISOString(),
   };
 
@@ -138,6 +158,14 @@ export function summarizeMonetizationEvents(events: MonetizationEvent[]): Moneti
   let pricingCtaClicks = 0;
   let dashboardPricingClicks = 0;
   let dashboardEarlyAccessClicks = 0;
+  let onboardingStarted = 0;
+  let onboardingStepViews = 0;
+  let onboardingPresetSelections = 0;
+  let onboardingSkipped = 0;
+  let onboardingCompleted = 0;
+
+  const onboardingStepViewByStep: Record<string, number> = {};
+  const onboardingPresetById: Record<string, number> = {};
 
   for (const event of events) {
     const canonicalTier = event.tier === "pro" || event.tier === "premium" ? "premium" : "free";
@@ -166,6 +194,32 @@ export function summarizeMonetizationEvents(events: MonetizationEvent[]): Moneti
         ctaByTier[canonicalTier] += 1;
       }
     }
+
+    if (event.name === "onboarding_started") {
+      onboardingStarted += 1;
+    }
+
+    if (event.name === "onboarding_step_viewed") {
+      onboardingStepViews += 1;
+      if (event.detail) {
+        onboardingStepViewByStep[event.detail] = (onboardingStepViewByStep[event.detail] ?? 0) + 1;
+      }
+    }
+
+    if (event.name === "onboarding_preset_selected") {
+      onboardingPresetSelections += 1;
+      if (event.detail) {
+        onboardingPresetById[event.detail] = (onboardingPresetById[event.detail] ?? 0) + 1;
+      }
+    }
+
+    if (event.name === "onboarding_skipped") {
+      onboardingSkipped += 1;
+    }
+
+    if (event.name === "onboarding_completed") {
+      onboardingCompleted += 1;
+    }
   }
 
   const latestTimestamp =
@@ -181,6 +235,13 @@ export function summarizeMonetizationEvents(events: MonetizationEvent[]): Moneti
     pricingCtaClicks,
     dashboardPricingClicks,
     dashboardEarlyAccessClicks,
+    onboardingStarted,
+    onboardingStepViews,
+    onboardingPresetSelections,
+    onboardingSkipped,
+    onboardingCompleted,
+    onboardingStepViewByStep,
+    onboardingPresetById,
     byTier,
     ctaByTier,
     latestTimestamp,

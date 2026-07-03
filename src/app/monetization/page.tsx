@@ -63,6 +63,14 @@ export default function MonetizationPage() {
               <p className="summary-label">Dashboard CTA clicks</p>
               <p className="summary-value">{summary.dashboardPricingClicks + summary.dashboardEarlyAccessClicks}</p>
             </article>
+            <article className="summary-card">
+              <p className="summary-label">Onboarding starts</p>
+              <p className="summary-value">{summary.onboardingStarted}</p>
+            </article>
+            <article className="summary-card">
+              <p className="summary-label">Onboarding completions</p>
+              <p className="summary-value">{summary.onboardingCompleted}</p>
+            </article>
           </div>
 
           <div className="pricing-grid">
@@ -84,6 +92,27 @@ export default function MonetizationPage() {
               <p className="eyebrow">Recent activity</p>
               <p className="text-sm text-slate-700">Last event: {formatTimestamp(summary.latestTimestamp)}</p>
               <p className="mt-2 text-sm text-slate-700">Stored events: {events.length}</p>
+            </article>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <article className="pricing-card">
+              <p className="eyebrow">Onboarding funnel</p>
+              <ul className="pricing-list list-disc pl-5">
+                <li>Step views: {summary.onboardingStepViews}</li>
+                <li>Preset selections: {summary.onboardingPresetSelections}</li>
+                <li>Skips: {summary.onboardingSkipped}</li>
+                <li>Completions: {summary.onboardingCompleted}</li>
+              </ul>
+            </article>
+            <article className="pricing-card">
+              <p className="eyebrow">Onboarding detail</p>
+              <ul className="pricing-list list-disc pl-5">
+                <li>Step 1 views: {summary.onboardingStepViewByStep.step_1 ?? 0}</li>
+                <li>Step 2 views: {summary.onboardingStepViewByStep.step_2 ?? 0}</li>
+                <li>Step 3 views: {summary.onboardingStepViewByStep.step_3 ?? 0}</li>
+                <li>Top preset logs: {Object.keys(summary.onboardingPresetById).length}</li>
+              </ul>
             </article>
           </div>
 

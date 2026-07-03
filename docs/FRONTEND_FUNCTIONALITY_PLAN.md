@@ -19,6 +19,18 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 - Added a live defaults summary panel during onboarding for clearer decision confidence.
 - Updated onboarding component tests to cover quick-start completion and persisted preferences.
 
+## In Progress (2026-07-02)
+
+- Add onboarding funnel analytics events for start, step views, preset picks, skip, and completion. Completed.
+- Surface onboarding funnel metrics in the local analytics page to measure first-session drop-off. Completed.
+
+## Completed (2026-07-02) - Onboarding Analytics
+
+- Added onboarding funnel event tracking in the shared local analytics utility.
+- Wired onboarding UI interactions to log start, step views, preset selections, skip, and completion.
+- Extended analytics dashboard cards with onboarding starts, completions, step views, and preset usage detail.
+- Updated monetization analytics tests for onboarding funnel summary expectations.
+
 ## Guiding Rule
 
 - Prefer frontend changes first.

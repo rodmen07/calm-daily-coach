@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FOCUS_AREAS, type FocusArea, type DailyDose } from "@/lib/plan";
 import { type OnboardingPreferences, saveOnboardingPreferences } from "@/lib/onboarding";
+import { trackMonetizationEvent } from "@/lib/monetization";
 
 type OnboardingProps = {
   onComplete: (prefs: OnboardingPreferences) => void;
@@ -52,11 +53,20 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
   const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
+  useEffect(() => {
+    trackMonetizationEvent("onboarding_started", "starter", "onboarding");
+  }, []);
+
+  useEffect(() => {
+    trackMonetizationEvent("onboarding_step_viewed", "starter", "onboarding", `step_${activeStep}`);
+  }, [activeStep]);
+
   function applyPreset(preset: OnboardingPreset) {
     setDefaultFocus(preset.defaultFocus);
     setDefaultDose(preset.defaultDose);
     setDefaultTheme(preset.defaultTheme);
     setSelectedPresetId(preset.id);
+    trackMonetizationEvent("onboarding_preset_selected", "starter", "onboarding", preset.id);
   }
 
   function handleComplete() {
@@ -65,8 +75,19 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
       defaultDose,
       defaultTheme,
     };
+    trackMonetizationEvent(
+      "onboarding_completed",
+      "starter",
+      "onboarding",
+      `step_${activeStep}${selectedPresetId ? `:${selectedPresetId}` : ""}`,
+    );
     saveOnboardingPreferences(prefs);
     onComplete(prefs);
+  }
+
+  function handleSkip() {
+    trackMonetizationEvent("onboarding_skipped", "starter", "onboarding", `step_${activeStep}`);
+    onSkip();
   }
 
   return (
@@ -80,7 +101,7 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
         <button
           className="text-xs font-semibold uppercase tracking-wider text-[--muted] hover:text-[--foreground]"
           type="button"
-          onClick={onSkip}
+          onClick={handleSkip}
         >
           Skip
         </button>
