@@ -50,6 +50,22 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 - Added focused unit coverage for review insight derivations in `src/lib/__tests__/review-insights.test.ts`.
 - Introduced a shared async operation status type in `src/lib/async-status.ts` and updated planner hook state typing to reduce repeated union definitions.
 
+## In Progress (2026-07-03) - Planner Hook Decomposition
+
+- Decompose `use-coach-planner` internals into focused lib modules while preserving its external API.
+- Extract planner state hydration/persistence helpers.
+- Extract reminder draft URL generation.
+- Extract planner-derived analytics helpers.
+- Add focused unit tests for extracted helper modules.
+
+## Completed (2026-07-03) - Planner Hook Decomposition
+
+- Extracted planner hydration/persistence logic to `src/lib/planner-state.ts`.
+- Extracted planner derivation helpers (`doseToRustEffort`, `deriveTopFocus`) to `src/lib/planner-derivations.ts`.
+- Extracted reminder draft generation to `src/lib/reminder-draft.ts`.
+- Updated `use-coach-planner` to consume these modules while preserving the hook's public API.
+- Added focused tests for each extracted module: `planner-state.test.ts`, `planner-derivations.test.ts`, and `reminder-draft.test.ts`.
+
 ## Completed (2026-07-02) - Dashboard Onboarding Health
 
 - Added a dashboard onboarding health badge with starts, completions, skips, and conversion rate.

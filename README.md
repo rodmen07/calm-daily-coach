@@ -88,6 +88,7 @@ The expanded focus-area set and 5/15/30-minute plan generation are covered in [s
 The visible category strip is also covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx).
 The route loop across Dashboard, Focus, Execute, and Review is covered in [src/app/__tests__/route-loop.test.tsx](src/app/__tests__/route-loop.test.tsx).
 Review insight derivation helpers are covered in [src/lib/__tests__/review-insights.test.ts](src/lib/__tests__/review-insights.test.ts).
+Planner state and helper derivation modules are covered in [src/lib/__tests__/planner-state.test.ts](src/lib/__tests__/planner-state.test.ts), [src/lib/__tests__/planner-derivations.test.ts](src/lib/__tests__/planner-derivations.test.ts), and [src/lib/__tests__/reminder-draft.test.ts](src/lib/__tests__/reminder-draft.test.ts).
 The theme toggle and persistence behavior are covered in [src/app/components/__tests__/theme-toggle.test.tsx](src/app/components/__tests__/theme-toggle.test.tsx).
 Rust bridge request and fallback behavior are covered in [src/lib/__tests__/rust-coach-bridge.test.ts](src/lib/__tests__/rust-coach-bridge.test.ts).
 Pricing route and monetization tier rendering are covered in [src/app/__tests__/pricing-page.test.tsx](src/app/__tests__/pricing-page.test.tsx).
@@ -104,6 +105,9 @@ The monetization strategy is tracked in [docs/MONETIZATION_PLAN.md](docs/MONETIZ
 - Check-in persistence flows through `src/lib/checkin-store.ts` to support backend migration without UI rewrites.
 - `src/app/page.tsx` now focuses on dashboard-only metrics and cycle-entry routing.
 - Route pages `src/app/focus/page.tsx`, `src/app/execute/page.tsx`, and `src/app/review/page.tsx` provide a deeper step-by-step UX while reusing the same planner and auth hooks.
+- Planner hydration and persistence helpers are centralized in `src/lib/planner-state.ts`.
+- Planner-derived helper logic is centralized in `src/lib/planner-derivations.ts`.
+- Reminder draft URL generation is centralized in `src/lib/reminder-draft.ts`.
 - Focus visual metadata is centralized in `src/lib/focus-metadata.ts` to keep route UI components declarative.
 - Review analytics derivation logic is centralized in `src/lib/review-insights.ts` to keep the review route focused on rendering.
 - Async operation state unions are centralized through `src/lib/async-status.ts` to reduce repeated status type definitions.

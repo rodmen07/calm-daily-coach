@@ -4,110 +4,21 @@ import {
   type CheckinStoreAdapter,
 } from "@/lib/checkin-store";
 import type { AsyncStatus } from "@/lib/async-status";
+import { doseToRustEffort, deriveTopFocus } from "@/lib/planner-derivations";
+import {
+  getInitialPlannerState,
+  persistPlannerState,
+} from "@/lib/planner-state";
+import { buildReminderMailtoHref } from "@/lib/reminder-draft";
 import {
   type WeeklySummary,
 } from "@/lib/browser-checkins";
 import {
-  DOSE_OPTIONS,
-  FOCUS_AREAS,
   buildDailyPlan,
-  type DailyDose,
   type DailyPlan,
   type FocusArea,
 } from "@/lib/plan";
 import { getRustCheckinAdvice, getRustPlanBrief } from "@/lib/rust-coach-bridge";
-
-const STORAGE_KEY = "calm-daily-coach";
-
-function scopedStorageKey(scopeKey: string) {
-  return `${STORAGE_KEY}:${scopeKey}`;
-}
-
-function doseToRustEffort(dose: DailyDose): "low" | "medium" | "high" {
-  if (dose === "light") {
-    return "low";
-  }
-  if (dose === "deep") {
-    return "high";
-  }
-  return "medium";
-}
-
-type SavedState = {
-  focus: FocusArea;
-  dose: DailyDose;
-  notes: string;
-  email: string;
-  plan: DailyPlan | null;
-};
-
-function getInitialState(scopeKey: string): SavedState {
-  const fallback: SavedState = {
-    focus: "Deep Work",
-    dose: "light",
-    notes: "",
-    email: "",
-    plan: null,
-  };
-
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  // If onboarding preferences exist, prefer them over the generic fallback values
-  const onboardingRaw = window.localStorage.getItem("calm-daily-coach:onboarding");
-  if (onboardingRaw) {
-    try {
-      const parsedPrefs = JSON.parse(onboardingRaw) as {
-        defaultFocus?: FocusArea;
-        defaultDose?: DailyDose;
-      };
-      if (parsedPrefs.defaultFocus && FOCUS_AREAS.includes(parsedPrefs.defaultFocus)) {
-        fallback.focus = parsedPrefs.defaultFocus;
-      }
-      if (parsedPrefs.defaultDose && DOSE_OPTIONS.includes(parsedPrefs.defaultDose)) {
-        fallback.dose = parsedPrefs.defaultDose;
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  const raw = window.localStorage.getItem(scopedStorageKey(scopeKey));
-  if (!raw) {
-    return fallback;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as {
-      focus?: FocusArea;
-      dose?: DailyDose;
-      notes?: string;
-      email?: string;
-      plan?: DailyPlan;
-    };
-
-    return {
-      focus:
-        parsed.focus && FOCUS_AREAS.includes(parsed.focus)
-          ? parsed.focus
-          : fallback.focus,
-      dose:
-        parsed.dose && DOSE_OPTIONS.includes(parsed.dose)
-          ? parsed.dose
-          : fallback.dose,
-      notes: typeof parsed.notes === "string" ? parsed.notes : fallback.notes,
-      email: typeof parsed.email === "string" ? parsed.email : fallback.email,
-      plan:
-        parsed.plan?.date === new Date().toISOString().slice(0, 10)
-          ? parsed.plan
-          : fallback.plan,
-    };
-  } catch {
-    window.localStorage.removeItem(scopedStorageKey(scopeKey));
-    return fallback;
-  }
-}
 
 type UseCoachPlannerArgs = {
   storageScope: string;
@@ -135,7 +46,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     let active = true;
 
     async function hydratePlannerState() {
-      const state = getInitialState(storageScope);
+      const state = getInitialPlannerState(storageScope);
       setFocus(state.focus);
       setDose(state.dose);
       setNotes(state.notes);
@@ -182,34 +93,18 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       return;
     }
 
-    window.localStorage.setItem(
-      scopedStorageKey(storageScope),
-      JSON.stringify({
-        focus,
-        dose,
-        notes,
-        email,
-        plan,
-      }),
-    );
+    persistPlannerState(storageScope, {
+      focus,
+      dose,
+      notes,
+      email,
+      plan,
+    });
   }, [focus, dose, notes, email, plan, storageScope, stateHydrated]);
 
   const canGenerate = useMemo(() => !loading, [loading]);
 
-  const topFocus = useMemo(() => {
-    if (!weeklySummary) {
-      return null;
-    }
-
-    const ranked = Object.entries(weeklySummary.byFocus)
-      .map(([focusArea, counts]) => ({
-        focus: focusArea as FocusArea,
-        completed: counts.done,
-      }))
-      .sort((a, b) => b.completed - a.completed);
-
-    return ranked[0]?.completed > 0 ? ranked[0].focus : null;
-  }, [weeklySummary]);
+  const topFocus = useMemo(() => deriveTopFocus(weeklySummary), [weeklySummary]);
 
   async function generatePlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -242,23 +137,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
 
     setReminderStatus({ type: "idle" });
 
-    const subject = encodeURIComponent(
-      `Your ${plan.minutes}-minute ${plan.focus} plan is ready`,
-    );
-    const body = encodeURIComponent(
-      [
-        `Focus: ${plan.focus}`,
-        `Dose: ${plan.dose}`,
-        `Time: ${plan.minutes} minutes`,
-        "",
-        `Action: ${plan.action}`,
-        `Reflection: ${plan.reflection}`,
-        "",
-        "You set the dose. We deliver exactly that amount.",
-      ].join("\n"),
-    );
-
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    window.location.href = buildReminderMailtoHref(plan, email);
     setReminderStatus({
       type: "ok",
       message: "Opened your email app with a prefilled reminder draft.",
