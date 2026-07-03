@@ -55,11 +55,11 @@ export async function submitCheckinFlow({
       storageScope,
     );
 
-    const checkinAdvice = await getAdvice({
+    const checkinAdvice = (await getAdvice({
       mood: status === "done" ? 4 : 2,
       energy: status === "done" ? 4 : 2,
       friction: status === "skipped" ? normalizedSkipReason : undefined,
-    });
+    })) ?? "";
 
     const weeklySummary = await checkinStore.getWeeklySummary(undefined, storageScope);
 

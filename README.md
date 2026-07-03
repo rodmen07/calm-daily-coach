@@ -90,6 +90,7 @@ The route loop across Dashboard, Focus, Execute, and Review is covered in [src/a
 Review insight derivation helpers are covered in [src/lib/__tests__/review-insights.test.ts](src/lib/__tests__/review-insights.test.ts).
 Planner state and helper derivation modules are covered in [src/lib/__tests__/planner-state.test.ts](src/lib/__tests__/planner-state.test.ts), [src/lib/__tests__/planner-derivations.test.ts](src/lib/__tests__/planner-derivations.test.ts), and [src/lib/__tests__/reminder-draft.test.ts](src/lib/__tests__/reminder-draft.test.ts).
 Check-in submission workflow behavior is covered in [src/lib/__tests__/checkin-workflow.test.ts](src/lib/__tests__/checkin-workflow.test.ts).
+Planner session hydration behavior is covered in [src/lib/__tests__/planner-session.test.ts](src/lib/__tests__/planner-session.test.ts).
 The theme toggle and persistence behavior are covered in [src/app/components/__tests__/theme-toggle.test.tsx](src/app/components/__tests__/theme-toggle.test.tsx).
 Rust bridge request and fallback behavior are covered in [src/lib/__tests__/rust-coach-bridge.test.ts](src/lib/__tests__/rust-coach-bridge.test.ts).
 Pricing route and monetization tier rendering are covered in [src/app/__tests__/pricing-page.test.tsx](src/app/__tests__/pricing-page.test.tsx).
@@ -107,6 +108,7 @@ The monetization strategy is tracked in [docs/MONETIZATION_PLAN.md](docs/MONETIZ
 - `src/app/page.tsx` now focuses on dashboard-only metrics and cycle-entry routing.
 - Route pages `src/app/focus/page.tsx`, `src/app/execute/page.tsx`, and `src/app/review/page.tsx` provide a deeper step-by-step UX while reusing the same planner and auth hooks.
 - Planner hydration and persistence helpers are centralized in `src/lib/planner-state.ts`.
+- Planner session hydration and migration orchestration are centralized in `src/lib/planner-session.ts`.
 - Planner-derived helper logic is centralized in `src/lib/planner-derivations.ts`.
 - Reminder draft URL generation is centralized in `src/lib/reminder-draft.ts`.
 - Check-in submission orchestration is centralized in `src/lib/checkin-workflow.ts`.

@@ -78,6 +78,18 @@ Grow the site from a polished flow shell into a more useful daily coaching produ
 - Updated `use-coach-planner` to consume the extracted module while preserving public hook behavior.
 - Added focused test coverage in `src/lib/__tests__/checkin-workflow.test.ts` for validation, done/skipped success paths, and storage failures.
 
+## In Progress (2026-07-03) - Planner Session Hydration Extraction
+
+- Extract hydration, migration status, and weekly summary bootstrap orchestration from `use-coach-planner` into a focused session module.
+- Preserve current route behavior and keep hook API stable.
+- Add focused tests for migrated, error, and summary-fallback hydration scenarios.
+
+## Completed (2026-07-03) - Planner Session Hydration Extraction
+
+- Extracted hydration, migration messaging, and weekly summary bootstrap flow to `src/lib/planner-session.ts`.
+- Updated `use-coach-planner` to consume the session module while preserving route behavior and hook API.
+- Added focused tests in `src/lib/__tests__/planner-session.test.ts` for guest scope, migration success, and summary failure fallback scenarios.
+
 ## Completed (2026-07-02) - Dashboard Onboarding Health
 
 - Added a dashboard onboarding health badge with starts, completions, skips, and conversion rate.

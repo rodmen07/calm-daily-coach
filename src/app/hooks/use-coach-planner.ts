@@ -10,6 +10,7 @@ import {
   persistPlannerState,
 } from "@/lib/planner-state";
 import { buildReminderMailtoHref } from "@/lib/reminder-draft";
+import { hydratePlannerSession } from "@/lib/planner-session";
 import {
   type WeeklySummary,
 } from "@/lib/browser-checkins";
@@ -49,38 +50,25 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
 
     async function hydratePlannerState() {
       const state = getInitialPlannerState(storageScope);
-      setFocus(state.focus);
-      setDose(state.dose);
-      setNotes(state.notes);
-      setEmail((prev) => prev || state.email || authEmail || "");
-      setPlan(state.plan);
+      const session = await hydratePlannerSession({
+        initialState: state,
+        authEmail,
+        storageScope,
+        checkinStore,
+      });
+
+      if (!active) {
+        return;
+      }
+
+      setFocus(session.nextState.focus);
+      setDose(session.nextState.dose);
+      setNotes(session.nextState.notes);
+      setEmail((prev) => prev || session.nextState.email);
+      setPlan(session.nextState.plan);
+      setMigrationStatus(session.migrationStatus);
+      setWeeklySummary(session.weeklySummary);
       setStateHydrated(true);
-
-      if (storageScope !== "guest") {
-        const migration = await checkinStore.migrateGuestCheckins(storageScope);
-        if (migration.status === "migrated" && migration.migratedCount > 0 && active) {
-          setMigrationStatus({
-            type: "ok",
-            message: `Migrated ${migration.migratedCount} guest check-in${migration.migratedCount === 1 ? "" : "s"} to your account.`,
-          });
-        } else if (migration.status === "error" && active) {
-          setMigrationStatus({
-            type: "error",
-            message: "Could not migrate guest check-ins to your account.",
-          });
-        }
-      }
-
-      try {
-        const summary = await checkinStore.getWeeklySummary(undefined, storageScope);
-        if (active) {
-          setWeeklySummary(summary);
-        }
-      } catch {
-        if (active) {
-          setWeeklySummary(null);
-        }
-      }
     }
 
     void hydratePlannerState();
