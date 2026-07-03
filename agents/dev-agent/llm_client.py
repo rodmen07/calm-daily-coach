@@ -239,14 +239,3 @@ class UnifiedLLMClient:
         except Exception as e:
             log.error(f"Error calling Copilot CLI: {e}")
             return {"content": "", "tool_calls": []}
-                            })
-                        log.info(f"Copilot CLI returned success: content length={len(content)}, tool_calls={len(tool_calls)}")
-                        return {"content": content, "tool_calls": tool_calls}
-                except Exception:
-                    continue
-
-            # Fallback: return raw text if no JSON assistant message matched
-            return {"content": out, "tool_calls": []}
-        except Exception as e:
-            log.error(f"Error calling Copilot CLI: {e}")
-            return {"content": "", "tool_calls": []}
