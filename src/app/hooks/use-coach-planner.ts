@@ -346,6 +346,13 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     });
   }
 
+  function resetPlan() {
+    setPlan(null);
+    setCheckinStatus({ type: "idle" });
+    setReminderStatus({ type: "idle" });
+    setCoachBrief(null);
+  }
+
   return {
     focus,
     setFocus,
@@ -370,6 +377,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     generatePlan,
     startNextDay,
     updatePlan,
+    resetPlan,
     coachBrief,
     checkinAdvice,
   };
