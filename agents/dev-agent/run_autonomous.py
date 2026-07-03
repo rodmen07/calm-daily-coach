@@ -138,7 +138,17 @@ def run_task(task):
     env["LLM_PROVIDER"] = env.get("LLM_PROVIDER", "auto")
     env["COPILOT_MODEL"] = env.get("COPILOT_MODEL", COPILOT_MODEL)
 
-    proc = subprocess.run(["python", "main.py"], cwd=str(ROOT), env=env, capture_output=True, text=True)
+    # Hard cap per task so a hung agent/subprocess can never stall the loop.
+    task_timeout = int(os.environ.get("TASK_TIMEOUT", "900"))
+    try:
+        proc = subprocess.run(
+            ["python", "main.py"], cwd=str(ROOT), env=env,
+            capture_output=True, text=True, timeout=task_timeout,
+        )
+    except subprocess.TimeoutExpired:
+        log(f"Task {task_id} timed out after {task_timeout}s; killing and moving on.")
+        return False
+
     if proc.stdout:
         log(proc.stdout)
 
