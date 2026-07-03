@@ -11,7 +11,7 @@ interface SubscriptionGuardProps {
 }
 
 export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
-  const { authUser, authConfigured, signInWithGoogle } = useCoachAuth();
+  const { authUser, authConfigured, authMessage, signInWithGoogle } = useCoachAuth();
   const [account, setAccount] = useState<UserAccount | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,16 +85,16 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   // REQUIRE Google login (remove guest mode)
   if (!authUser) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8 rounded-2xl border border-slate-800 bg-slate-950 p-8 text-center shadow-2xl">
+      <div className="flex min-h-screen items-center justify-center bg-(--background) px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md space-y-8 rounded-2xl border border-(--line) bg-(--panel) p-8 text-center shadow-2xl">
           <div className="space-y-2">
             <span className="inline-block rounded-full bg-[--accent]/10 p-3 text-[--accent]">
               <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
               </svg>
             </span>
-            <h2 className="text-3xl font-extrabold tracking-tight text-white">Sign in required</h2>
-            <p className="text-sm text-slate-400">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[--foreground]">Sign in required</h2>
+            <p className="text-sm text-[--muted]">
               Calm Daily Coach requires a secure, authenticated account to access your daily cycles and routines.
             </p>
           </div>
@@ -102,7 +102,8 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
           <div className="mt-8 space-y-4">
             <button
               onClick={signInWithGoogle}
-              className="flex w-full items-center justify-center gap-3 rounded-full bg-[--accent] px-4 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-[--accent-strong] shadow-lg hover:shadow-[--accent]/20"
+              className="primary-button flex w-full items-center justify-center gap-3"
+              type="button"
             >
               <svg className="h-4 w-4" aria-hidden="true" viewBox="0 0 24 24">
                 <path
@@ -124,6 +125,18 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
               </svg>
               <span>Continue with Google</span>
             </button>
+
+            {!authConfigured ? (
+              <p className="text-xs text-amber-700">
+                Google login is not configured yet. Add Firebase environment variables to enable it.
+              </p>
+            ) : null}
+
+            {authMessage ? (
+              <p className="text-xs text-rose-700" role="alert" aria-live="assertive">
+                {authMessage}
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
