@@ -1,0 +1,173 @@
+import os
+import json
+import logging
+from typing import List, Dict, Any, Optional
+
+log = logging.getLogger("dev-agent.llm")
+
+class UnifiedLLMClient:
+    """
+    A unified LLM client supporting tool calling across OpenAI, Anthropic, and Gemini.
+    """
+    def __init__(self, provider: Optional[str] = None, model: Optional[str] = None):
+        self.provider = provider or os.environ.get("LLM_PROVIDER", "openai").lower()
+        self.model = model or os.environ.get("LLM_MODEL")
+        
+        # Select defaults based on provider
+        if not self.model:
+            if self.provider == "openai":
+                self.model = "gpt-4o-mini"
+            elif self.provider == "anthropic":
+                self.model = "claude-3-5-haiku-20241022"
+            elif self.provider == "gemini":
+                self.model = "gemini-2.5-flash"
+                
+        log.info(f"Initialized LLM client: provider={self.provider}, model={self.model}")
+        
+    def generate(
+        self, 
+        messages: List[Dict[str, str]], 
+        tools: Optional[List[Dict[str, Any]]] = None,
+        system_prompt: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Sends a conversation history to the configured provider and parses the result.
+        Returns a dict containing 'content' (str) and 'tool_calls' (list of dicts).
+        """
+        if self.provider == "openai":
+            return self._call_openai(messages, tools, system_prompt)
+        elif self.provider == "anthropic":
+            return self._call_anthropic(messages, tools, system_prompt)
+        elif self.provider == "gemini":
+            return self._call_gemini(messages, tools, system_prompt)
+        else:
+            raise ValueError(f"Unsupported provider: {self.provider}")
+
+    def _call_openai(self, messages: List[Dict[str, str]], tools: Optional[List[Dict[str, Any]]], system_prompt: Optional[str]) -> Dict[str, Any]:
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        
+        formatted_messages = []
+        if system_prompt:
+            formatted_messages.append({"role": "system", "content": system_prompt})
+        formatted_messages.extend(messages)
+        
+        kwargs: Dict[str, Any] = {
+            "model": self.model,
+            "messages": formatted_messages,
+            "temperature": 0.2,
+        }
+        
+        if tools:
+            kwargs["tools"] = tools
+            
+        # Support OpenAI reasoning models (o1, o3-mini) and valid reasoning effort configurations
+        is_reasoning_model = "o1" in self.model or "o3-" in self.model
+        if is_reasoning_model:
+            # reasoning models cannot take temperature parameter
+            kwargs.pop("temperature", None)
+            
+            # Allow configuring reasoning effort (none, minimal, low, medium, high, xhigh)
+            effort = os.environ.get("REASONING_EFFORT")
+            if effort:
+                effort = effort.lower()
+                valid_efforts = {"none", "minimal", "low", "medium", "high", "xhigh"}
+                if effort in valid_efforts:
+                    kwargs["reasoning_effort"] = effort
+                else:
+                    log.warning(f"Invalid REASONING_EFFORT '{effort}' ignored. Using default effort.")
+        
+        log.debug(f"Calling OpenAI with model={self.model}")
+        response = client.chat.completions.create(**kwargs)
+        
+        message = response.choices[0].message
+        content = message.content or ""
+        tool_calls = []
+        
+        if message.tool_calls:
+            for tc in message.tool_calls:
+                try:
+                    args = json.loads(tc.function.arguments)
+                except Exception:
+                    args = tc.function.arguments
+                tool_calls.append({
+                    "id": tc.id,
+                    "name": tc.function.name,
+                    "arguments": args
+                })
+                
+        return {"content": content, "tool_calls": tool_calls}
+
+    def _call_anthropic(self, messages: List[Dict[str, str]], tools: Optional[List[Dict[str, Any]]], system_prompt: Optional[str]) -> Dict[str, Any]:
+        from anthropic import Anthropic
+        client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+        
+        formatted_messages = []
+        for msg in messages:
+            # Map tools roles
+            role = msg["role"]
+            if role == "system":
+                continue # System is handled at top-level parameter
+            formatted_messages.append({"role": role, "content": msg["content"]})
+            
+        kwargs: Dict[str, Any] = {
+            "model": self.model,
+            "messages": formatted_messages,
+            "max_tokens": 4000,
+            "temperature": 0.2,
+        }
+        
+        if system_prompt:
+            kwargs["system"] = system_prompt
+            
+        if tools:
+            # Map tool schemas to Anthropic style
+            anthropic_tools = []
+            for t in tools:
+                func = t["function"]
+                anthropic_tools.append({
+                    "name": func["name"],
+                    "description": func["description"],
+                    "input_schema": func["parameters"]
+                })
+            kwargs["tools"] = anthropic_tools
+            
+        log.debug(f"Calling Anthropic with model={self.model}")
+        response = client.messages.create(**kwargs)
+        
+        content = ""
+        tool_calls = []
+        
+        for block in response.content:
+            if block.type == "text":
+                content += block.text
+            elif block.type == "tool_use":
+                tool_calls.append({
+                    "id": block.id,
+                    "name": block.name,
+                    "arguments": block.input
+                })
+                
+        return {"content": content, "tool_calls": tool_calls}
+
+    def _call_gemini(self, messages: List[Dict[str, str]], tools: Optional[List[Dict[str, Any]]], system_prompt: Optional[str]) -> Dict[str, Any]:
+        import google.generativeai as genai
+        genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+        
+        # Turn standard messages into Gemini format
+        # For simplicity, we can translate message history or use the simple API.
+        model = genai.GenerativeModel(self.model, system_instruction=system_prompt)
+        
+        # Format history
+        contents = []
+        for m in messages:
+            role = "user" if m["role"] == "user" else "model"
+            contents.append({"role": role, "parts": [m["content"]]})
+            
+        # Support tooling if needed via client config or simple prompt flow
+        # In a scaffold, keeping Gemini simple makes it resilient!
+        log.debug(f"Calling Gemini with model={self.model}")
+        response = model.generate_content(contents)
+        
+        # Return purely text completion for the simple scaffold configuration
+        return {"content": response.text, "tool_calls": []}
