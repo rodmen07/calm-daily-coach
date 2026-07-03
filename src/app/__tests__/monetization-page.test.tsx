@@ -24,6 +24,19 @@ describe("Monetization page", () => {
           source: "pricing",
           timestamp: "2026-06-27T12:01:00.000Z",
         },
+        {
+          name: "onboarding_started",
+          tier: "free",
+          source: "onboarding",
+          timestamp: "2026-06-27T12:02:00.000Z",
+        },
+        {
+          name: "onboarding_completed",
+          tier: "free",
+          source: "onboarding",
+          timestamp: "2026-06-27T12:03:00.000Z",
+          detail: "step_2:balanced",
+        },
       ]),
     );
 
@@ -31,7 +44,10 @@ describe("Monetization page", () => {
 
     expect(screen.getByText("Monetization")).toBeTruthy();
     expect(screen.getByText("Conversion analytics snapshot")).toBeTruthy();
-    expect(screen.getByTestId("analytics-total-events").textContent).toBe("2");
+    expect(screen.getByTestId("analytics-total-events").textContent).toBe("4");
+    expect(screen.getByText("Onboarding starts")).toBeTruthy();
+    expect(screen.getByText("Onboarding completions")).toBeTruthy();
+    expect(screen.getByText("Onboarding funnel")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Back to pricing" }).getAttribute("href")).toBe("/pricing");
   });
 });

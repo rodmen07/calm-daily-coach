@@ -48,7 +48,7 @@ export default function FocusPage() {
         >
           <div className="mb-5 flex flex-col gap-2 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-700">
-              {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Guest mode"}
+              {authUser ? `Signed in as ${authUser.displayName ?? authUser.email}` : "Account Mode"}
             </p>
             {authUser ? (
               <button className="secondary-button" type="button" onClick={signOutUser}>
@@ -78,6 +78,7 @@ export default function FocusPage() {
                   else if (area === "Deep Work") icon = "💻";
                   else if (area === "Finances") icon = "💵";
                   else if (area === "Fitness") icon = "💪";
+                  else if (area === "Hobbies") icon = "🎮";
                   else if (area === "Home") icon = "🏠";
                   else if (area === "Learning") icon = "📚";
                   else if (area === "Mindfulness") icon = "🧘";
@@ -85,6 +86,7 @@ export default function FocusPage() {
                   else if (area === "Organization") icon = "🗂️";
                   else if (area === "Relationships") icon = "❤️";
                   else if (area === "Sleep") icon = "😴";
+                  else if (area === "Writing") icon = "✍️";
 
                   return (
                     <button

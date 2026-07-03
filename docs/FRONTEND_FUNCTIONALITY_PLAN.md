@@ -4,6 +4,44 @@
 
 Grow the site from a polished flow shell into a more useful daily coaching product while keeping the work frontend-first.
 
+## Latest Iteration (2026-07-02)
+
+- Dashboard membership panel now reflects the real single-plan model instead of legacy multi-tier messaging.
+- Membership status messaging is now state-aware: signed out, checking, trial days remaining, active, or expired.
+- Dashboard CTA language was simplified to align with one $5/month membership after a 30-day free trial.
+- Dashboard tests were updated to cover the new copy and call-to-action behavior.
+
+## Completed (2026-07-02)
+
+- Focused onboarding UX pass shipped to reduce first-session friction.
+- Added a quick-start preset path that configures focus, dose, and theme in one action.
+- Added finish-early actions so users can save onboarding defaults from step 1 or step 2.
+- Added a live defaults summary panel during onboarding for clearer decision confidence.
+- Updated onboarding component tests to cover quick-start completion and persisted preferences.
+
+## In Progress (2026-07-02)
+
+- Add onboarding funnel analytics events for start, step views, preset picks, skip, and completion. Completed.
+- Surface onboarding funnel metrics in the local analytics page to measure first-session drop-off. Completed.
+
+## Completed (2026-07-02) - Onboarding Analytics
+
+- Added onboarding funnel event tracking in the shared local analytics utility.
+- Wired onboarding UI interactions to log start, step views, preset selections, skip, and completion.
+- Extended analytics dashboard cards with onboarding starts, completions, step views, and preset usage detail.
+- Updated monetization analytics tests for onboarding funnel summary expectations.
+
+## In Progress (2026-07-02) - Dashboard UX
+
+- Add a compact onboarding funnel health badge to the dashboard for at-a-glance adoption visibility. Completed.
+
+## Completed (2026-07-02) - Dashboard Onboarding Health
+
+- Added a dashboard onboarding health badge with starts, completions, skips, and conversion rate.
+- Added status labels for onboarding funnel quality (no runs, strong, moderate, needs iteration).
+- Added dashboard shortcut to the detailed onboarding funnel analytics page.
+- Updated dashboard tests to validate onboarding health badge rendering and conversion state display.
+
 ## Guiding Rule
 
 - Prefer frontend changes first.

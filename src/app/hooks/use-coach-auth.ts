@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { getFirebaseAuth, getFirebaseFirestore } from "@/lib/firebase";
+import { upsertUserAccount } from "@/lib/firestore-user";
 import {
   authErrorMessage,
   shouldFallbackToRedirect,
@@ -25,12 +26,41 @@ export function useCoachAuth() {
       return;
     }
 
-    getRedirectResult(auth).catch((error: unknown) => {
-      setAuthMessage(authErrorMessage(error));
-    });
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          const db = getFirebaseFirestore();
+          if (db) {
+            await upsertUserAccount(
+              db,
+              result.user.uid,
+              result.user.email ?? "",
+              result.user.displayName ?? null
+            );
+          }
+        }
+      })
+      .catch((error: unknown) => {
+        setAuthMessage(authErrorMessage(error));
+      });
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setAuthUser(user);
+      if (user) {
+        const db = getFirebaseFirestore();
+        if (db) {
+          try {
+            await upsertUserAccount(
+              db,
+              user.uid,
+              user.email ?? "",
+              user.displayName ?? null
+            );
+          } catch (err) {
+            console.error("Failed to upsert user account on auth state change:", err);
+          }
+        }
+      }
     });
 
     return () => unsubscribe();
@@ -47,7 +77,18 @@ export function useCoachAuth() {
     const provider = new GoogleAuthProvider();
 
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      if (result.user) {
+        const db = getFirebaseFirestore();
+        if (db) {
+          await upsertUserAccount(
+            db,
+            result.user.uid,
+            result.user.email ?? "",
+            result.user.displayName ?? null
+          );
+        }
+      }
     } catch (error: unknown) {
       const message = authErrorMessage(error);
 

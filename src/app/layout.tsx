@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono } from "next/font/google";
 import Link from "next/link";
 import { ThemeToggle } from "@/app/components/theme-toggle";
+import { SyncStatusBadge } from "@/app/components/sync-status-badge";
+import { SubscriptionGuard } from "@/app/components/subscription-guard";
 import "./globals.css";
 
 const sora = Sora({
@@ -62,11 +64,14 @@ export default function RootLayout({
                 <Link href="/pricing">Pricing</Link>
                 <Link href="/monetization">Monetization</Link>
               </nav>
-              <ThemeToggle />
+              <div className="flex items-center gap-3">
+                <SyncStatusBadge />
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </header>
-        {children}
+        <SubscriptionGuard>{children}</SubscriptionGuard>
       </body>
     </html>
   );

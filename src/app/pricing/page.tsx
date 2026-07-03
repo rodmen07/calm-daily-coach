@@ -1,145 +1,77 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
-import { useMonetization } from "@/app/hooks/use-monetization";
-import { trackMonetizationEvent, type PlanInterest } from "@/lib/monetization";
-
-const plans = [
-  {
-    tier: "starter" as const,
-    name: "Starter",
-    amount: "$0",
-    cadence: "forever",
-    description: "Deliberate daily flow for personal habit momentum.",
-    features: [
-      "Dashboard, Focus, Execute, Review cycle",
-      "Local plan and check-in storage",
-      "Weekly completion summary",
-    ],
-    ctaLabel: "Current free plan",
-    ctaHref: "/",
-    featured: false,
-  },
-  {
-    tier: "pro" as const,
-    name: "Pro",
-    amount: "$8",
-    cadence: "per month",
-    description: "Adaptive coaching for people who want stronger follow-through.",
-    features: [
-      "Weekly narrative insights and recommendations",
-      "Smart reminders with preferred windows",
-      "Cloud sync status and recovery guardrails",
-      "Priority feature access",
-    ],
-    ctaLabel: "Join Pro early access",
-    ctaHref: "mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20Pro%20early%20access",
-    featured: true,
-  },
-  {
-    tier: "team" as const,
-    name: "Team",
-    amount: "$24",
-    cadence: "per month",
-    description: "Shared accountability for small teams and coaching cohorts.",
-    features: [
-      "Shared weekly review templates",
-      "Manager or coach visibility snapshots",
-      "Seat-based access control",
-    ],
-    ctaLabel: "Talk to us",
-    ctaHref: "mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20Team%20plan",
-    featured: false,
-  },
-];
+import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 
 export default function PricingPage() {
-  const { planInterest, setPlanInterest } = useMonetization();
-
-  const selectedPlanLabel = useMemo(() => {
-    if (planInterest === "pro") {
-      return "Pro";
-    }
-
-    if (planInterest === "team") {
-      return "Team";
-    }
-
-    return "Starter";
-  }, [planInterest]);
-
-  function handleSelectPlan(tier: PlanInterest) {
-    setPlanInterest(tier);
-    trackMonetizationEvent("pricing_plan_selected", tier, "pricing");
-  }
+  const { authUser, signInWithGoogle } = useCoachAuth();
 
   return (
     <div className="page-shell">
-      <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-        <section className="panel">
-          <p className="eyebrow">Pricing</p>
-          <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">Calm plans for deliberate growth</h1>
-          <p className="mb-5 text-sm leading-6 text-slate-700 sm:text-base">
-            Start free, then upgrade when you want coaching depth, automation, and resilient sync.
-          </p>
-          <p className="pricing-status mb-4 text-xs font-semibold uppercase tracking-wide">
-            Current plan interest: {selectedPlanLabel}
+      <main className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
+        <section className="panel text-center animate-status-rise">
+          <p className="eyebrow">Membership</p>
+          <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Simplicity first, no tiers.
+          </h1>
+          <p className="mb-6 text-sm leading-6 text-slate-700 dark:text-slate-400 sm:text-base">
+            Every feature of Calm Daily Coach is included in one single direct membership model. 
+            Enjoy a completely free, unrestricted 30-day trial. Continue afterward for only $5/month.
           </p>
 
-          <div className="pricing-grid">
-            {plans.map((plan) => (
-              <article key={plan.name} className={`pricing-card ${plan.featured ? "is-featured" : ""}`}>
-                <div>
-                  <p className="eyebrow">{plan.name}</p>
-                  <p className="pricing-amount">
-                    {plan.amount}
-                    <span className="ml-1 text-sm font-medium text-slate-700">{plan.cadence}</span>
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">{plan.description}</p>
-                </div>
-                <ul className="pricing-list list-disc pl-5">
-                  {plan.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                <button
-                  className={plan.tier === planInterest ? "primary-button" : "secondary-button"}
-                  type="button"
-                  onClick={() => handleSelectPlan(plan.tier)}
-                >
-                  {plan.tier === planInterest ? `${plan.name} selected` : `Select ${plan.name}`}
-                </button>
-                {plan.ctaHref.startsWith("/") ? (
-                  <Link
-                    className={plan.featured ? "primary-button" : "secondary-button"}
-                    href={plan.ctaHref}
-                    onClick={() => trackMonetizationEvent("pricing_cta_clicked", plan.tier, "pricing")}
-                  >
-                    {plan.ctaLabel}
-                  </Link>
-                ) : (
-                  <a
-                    className={plan.featured ? "primary-button" : "secondary-button"}
-                    href={plan.ctaHref}
-                    onClick={() => trackMonetizationEvent("pricing_cta_clicked", plan.tier, "pricing")}
-                  >
-                    {plan.ctaLabel}
-                  </a>
-                )}
-              </article>
-            ))}
+          <div className="mx-auto max-w-sm rounded-2xl border border-[--accent]/30 bg-[--field] p-6 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-[--accent] text-slate-950 font-bold font-mono text-[9px] px-3 py-1 uppercase rounded-bl-lg tracking-wider">
+              30 Days Free
+            </div>
+            <p className="text-xs uppercase tracking-widest font-bold text-[--accent] font-mono">Full Membership</p>
+            <p className="text-5xl font-extrabold text-slate-800 dark:text-slate-100 mt-2">
+              $5<span className="text-sm font-normal text-slate-400">/mo</span>
+            </p>
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-normal">
+              Continuous focus cycles, action target customizations, weekly performance reviews, and automatic secure cloud syncing.
+            </p>
+
+            <ul className="text-left space-y-2 text-xs text-slate-700 dark:text-slate-300 my-5 border-t border-slate-200 dark:border-slate-800 pt-4">
+              <li className="flex items-center gap-1.5">
+                <span className="text-[--accent]" aria-hidden="true">✓</span>
+                <span>Unrestricted daily cycle timelines</span>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="text-[--accent]" aria-hidden="true">✓</span>
+                <span>Action and reflection customizations</span>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="text-[--accent]" aria-hidden="true">✓</span>
+                <span>Weekly progress sparklines & diagnostics</span>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="text-[--accent]" aria-hidden="true">✓</span>
+                <span>Secure account cross-device cloud sync</span>
+              </li>
+            </ul>
+
+            {authUser ? (
+              <a
+                className="primary-button inline-flex w-full justify-center text-center font-bold"
+                href={`mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20Membership%20upgrade&body=Hi%2CCoach!%20My%20account%20uid%20is%20${authUser.uid}.%20Please%20upgrade%20me%20to%20the%20$5%2Fmonth%20plan.`}
+              >
+                Join Membership ($5/mo)
+              </a>
+            ) : (
+              <button
+                onClick={signInWithGoogle}
+                className="primary-button inline-flex w-full justify-center text-center font-bold"
+              >
+                Sign in to start 30-day Free Trial
+              </button>
+            )}
           </div>
 
-          <div className="mt-5 border-t border-slate-200 pt-4 text-sm text-slate-700">
+          <div className="mt-5 border-t border-slate-200 dark:border-slate-800 pt-4 text-sm text-slate-600 dark:text-slate-400">
             <p>
-              Questions about monetization roadmap? Review the product plan in the docs, then return to your daily
-              workflow from the dashboard.
+              Your first 30 days are completely free. If you have questions or need support, contact Hello@CalmDailyCoach.com.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link className="secondary-button" href="/monetization">
-                View conversion analytics
-              </Link>
+            <div className="mt-4 flex justify-center gap-2">
               <Link className="secondary-button" href="/">
                 Back to dashboard
               </Link>

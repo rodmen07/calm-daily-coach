@@ -229,17 +229,32 @@ export default function ExecutePage() {
               <div className="close-actions">
                 <button
                   type="button"
-                  className="primary-button"
+                  className={`primary-button transition-all duration-300 ${
+                    hasCheckedIn && checkinStatus.type === "ok" && checkinStatus.message.startsWith("Great work")
+                      ? "scale-102 bg-emerald-500 hover:bg-emerald-400 text-slate-900 shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-pulse"
+                      : ""
+                  }`}
                   disabled={!canSubmitCheckin}
-                  onClick={() => void submitCheckin("done")}
+                  onClick={() => {
+                    // Tactile micro haptic vibration if available
+                    if (typeof navigator !== "undefined" && navigator.vibrate) {
+                      navigator.vibrate([40, 20, 40]);
+                    }
+                    void submitCheckin("done");
+                  }}
                 >
-                  Mark complete
+                  {hasCheckedIn && checkinStatus.type === "ok" ? "✓ Logged complete" : "Mark complete"}
                 </button>
                 <button
                   type="button"
                   className="secondary-button"
                   disabled={!canSubmitCheckin}
-                  onClick={() => void submitCheckin("skipped")}
+                  onClick={() => {
+                    if (typeof navigator !== "undefined" && navigator.vibrate) {
+                      navigator.vibrate(30);
+                    }
+                    void submitCheckin("skipped");
+                  }}
                 >
                   Skip today
                 </button>
