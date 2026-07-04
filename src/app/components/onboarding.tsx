@@ -224,15 +224,15 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
                 <span className="font-semibold capitalize">{option}</span>
                 {/* Visual Intensity Bars indicator */}
                 <div className="flex gap-1 my-2 justify-center">
-                  <span className={`h-3.5 w-1.5 rounded-full transition-all duration-300 ${
+                  <span className={`inline-block h-3.5 w-1.5 rounded-full transition-all duration-300 ${
                     defaultDose === option ? "bg-[--accent] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[--line]"
                   }`} />
-                  <span className={`h-3.5 w-1.5 rounded-full transition-all duration-300 ${
+                  <span className={`inline-block h-3.5 w-1.5 rounded-full transition-all duration-300 ${
                     option === "medium" || option === "deep"
                       ? defaultDose === option ? "bg-[--accent] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[--line]"
                       : "bg-transparent border border-dashed border-[--line] opacity-45"
                   }`} />
-                  <span className={`h-3.5 w-1.5 rounded-full transition-all duration-300 ${
+                  <span className={`inline-block h-3.5 w-1.5 rounded-full transition-all duration-300 ${
                     option === "deep"
                       ? defaultDose === option ? "bg-[--accent] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[--line]"
                       : "bg-transparent border border-dashed border-[--line] opacity-45"
