@@ -47,11 +47,40 @@ def log(msg):
 
 
 def load_backlog():
+    # Retry briefly: the file may be momentarily locked while another process
+    # (a main.py subprocess) is writing it on Windows.
+    for attempt in range(10):
+        try:
+            return json.loads(BACKLOG.read_text(encoding="utf-8"))
+        except (PermissionError, json.JSONDecodeError):
+            time.sleep(0.2)
+    # Last attempt: let the error surface to the caller's handler.
     return json.loads(BACKLOG.read_text(encoding="utf-8"))
 
 
 def save_backlog(data):
-    BACKLOG.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    # Atomic write: serialize to a unique temp file in the same directory, then
+    # os.replace() it over the target. Retries cover transient Windows locks so
+    # a concurrent read/write never corrupts or fails the backlog.
+    payload = json.dumps(data, indent=2)
+    tmp = BACKLOG.with_suffix(f".tmp.{os.getpid()}")
+    for attempt in range(10):
+        try:
+            tmp.write_text(payload, encoding="utf-8")
+            os.replace(tmp, BACKLOG)
+            return
+        except PermissionError:
+            time.sleep(0.2)
+        finally:
+            if tmp.exists():
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+    # Final attempt without swallowing the error, so the outer loop can log it.
+    tmp.write_text(payload, encoding="utf-8")
+    os.replace(tmp, BACKLOG)
+
 
 
 def next_task_number(data):
@@ -138,7 +167,17 @@ def run_task(task):
     env["LLM_PROVIDER"] = env.get("LLM_PROVIDER", "auto")
     env["COPILOT_MODEL"] = env.get("COPILOT_MODEL", COPILOT_MODEL)
 
-    proc = subprocess.run(["python", "main.py"], cwd=str(ROOT), env=env, capture_output=True, text=True)
+    # Hard cap per task so a hung agent/subprocess can never stall the loop.
+    task_timeout = int(os.environ.get("TASK_TIMEOUT", "900"))
+    try:
+        proc = subprocess.run(
+            ["python", "main.py"], cwd=str(ROOT), env=env,
+            capture_output=True, text=True, timeout=task_timeout,
+        )
+    except subprocess.TimeoutExpired:
+        log(f"Task {task_id} timed out after {task_timeout}s; killing and moving on.")
+        return False
+
     if proc.stdout:
         log(proc.stdout)
 
