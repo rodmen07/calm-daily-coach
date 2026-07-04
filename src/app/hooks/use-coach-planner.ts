@@ -31,6 +31,7 @@ type UseCoachPlannerArgs = {
 export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs) {
   const checkinStore: CheckinStoreAdapter = useMemo(() => createCheckinStore(), []);
   const [stateHydrated, setStateHydrated] = useState(false);
+  const [loadedScope, setLoadedScope] = useState<string | null>(null);
   const [focus, setFocus] = useState<FocusArea>("Deep Work");
   const [dose, setDose] = useState<DailyDose>("light");
   const [notes, setNotes] = useState("");
@@ -44,6 +45,14 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   const [migrationStatus, setMigrationStatus] = useState<AsyncStatus>({ type: "idle" });
   const [coachBrief, setCoachBrief] = useState<string | null>(null);
   const [checkinAdvice, setCheckinAdvice] = useState<string | null>(null);
+
+  // Synchronously reset stateHydrated if the storage scope changes in render phase.
+  // This prevents the old scope's state from clobbering the new scope's localStorage on auth transitions.
+  const [lastScope, setLastScope] = useState(storageScope);
+  if (storageScope !== lastScope) {
+    setLastScope(storageScope);
+    setStateHydrated(false);
+  }
 
   useEffect(() => {
     let active = true;
@@ -68,6 +77,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       setPlan(session.nextState.plan);
       setMigrationStatus(session.migrationStatus);
       setWeeklySummary(session.weeklySummary);
+      setLoadedScope(storageScope);
       setStateHydrated(true);
     }
 
@@ -79,7 +89,8 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   }, [storageScope, authEmail, checkinStore]);
 
   useEffect(() => {
-    if (!stateHydrated) {
+    // Only persist of the state is fully hydrated AND the currently loaded scope matches the storage scope.
+    if (!stateHydrated || storageScope !== loadedScope) {
       return;
     }
 
@@ -90,7 +101,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       email,
       plan,
     });
-  }, [focus, dose, notes, email, plan, storageScope, stateHydrated]);
+  }, [focus, dose, notes, email, plan, storageScope, stateHydrated, loadedScope]);
 
   const canGenerate = useMemo(() => !loading, [loading]);
 
