@@ -10,7 +10,7 @@ from pathlib import Path
 # This propagates LLM credentials and providers downwards when task_slicer
 # runs inside the parent autonomous.py loop to remediate failed backlog tasks.
 os.environ["LLM_PROVIDER"] = os.environ.get("LLM_PROVIDER", "auto")
-os.environ["COPILOT_MODEL"] = os.environ.get("COPILOT_MODEL", "gpt-5-mini")
+os.environ["COPILOT_MODEL"] = os.environ.get("COPILOT_MODEL", "gpt-5.3-codex")
 
 import backlog_store
 import task_slicer
@@ -36,8 +36,8 @@ REPLENISH_BATCH = int(os.environ.get("AUTOMATION_REPLENISH_BATCH", "8"))
 MAX_ATTEMPTS = int(os.environ.get("AUTOMATION_MAX_ATTEMPTS", "3"))
 # Every N loops, sweep and retry parked tasks down to 0 attempts. Capped to prevent infinite death-spins.
 RESCHEDULE_INTERVAL_LOOPS = int(os.environ.get("AUTOMATION_RESCHEDULE_INTERVAL", "5"))
-# Cheapest included model keeps the automation running even past premium quota.
-COPILOT_MODEL = os.environ.get("COPILOT_MODEL", "gpt-5-mini")
+# Default automation model; can still be overridden with COPILOT_MODEL.
+COPILOT_MODEL = os.environ.get("COPILOT_MODEL", "gpt-5.3-codex")
 
 # Rotating pool of frontend feature ideas for calm-daily-coach. Used to keep the
 # backlog non-empty so the automation always has work.

@@ -23,7 +23,8 @@ class FakeOscillatorNode extends FakeAudioNode {
 class FakeBuffer {
   private channel = new Float32Array(2048);
 
-  public getChannelData(_channelIndex: number): Float32Array {
+  public getChannelData(channelIndex: number): Float32Array {
+    void channelIndex;
     return this.channel;
   }
 }
@@ -57,7 +58,10 @@ class FakeAudioContext {
     return node as unknown as GainNode;
   }
 
-  public createBuffer(_channels: number, _length: number, _sampleRate: number): AudioBuffer {
+  public createBuffer(channels: number, length: number, sampleRate: number): AudioBuffer {
+    void channels;
+    void length;
+    void sampleRate;
     return new FakeBuffer() as unknown as AudioBuffer;
   }
 
@@ -73,7 +77,8 @@ class FakeAudioContext {
     return node as unknown as OscillatorNode;
   }
 
-  public createChannelMerger(_channels: number): ChannelMergerNode {
+  public createChannelMerger(channels: number): ChannelMergerNode {
+    void channels;
     return new FakeAudioNode() as unknown as ChannelMergerNode;
   }
 
