@@ -111,14 +111,19 @@ def auto_remediate_backlog_failures(backlog_data: Dict[str, Any], max_attempts: 
     remediated_count = 0
 
     for task in tasks:
+        task_id = task.get("id", "?")
         # We target tasks that have failed up to the max threshold but are still marked
         # 'pending' (about to be parked) or are 'failed' / 'parked' with max attempts.
         is_failing = task.get("status") == "parked" or (task.get("status") == "pending" and task.get("attempts", 0) >= max_attempts)
         # Avoid splitting a task that was already split
-        is_already_split = any(t.get("id", "").startswith(f"{task.get('id')}-sub") for t in tasks)
+        is_already_split = any(t.get("id", "").startswith(f"{task_id}-sub") for t in tasks)
         
-        if is_failing and not is_already_split:
-            task_id = task.get("id", "?")
+        # Hard recursion ceiling: never split a task that is already a subtask
+        # (e.g. contains '-sub' in its ID). This breaks the infinite loop and
+        # locks repeatedly failing subtasks as parked for human attention.
+        is_nested_subtask = "-sub" in task_id
+
+        if is_failing and not is_already_split and not is_nested_subtask:
             log.info(f"Remediating failing/parked task {task_id} - '{task.get('title')}' by splitting...")
             
             # Retrieve last known failure logs
