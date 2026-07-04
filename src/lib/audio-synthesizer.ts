@@ -2,7 +2,7 @@ export type CalmSoundType = "brown" | "pink" | "binaural" | "drone";
 
 export class CalmAudioSynthesizer {
   private ctx: AudioContext | null = null;
-  private currentSource: AudioScheduledSource | null = null;
+  private currentSource: AudioScheduledSourceNode | null = null;
   private leftOscStatus: OscillatorNode | null = null;
   private rightOscStatus: OscillatorNode | null = null;
   private gainNode: GainNode | null = null;
