@@ -95,7 +95,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
             </span>
             <h2 className="text-3xl font-extrabold tracking-tight text-[--foreground]">Sign in required</h2>
             <p className="text-sm text-[--muted]">
-              Calm Daily Coach requires a secure, authenticated account to access your daily cycles and routines.
+              Focus requires a secure, authenticated account to access your daily cycles and routines.
             </p>
           </div>
 
