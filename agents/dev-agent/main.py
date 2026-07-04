@@ -88,8 +88,10 @@ def commit_changes(task_id: str, title: str):
     except Exception as e:
         log.error(f"Error committing git changes: {e}")
 
-def run_agentic_loop(task: Dict[str, Any]) -> bool:
+def run_agentic_loop(task: Dict[str, Any], report: Dict[str, Any] = None) -> bool:
     """Executes the tool interaction loop with the LLM client."""
+    if report is None:
+        report = {}
     client = UnifiedLLMClient()
     
     # Initialize conversation
@@ -109,6 +111,7 @@ def run_agentic_loop(task: Dict[str, Any]) -> bool:
     
     for round_idx in range(1, MAX_ROUNDS + 1):
         log.info(f"--- TOOL ROUND {round_idx}/{MAX_ROUNDS} ---")
+        report["rounds"] = round_idx
         
         try:
             response = client.generate(messages, tools=TOOL_SCHEMAS, system_prompt=system_prompt)
@@ -127,6 +130,7 @@ def run_agentic_loop(task: Dict[str, Any]) -> bool:
             log.info("No tool calls triggered by agent. Checking task status...")
             # Automatically check build/tests to guarantee completeness
             verify_res = dispatch_tool("run_verification", {})
+            report["last_verification"] = verify_res
             if verify_res["success"]:
                 log.info("Verification passed! Task completed successfully.")
                 return True
@@ -204,21 +208,35 @@ def main():
     create_git_branch(branch_name)
     
     # Run the loop
-    success = run_agentic_loop(task_to_run)
-    
+    report: Dict[str, Any] = {}
+    success = run_agentic_loop(task_to_run, report)
+
+    # Only a real change counts. If the agent produced nothing, treat it as a
+    # failure so the task is retried instead of falsely marked complete.
+    final_success = success
     if success:
-        # Only a real change counts. If the agent produced nothing, treat it as a
-        # failure so the task is retried instead of falsely marked complete.
         status = subprocess.run(
             ["git", "status", "--porcelain"],
             cwd=str(WORKSPACE_ROOT), capture_output=True, text=True,
         )
         if not status.stdout.strip():
             log.error("Agent reported success but produced no file changes. Treating as failure.")
-            task_to_run["status"] = "failed"
-            save_backlog(backlog_data)
-            sys.exit(1)
+            final_success = False
 
+    # Learning layer: fold this task's outcome into the cumulative project memory
+    # BEFORE committing, so the regenerated PROJECT_MEMORY.md rides along with a
+    # successful task's PR. Best-effort - never let memory bookkeeping fail a run.
+    try:
+        import memory
+        memory.record_task_outcome(
+            task_to_run, final_success,
+            report.get("last_verification"), report.get("rounds"),
+        )
+        memory.refresh_project_memory_file()
+    except Exception as e:
+        log.error(f"Project-memory update failed (continuing): {e}")
+
+    if final_success:
         log.info("Agent succeeded! Committing...")
         commit_changes(task_to_run["id"], task_to_run["title"])
         
