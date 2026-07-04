@@ -48,3 +48,5 @@ agents/dev-agent/state.json
 agents/dev-agent/run_autonomous*.log
 agents/dev-agent/__pycache__/
 agents/dev-agent/*.tmp.*
+# Keep the markdown report committed so users see failed/parked task lists on GitHub.
+!agents/dev-agent/REPORT.md
