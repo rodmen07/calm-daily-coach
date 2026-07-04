@@ -179,6 +179,15 @@ def run_task(task):
         )
     except subprocess.TimeoutExpired:
         log(f"Task {task_id} timed out after {task_timeout}s; killing and moving on.")
+        # Teach the memory that this task shape stalls, so future prompts warn against it.
+        try:
+            import memory
+            memory.record_task_outcome(
+                task, False,
+                {"stdout": "", "stderr": f"task timed out after {task_timeout}s"}, None,
+            )
+        except Exception as e:
+            log(f"memory timeout-record warning: {e}")
         return False
 
     if proc.stdout:
