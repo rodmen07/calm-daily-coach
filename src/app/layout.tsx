@@ -59,6 +59,7 @@ export default function RootLayout({
               <nav className="site-nav-links" aria-label="Primary">
                 <Link href="/">Dashboard</Link>
                 <Link href="/ambient">Ambient</Link>
+                <Link href="/breathe">Breathe</Link>
                 <Link href="/challenges">Challenges</Link>
                 <Link href="/focus">Focus</Link>
                 <Link href="/execute">Execute</Link>
