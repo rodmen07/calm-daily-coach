@@ -142,15 +142,15 @@ export default function FocusPage() {
                       <span className="font-semibold text-sm">{doseLabels[option]}</span>
                       {/* Visual Intensity Bars indicator */}
                       <div className="flex gap-1 mt-1.5">
-                        <span className={`h-3 w-1.5 rounded-full transition-all duration-300 ${
+                        <span className={`inline-block h-3 w-1.5 rounded-full transition-all duration-300 ${
                           dose === option ? "bg-[--accent]" : "bg-[--line]"
                         }`} />
-                        <span className={`h-3 w-1.5 rounded-full transition-all duration-300 ${
+                        <span className={`inline-block h-3 w-1.5 rounded-full transition-all duration-300 ${
                           option === "medium" || option === "deep"
                             ? dose === option ? "bg-[--accent]" : "bg-[--line]"
                             : "bg-transparent border border-dashed border-[--line] opacity-40"
                         }`} />
-                        <span className={`h-3 w-1.5 rounded-full transition-all duration-300 ${
+                        <span className={`inline-block h-3 w-1.5 rounded-full transition-all duration-300 ${
                           option === "deep"
                             ? dose === option ? "bg-[--accent]" : "bg-[--line]"
                             : "bg-transparent border border-dashed border-[--line] opacity-40"
