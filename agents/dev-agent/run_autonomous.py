@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 import backlog_store
+import task_slicer
 
 ROOT = Path(__file__).parent
 REPO_ROOT = ROOT.parent.parent
@@ -285,6 +286,20 @@ def process_once(loop_count):
     # Keep the backlog stocked with frontend work.
     if backlog_store.count_by_status("pending") < MIN_PENDING:
         replenish_backlog(None)
+
+    # Coordinated Failure Remediation Guard:
+    # Before grabbing any task, let the master or solo lock owner sweep the backlog
+    # for repeatedly failing tasks and slice them into simpler sequential pieces.
+    # Safe across processes because remediation is wrapped inside backlog_store's lock.
+    try:
+        def _remediate_and_slice(data):
+            return task_slicer.auto_remediate_backlog_failures(data, MAX_ATTEMPTS)
+
+        sliced_count = backlog_store.mutate(_remediate_and_slice)
+        if sliced_count > 0:
+            log(f"[{WORKER_ID}] Automatically split {sliced_count} repeatedly failing tasks into simpler segments!")
+    except Exception as e:
+        log(f"[{WORKER_ID}] auto-slicing warning (continuing): {e}")
 
     # Atomically claim a task so no two workers ever grab the same one.
     task = backlog_store.claim_next_pending(WORKER_ID)
