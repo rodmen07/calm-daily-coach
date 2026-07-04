@@ -143,17 +143,17 @@ export default function FocusPage() {
                       {/* Visual Intensity Bars indicator */}
                       <div className="flex gap-1 mt-1.5">
                         <span className={`inline-block h-3 w-1.5 rounded-full transition-all duration-300 ${
-                          dose === option ? "bg-[--accent]" : "bg-[--line]"
+                          dose === option ? "bg-[var(--accent)]" : "bg-[var(--line)]"
                         }`} />
                         <span className={`inline-block h-3 w-1.5 rounded-full transition-all duration-300 ${
                           option === "medium" || option === "deep"
-                            ? dose === option ? "bg-[--accent]" : "bg-[--line]"
-                            : "bg-transparent border border-dashed border-[--line] opacity-40"
+                            ? dose === option ? "bg-[var(--accent)]" : "bg-[var(--line)]"
+                            : "bg-transparent border border-dashed border-[var(--line)] opacity-40"
                         }`} />
                         <span className={`inline-block h-3 w-1.5 rounded-full transition-all duration-300 ${
                           option === "deep"
-                            ? dose === option ? "bg-[--accent]" : "bg-[--line]"
-                            : "bg-transparent border border-dashed border-[--line] opacity-40"
+                            ? dose === option ? "bg-[var(--accent)]" : "bg-[var(--line)]"
+                            : "bg-transparent border border-dashed border-[var(--line)] opacity-40"
                         }`} />
                       </div>
                     </div>
