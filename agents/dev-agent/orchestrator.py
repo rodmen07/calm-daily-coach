@@ -40,7 +40,7 @@ SHARED_BACKLOG = AGENT_DIR / "backlog.json"
 # Worktrees live in a sibling directory so we never nest a checkout inside itself.
 WORKTREE_ROOT = REPO_ROOT.parent / ".agent-worktrees"
 
-COPILOT_MODEL = os.environ.get("COPILOT_MODEL", "gpt-5-mini")
+COPILOT_MODEL = os.environ.get("COPILOT_MODEL", "gpt-5.3-codex")
 
 
 def run(cmd, cwd=None, check=False, capture=True):

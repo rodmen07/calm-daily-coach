@@ -189,7 +189,7 @@ class UnifiedLLMClient:
 
         # Build one clean instruction for the single-shot CLI call.
         # IMPORTANT: do NOT prepend the system/persona preamble. When the -p input
-        # starts with "You are a coding agent...", gpt-5-mini treats the whole
+        # starts with "You are a coding agent...", gpt-5.3-codex treats the whole
         # prompt as persona setup and replies with a generic greeting instead of
         # doing the work. Sending only the concrete task instruction (the user
         # message) makes it act immediately. System guidance is folded into the
@@ -205,8 +205,8 @@ class UnifiedLLMClient:
 
         # Call copilot directly with list arguments to bypass shell limits and quotes
         copilot_bin = "copilot.cmd" if os.name == "nt" else "copilot"
-        # Default to the cheapest included model (0x premium multiplier) for maximum uptime.
-        model = os.environ.get("COPILOT_MODEL", "gpt-5-mini")
+        # Default automation model; still overridable via COPILOT_MODEL.
+        model = os.environ.get("COPILOT_MODEL", "gpt-5.3-codex")
         cmd = [
             copilot_bin,
             "-p", prompt_text,

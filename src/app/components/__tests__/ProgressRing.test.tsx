@@ -29,7 +29,7 @@ describe('ProgressRing', () => {
     expect(text.textContent).toBe(`${target}%`);
 
     // verify circle dashoffset approximates expected
-    const circle = screen.getByTestId('progress-circle') as SVGCircleElement;
+    const circle = screen.getByTestId('progress-circle') as unknown as SVGCircleElement;
     const radius = 30;
     const circumference = 2 * Math.PI * radius;
     const expectedOffset = circumference * (1 - target / 100);
