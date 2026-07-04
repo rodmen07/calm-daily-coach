@@ -25,8 +25,28 @@ def load_backlog() -> Dict[str, Any]:
         return json.loads(BACKLOG_PATH.read_text(encoding="utf-8"))
     return {"tasks": []}
 
+def _atomic_write(path: pathlib.Path, text: str):
+    """Write via a unique temp file + os.replace, retrying transient Windows locks."""
+    tmp = path.with_suffix(f".tmp.{os.getpid()}")
+    import time as _time
+    for _ in range(10):
+        try:
+            tmp.write_text(text, encoding="utf-8")
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            _time.sleep(0.2)
+        finally:
+            if tmp.exists():
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+
 def save_backlog(data: Dict[str, Any]):
-    BACKLOG_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _atomic_write(BACKLOG_PATH, json.dumps(data, indent=2))
 
 def load_state() -> Dict[str, Any]:
     if STATE_PATH.exists():
@@ -34,7 +54,7 @@ def load_state() -> Dict[str, Any]:
     return {"completed_tasks": [], "runs_count": 0}
 
 def save_state(data: Dict[str, Any]):
-    STATE_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    _atomic_write(STATE_PATH, json.dumps(data, indent=2))
 
 def create_git_branch(branch_name: str):
     """Creates a local task-specific git branch."""

@@ -47,3 +47,4 @@ agents/dev-agent/backlog.json
 agents/dev-agent/state.json
 agents/dev-agent/run_autonomous*.log
 agents/dev-agent/__pycache__/
+agents/dev-agent/*.tmp.*
