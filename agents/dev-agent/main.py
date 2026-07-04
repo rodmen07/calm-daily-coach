@@ -16,7 +16,11 @@ logging.basicConfig(
 )
 log = logging.getLogger("dev-agent.main")
 
-BACKLOG_PATH = pathlib.Path(__file__).parent / "backlog.json"
+# Honor a shared backlog path so an orchestrator can point multiple workers at
+# one queue. When AUTOMATION_MANAGED=1 the parent runner owns task status (under
+# a cross-process lock), so this process must not write status back itself.
+BACKLOG_PATH = pathlib.Path(os.environ.get("AUTOMATION_BACKLOG_PATH") or (pathlib.Path(__file__).parent / "backlog.json"))
+MANAGED = os.environ.get("AUTOMATION_MANAGED") == "1"
 STATE_PATH = pathlib.Path(__file__).parent / "state.json"
 MAX_ROUNDS = 30
 
@@ -57,19 +61,25 @@ def save_state(data: Dict[str, Any]):
     _atomic_write(STATE_PATH, json.dumps(data, indent=2))
 
 def create_git_branch(branch_name: str):
-    """Creates a local task-specific git branch."""
+    """Creates a local task-specific git branch off the latest origin/main."""
     log.info(f"Setting up branch: {branch_name}")
+    detach = os.environ.get("AUTOMATION_DETACH") == "1"
     try:
         # Check if dirty
         status = subprocess.run(["git", "status", "--porcelain"], cwd=str(WORKSPACE_ROOT), capture_output=True, text=True)
         if status.stdout.strip():
             log.warning("Git working tree is dirty! Stashing changes.")
             subprocess.run(["git", "stash"], cwd=str(WORKSPACE_ROOT))
-            
-        # Checkout main first
-        subprocess.run(["git", "checkout", "main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
-        subprocess.run(["git", "pull", "origin", "main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
-        
+
+        subprocess.run(["git", "fetch", "origin", "main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
+        if detach:
+            # In a worktree the shared `main` branch is checked out elsewhere and
+            # cannot be checked out here; branch straight off origin/main instead.
+            subprocess.run(["git", "checkout", "-f", "--detach", "origin/main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
+        else:
+            subprocess.run(["git", "checkout", "main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
+            subprocess.run(["git", "pull", "origin", "main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
+
         # Create and checkout clean task branch
         subprocess.run(["git", "checkout", "-b", branch_name], cwd=str(WORKSPACE_ROOT), capture_output=True)
     except Exception as e:
@@ -239,21 +249,24 @@ def main():
     if final_success:
         log.info("Agent succeeded! Committing...")
         commit_changes(task_to_run["id"], task_to_run["title"])
-        
-        # Update state and backlog
-        task_to_run["status"] = "completed"
-        save_backlog(backlog_data)
-        
+
+        # Update state and backlog. Under orchestration the parent runner owns
+        # task status via the shared lock, so skip the backlog write here.
+        if not MANAGED:
+            task_to_run["status"] = "completed"
+            save_backlog(backlog_data)
+
         state_data["completed_tasks"].append(task_to_run["id"])
         state_data["runs_count"] += 1
         save_state(state_data)
-        
+
         log.info(f"Successfully completed task {task_to_run['id']}. Exit code 0.")
         sys.exit(0)
     else:
         log.error("Agent failed or reached limits with failing code verification.")
-        task_to_run["status"] = "failed"
-        save_backlog(backlog_data)
+        if not MANAGED:
+            task_to_run["status"] = "failed"
+            save_backlog(backlog_data)
         sys.exit(1)
 
 if __name__ == "__main__":
