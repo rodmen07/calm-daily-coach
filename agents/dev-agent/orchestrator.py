@@ -52,7 +52,11 @@ def worktree_path(worker_id: str) -> Path:
 
 
 def provision_worktree(worker_id: str, skip_install: bool) -> Path:
-    """Create (or reuse) an isolated git worktree for a worker, off origin/main."""
+    """Create (or reuse) an isolated git worktree for a worker, off origin/main.
+    Automatically links node_modules from the primary checkout to avoid slow,
+    CPU-heavy, gigabyte-wasting duplicate installations on disk. On Windows,
+    creates a Directory Junction which requires no special admin privileges.
+    """
     path = worktree_path(worker_id)
     run(["git", "fetch", "origin", "main"], cwd=REPO_ROOT)
 
@@ -69,9 +73,28 @@ def provision_worktree(worker_id: str, skip_install: bool) -> Path:
         print(f"[orchestrator] Created worktree for {worker_id} at {path}")
 
     node_modules = path / "node_modules"
-    if not skip_install and not node_modules.exists():
-        print(f"[orchestrator] Installing node deps in {worker_id} (one-time, may take a few minutes)...")
-        res = run(["npm", "ci"], cwd=path, capture=False)
+    primary_node_modules = REPO_ROOT / "node_modules"
+
+    if primary_node_modules.exists() and not node_modules.exists():
+        print(f"[orchestrator] Speed-linking node_modules from primary repo to {worker_id}...")
+        try:
+            if os.name == "nt":
+                # Create a Windows Directory Junction: has high compatibility and needs no admin elevation
+                # Use double-slashes or convert to absolute Path strings with safe quotes
+                src_str = str(primary_node_modules).replace("/", "\\")
+                dst_str = str(node_modules).replace("/", "\\")
+                res = subprocess.run(f'mklink /J "{dst_str}" "{src_str}"', shell=True, capture_output=True, text=True, check=True)
+            else:
+                # Create standard symbolic link on Unix/MacOS
+                os.symlink(src=str(primary_node_modules), dst=str(node_modules), target_is_directory=True)
+            print(f"[orchestrator] Successfully linked node_modules for {worker_id}")
+        except Exception as e:
+            print(f"[orchestrator] Symlink linking failed (will fallback to npm installation): {e}")
+
+    # Fallback to normal installation if symlinking failed or primary modules don't exist yet
+    if not node_modules.exists() and not skip_install:
+        print(f"[orchestrator] Installing node deps in {worker_id} (one-time fallback, may take a few minutes)...")
+        res = run(["npm", "ci"], cwd=path, capture=False) if os.name != "nt" else run(["npm.cmd", "ci"], cwd=path, capture=False)
         if res.returncode != 0:
             print(f"[orchestrator] npm ci failed in {worker_id}; verification may fail until deps are installed.")
 

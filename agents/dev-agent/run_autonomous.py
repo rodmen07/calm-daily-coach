@@ -6,6 +6,12 @@ import random
 import subprocess
 from pathlib import Path
 
+# Set default env values prior to loading backlog_store / task_slicer imports.
+# This propagates LLM credentials and providers downwards when task_slicer
+# runs inside the parent autonomous.py loop to remediate failed backlog tasks.
+os.environ["LLM_PROVIDER"] = os.environ.get("LLM_PROVIDER", "auto")
+os.environ["COPILOT_MODEL"] = os.environ.get("COPILOT_MODEL", "gpt-5-mini")
+
 import backlog_store
 import task_slicer
 
