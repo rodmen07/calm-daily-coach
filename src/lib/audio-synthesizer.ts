@@ -2,10 +2,9 @@ export type CalmSoundType = "brown" | "pink" | "binaural" | "drone";
 
 export class CalmAudioSynthesizer {
   private ctx: AudioContext | null = null;
-  private currentSource: AudioScheduledSourceNode | null = null;
-  private leftOscStatus: OscillatorNode | null = null;
-  private rightOscStatus: OscillatorNode | null = null;
-  private gainNode: GainNode | null = null;
+  private activeSources: AudioScheduledSourceNode[] = [];
+  private activeNodes: AudioNode[] = [];
+  private masterGain: GainNode | null = null;
   private activeType: CalmSoundType | null = null;
 
   constructor() {
@@ -27,31 +26,54 @@ export class CalmAudioSynthesizer {
     return this.activeType;
   }
 
+  private trackSource(source: AudioScheduledSourceNode): void {
+    this.activeSources.push(source);
+  }
+
+  private trackNode(node: AudioNode): void {
+    this.activeNodes.push(node);
+  }
+
   public stop(): void {
-    if (this.currentSource) {
+    for (const source of this.activeSources) {
       try {
-        this.currentSource.stop();
+        source.stop();
       } catch {
         // Safe ignore
       }
-      this.currentSource = null;
+      try {
+        source.disconnect();
+      } catch {
+        // Safe ignore
+      }
     }
+    this.activeSources = [];
 
-    if (this.leftOscStatus) {
-      try { this.leftOscStatus.stop(); } catch { /* ignore */ }
-      this.leftOscStatus = null;
+    for (const node of this.activeNodes) {
+      try {
+        node.disconnect();
+      } catch {
+        // Safe ignore
+      }
     }
-    if (this.rightOscStatus) {
-      try { this.rightOscStatus.stop(); } catch { /* ignore */ }
-      this.rightOscStatus = null;
+    this.activeNodes = [];
+
+    if (this.masterGain) {
+      this.masterGain.gain.value = 0;
+      try {
+        this.masterGain.disconnect();
+      } catch {
+        // Safe ignore
+      }
+      this.masterGain = null;
     }
 
     this.activeType = null;
   }
 
   public setVolume(volume: number): void {
-    if (this.gainNode) {
-      this.gainNode.gain.value = Math.max(0, Math.min(1, volume));
+    if (this.masterGain) {
+      this.masterGain.gain.value = Math.max(0, Math.min(1, volume));
     }
   }
 
@@ -59,20 +81,21 @@ export class CalmAudioSynthesizer {
     this.stop();
     const context = this.initContext();
 
-    this.gainNode = context.createGain();
-    this.gainNode.gain.value = volume;
-    this.gainNode.connect(context.destination);
+    this.masterGain = context.createGain();
+    this.masterGain.gain.value = Math.max(0, Math.min(1, volume));
+    this.masterGain.connect(context.destination);
+    this.trackNode(this.masterGain);
 
     this.activeType = type;
 
     if (type === "brown") {
-      this.playBrownianNoise(context, this.gainNode);
+      this.playBrownianNoise(context, this.masterGain);
     } else if (type === "pink") {
-      this.playPinkNoise(context, this.gainNode);
+      this.playPinkNoise(context, this.masterGain);
     } else if (type === "binaural") {
-      this.playBinauralBeats(context, this.gainNode);
+      this.playBinauralBeats(context, this.masterGain);
     } else if (type === "drone") {
-      this.playCelestialDrone(context, this.gainNode);
+      this.playCelestialDrone(context, this.masterGain);
     }
   }
 
@@ -95,7 +118,7 @@ export class CalmAudioSynthesizer {
     whiteNoise.connect(destination);
     whiteNoise.start(0);
 
-    this.currentSource = whiteNoise;
+    this.trackSource(whiteNoise);
   }
 
   private playPinkNoise(context: AudioContext, destination: AudioNode): void {
@@ -123,7 +146,7 @@ export class CalmAudioSynthesizer {
     pinkSource.connect(destination);
     pinkSource.start(0);
 
-    this.currentSource = pinkSource;
+    this.trackSource(pinkSource);
   }
 
   private playBinauralBeats(context: AudioContext, destination: AudioNode): void {
@@ -147,6 +170,9 @@ export class CalmAudioSynthesizer {
     const rightGain = context.createGain();
     leftGain.gain.value = 0.5;
     rightGain.gain.value = 0.5;
+    this.trackNode(leftGain);
+    this.trackNode(rightGain);
+    this.trackNode(merger);
 
     leftOsc.connect(leftGain);
     leftGain.connect(merger, 0, 0);
@@ -159,8 +185,8 @@ export class CalmAudioSynthesizer {
     leftOsc.start(0);
     rightOsc.start(0);
 
-    this.leftOscStatus = leftOsc;
-    this.rightOscStatus = rightOsc;
+    this.trackSource(leftOsc);
+    this.trackSource(rightOsc);
   }
 
   private playCelestialDrone(context: AudioContext, destination: AudioNode): void {
@@ -191,6 +217,8 @@ export class CalmAudioSynthesizer {
 
     const lfoGain = context.createGain();
     lfoGain.gain.value = 250; // offset amount
+    this.trackNode(filter);
+    this.trackNode(lfoGain);
 
     lfo.connect(lfoGain);
     lfoGain.connect(filter.frequency);
@@ -209,7 +237,9 @@ export class CalmAudioSynthesizer {
     osc2.start(0);
     osc3.start(0);
 
-    this.leftOscStatus = osc1;
-    this.rightOscStatus = osc2;
+    this.trackSource(lfo);
+    this.trackSource(osc1);
+    this.trackSource(osc2);
+    this.trackSource(osc3);
   }
 }
