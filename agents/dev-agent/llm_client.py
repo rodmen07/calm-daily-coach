@@ -10,7 +10,7 @@ class UnifiedLLMClient:
     A unified LLM client supporting tool calling across OpenAI, Anthropic, and Gemini.
     """
     def __init__(self, provider: Optional[str] = None, model: Optional[str] = None):
-        self.provider = provider or os.environ.get("LLM_PROVIDER", "openai").lower()
+        self.provider = provider or os.environ.get("LLM_PROVIDER", "auto").lower()
         self.model = model or os.environ.get("LLM_MODEL")
         
         # Select defaults based on provider
@@ -203,7 +203,6 @@ class UnifiedLLMClient:
         if not prompt_text and system_prompt:
             prompt_text = system_prompt.strip()
 
-        # Call copilot directly with list arguments to bypass shell limits and quotes
         copilot_bin = "copilot.cmd" if os.name == "nt" else "copilot"
         # Default automation model; still overridable via COPILOT_MODEL.
         model = os.environ.get("COPILOT_MODEL", "gpt-5.3-codex")
@@ -212,17 +211,12 @@ class UnifiedLLMClient:
             "-p", prompt_text,
             "--model", model,
             "--output-format", "json",
+            "--autopilot",
+            "--max-autopilot-continues", os.environ.get("COPILOT_MAX_AUTOPILOT_CONTINUES", "12"),
             "--allow-all",
             "--allow-all-paths",
             # Force fully autonomous operation: never pause to ask the user.
             "--no-ask-user",
-            # Shell execution is sandbox-blocked here, and when the agent tries a
-            # baseline test run it stalls. Deny every shell tool name (the tool is
-            # called "powershell" on Windows, "bash"/"shell" elsewhere) so the
-            # agent writes the code directly instead of trying to run npm.
-            "--deny-tool", "powershell",
-            "--deny-tool", "bash",
-            "--deny-tool", "shell",
         ]
 
         try:
@@ -230,9 +224,15 @@ class UnifiedLLMClient:
             timeout_s = int(os.environ.get("COPILOT_TIMEOUT", "600"))
             proc = subprocess.run(cmd, capture_output=True, timeout=timeout_s, cwd=str(workspace_root))
             out = proc.stdout.decode("utf-8", errors="ignore").strip()
+            err = proc.stderr.decode("utf-8", errors="ignore").strip()
+
+            if proc.returncode != 0:
+                log.error(f"Copilot CLI exited with code {proc.returncode}. stderr={err[:1000]}")
+
+            raw_stream = out if out else err
 
             # Try parse JSONL output (one JSON object per line)
-            lines = [l for l in out.splitlines() if l.strip()]
+            lines = [l for l in raw_stream.splitlines() if l.strip()]
             for line in reversed(lines):
                 try:
                     obj = json.loads(line)
@@ -254,7 +254,10 @@ class UnifiedLLMClient:
                     continue
 
             # Fallback: return raw text if no JSON assistant message matched
-            return {"content": out, "tool_calls": []}
+            fallback = raw_stream[:8000]
+            if fallback:
+                log.warning("Copilot CLI did not emit assistant.message JSON; returning raw output fallback.")
+            return {"content": fallback, "tool_calls": []}
         except Exception as e:
             log.error(f"Error calling Copilot CLI: {e}")
             return {"content": "", "tool_calls": []}
