@@ -225,17 +225,17 @@ export function Onboarding({ onComplete, onSkip }: OnboardingProps) {
                 {/* Visual Intensity Bars indicator */}
                 <div className="flex gap-1 my-2 justify-center">
                   <span className={`inline-block h-3.5 w-1.5 rounded-full transition-all duration-300 ${
-                    defaultDose === option ? "bg-[--accent] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[--line]"
+                    defaultDose === option ? "bg-[var(--accent)] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[var(--line)]"
                   }`} />
                   <span className={`inline-block h-3.5 w-1.5 rounded-full transition-all duration-300 ${
                     option === "medium" || option === "deep"
-                      ? defaultDose === option ? "bg-[--accent] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[--line]"
-                      : "bg-transparent border border-dashed border-[--line] opacity-45"
+                      ? defaultDose === option ? "bg-[var(--accent)] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[var(--line)]"
+                      : "bg-transparent border border-dashed border-[var(--line)] opacity-45"
                   }`} />
                   <span className={`inline-block h-3.5 w-1.5 rounded-full transition-all duration-300 ${
                     option === "deep"
-                      ? defaultDose === option ? "bg-[--accent] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[--line]"
-                      : "bg-transparent border border-dashed border-[--line] opacity-45"
+                      ? defaultDose === option ? "bg-[var(--accent)] scale-y-110 shadow-[0_0_8px_rgba(122,214,183,0.3)]" : "bg-[var(--line)]"
+                      : "bg-transparent border border-dashed border-[var(--line)] opacity-45"
                   }`} />
                 </div>
                 <span className="text-xs">
