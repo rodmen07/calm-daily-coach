@@ -1,14 +1,23 @@
 import os
 import json
 import time
+import sys
 import random
 import subprocess
 from pathlib import Path
 
+import backlog_store
+
 ROOT = Path(__file__).parent
 REPO_ROOT = ROOT.parent.parent
-BACKLOG = ROOT / "backlog.json"
+BACKLOG = backlog_store.backlog_path()
 REPORT_PATH = ROOT / "REPORT.md"
+
+# Identifies this worker within a multi-agent pool; "solo" for a single runner.
+WORKER_ID = os.environ.get("AUTOMATION_WORKER_ID", "solo")
+# When managed by the orchestrator, backlog status is owned by this runner (via
+# the shared lock), so the main.py subprocess must not also write task status.
+MANAGED = os.environ.get("AUTOMATION_MANAGED") == "1" or WORKER_ID != "solo"
 
 # Seconds between iterations when there is nothing to do.
 POLL_INTERVAL = int(os.environ.get("AUTOMATION_POLL_INTERVAL", "5"))
@@ -100,35 +109,49 @@ def next_task_number(data):
 
 
 def replenish_backlog(data):
-    """Append fresh frontend tasks so the backlog is never empty."""
-    start = next_task_number(data)
-    picks = random.sample(FRONTEND_TASK_POOL, min(REPLENISH_BATCH, len(FRONTEND_TASK_POOL)))
-    for i, (title, description, files) in enumerate(picks):
-        num = start + i
-        data["tasks"].append({
-            "id": f"cdc-{num:03d}",
-            "title": title,
-            "description": description,
-            "files_to_touch": files,
-            "status": "pending",
-        })
-    save_backlog(data)
-    log(f"Replenished backlog with {len(picks)} new frontend tasks (starting cdc-{start:03d}).")
+    """Append fresh frontend tasks so the backlog is never empty. Runs under lock
+    via backlog_store so concurrent workers cannot double-number new task ids."""
+    def _replenish(data):
+        start = next_task_number(data)
+        picks = random.sample(FRONTEND_TASK_POOL, min(REPLENISH_BATCH, len(FRONTEND_TASK_POOL)))
+        for i, (title, description, files) in enumerate(picks):
+            num = start + i
+            data["tasks"].append({
+                "id": f"cdc-{num:03d}",
+                "title": title,
+                "description": description,
+                "files_to_touch": files,
+                "status": "pending",
+            })
+        return len(picks), start
+
+    added, start = backlog_store.mutate(_replenish)
+    log(f"[{WORKER_ID}] Replenished backlog with {added} new frontend tasks (starting cdc-{start:03d}).")
 
 
 def clean_git_state():
-    """Reset the repo to a clean main so a fresh task branch can be created.
+    """Reset the working tree to a clean origin/main so a fresh task branch can
+    be created.
 
     backlog.json and state.json are git-ignored runtime files; they live on disk
     and are untouched by the reset, so task status and replenishment persist.
+
+    In a git worktree (multi-agent mode, AUTOMATION_DETACH=1) the shared `main`
+    branch is checked out by the primary worktree and cannot be checked out here,
+    so we detach directly onto origin/main instead of switching to `main`.
     """
+    detach = os.environ.get("AUTOMATION_DETACH") == "1"
     try:
         lock = REPO_ROOT / ".git" / "index.lock"
         if lock.exists():
             lock.unlink()
         subprocess.run(["git", "checkout", "--", "."], cwd=str(REPO_ROOT), capture_output=True, text=True)
-        subprocess.run(["git", "checkout", "main"], cwd=str(REPO_ROOT), capture_output=True, text=True)
-        subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=str(REPO_ROOT), capture_output=True, text=True)
+        subprocess.run(["git", "fetch", "origin", "main"], cwd=str(REPO_ROOT), capture_output=True, text=True)
+        if detach:
+            subprocess.run(["git", "checkout", "-f", "--detach", "origin/main"], cwd=str(REPO_ROOT), capture_output=True, text=True)
+        else:
+            subprocess.run(["git", "checkout", "main"], cwd=str(REPO_ROOT), capture_output=True, text=True)
+            subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=str(REPO_ROOT), capture_output=True, text=True)
         subprocess.run(["git", "stash", "clear"], cwd=str(REPO_ROOT), capture_output=True, text=True)
     except Exception as e:
         log(f"clean_git_state warning: {e}")
@@ -162,23 +185,27 @@ def create_pr_and_enable_auto(branch_name, title, body):
 
 def run_task(task):
     task_id = task["id"]
-    log(f"Starting task {task_id} - {task['title']}")
+    log(f"[{WORKER_ID}] Starting task {task_id} - {task['title']}")
 
     env = os.environ.copy()
     env["FORCE_TASK_ID"] = task_id
     env["DRY_RUN"] = "0"
     env["LLM_PROVIDER"] = env.get("LLM_PROVIDER", "auto")
     env["COPILOT_MODEL"] = env.get("COPILOT_MODEL", COPILOT_MODEL)
+    # Under a worker pool the shared backlog status is owned by this runner, so
+    # tell main.py not to write task status itself (it would race other workers).
+    if MANAGED:
+        env["AUTOMATION_MANAGED"] = "1"
 
     # Hard cap per task so a hung agent/subprocess can never stall the loop.
     task_timeout = int(os.environ.get("TASK_TIMEOUT", "900"))
     try:
         proc = subprocess.run(
-            ["python", "main.py"], cwd=str(ROOT), env=env,
+            [sys.executable, "main.py"], cwd=str(ROOT), env=env,
             capture_output=True, text=True, timeout=task_timeout,
         )
     except subprocess.TimeoutExpired:
-        log(f"Task {task_id} timed out after {task_timeout}s; killing and moving on.")
+        log(f"[{WORKER_ID}] Task {task_id} timed out after {task_timeout}s; killing and moving on.")
         # Teach the memory that this task shape stalls, so future prompts warn against it.
         try:
             import memory
@@ -198,10 +225,10 @@ def run_task(task):
         branch_name = "".join(c for c in branch_name if c.isalnum() or c in "-/")
         subprocess.run(["git", "push", "-u", "origin", branch_name], cwd=str(REPO_ROOT), capture_output=True, text=True)
         pr_url = create_pr_and_enable_auto(branch_name, f"feat({task_id}): {task['title']}", f"Automated frontend change for {task_id}.")
-        log(f"PR created: {pr_url}")
+        log(f"[{WORKER_ID}] PR created: {pr_url}")
         return True
 
-    log(f"Task {task_id} failed: {proc.stderr.strip()[:500]}")
+    log(f"[{WORKER_ID}] Task {task_id} failed: {proc.stderr.strip()[:500]}")
     return False
 
 
@@ -233,54 +260,50 @@ def update_parked_report(tasks):
 
 
 def process_once(loop_count):
-    data = load_backlog()
+    # Recover tasks abandoned by a crashed/killed worker (claimed but never
+    # finalized within the lease window), returning them to the pending pool.
+    lease = int(os.environ.get("AUTOMATION_CLAIM_LEASE", str(int(os.environ.get("TASK_TIMEOUT", "900")) + 120)))
+    requeued = backlog_store.requeue_stale_claims(lease)
+    if requeued:
+        log(f"[{WORKER_ID}] Requeued {requeued} stale claimed task(s) back to pending.")
 
-    # On schedule: sweep through parked tasks and reset them back to pending with 0 attempts.
+    # On schedule: sweep parked tasks back to pending for another attempt.
     if loop_count > 0 and loop_count % RESCHEDULE_INTERVAL_LOOPS == 0:
-        log(f"Reschedule Sweep (loop {loop_count}): resetting parked tasks back to pending for another go.")
-        swept = 0
-        for t in data.get("tasks", []):
-            if t.get("status") == "parked":
-                t["status"] = "pending"
-                t["attempts"] = 0
-                swept += 1
+        def _sweep(data):
+            swept = 0
+            for t in data.get("tasks", []):
+                if t.get("status") == "parked":
+                    t["status"] = "pending"
+                    t["attempts"] = 0
+                    swept += 1
+            return swept
+
+        swept = backlog_store.mutate(_sweep)
         if swept > 0:
-            save_backlog(data)
-            log(f"Reset {swept} parked tasks back to pending.")
+            log(f"[{WORKER_ID}] Reschedule sweep (loop {loop_count}): reset {swept} parked tasks to pending.")
 
     # Keep the backlog stocked with frontend work.
-    pending = [t for t in data.get("tasks", []) if t.get("status") == "pending"]
-    if len(pending) < MIN_PENDING:
-        replenish_backlog(data)
-        data = load_backlog()
-        pending = [t for t in data.get("tasks", []) if t.get("status") == "pending"]
+    if backlog_store.count_by_status("pending") < MIN_PENDING:
+        replenish_backlog(None)
 
-    if not pending:
-        log("No pending tasks. Sleeping...")
+    # Atomically claim a task so no two workers ever grab the same one.
+    task = backlog_store.claim_next_pending(WORKER_ID)
+    if not task:
+        log(f"[{WORKER_ID}] No pending tasks. Sleeping...")
         time.sleep(POLL_INTERVAL)
         return
 
-    task = pending[0]
     clean_git_state()
     ok = run_task(task)
 
-    # Reload to avoid clobbering status main.py may have written.
-    data = load_backlog()
-    for t in data.get("tasks", []):
-        if t["id"] == task["id"]:
-            if ok:
-                t["status"] = "completed"
-            else:
-                t["attempts"] = t.get("attempts", 0) + 1
-                t["status"] = "parked" if t["attempts"] >= MAX_ATTEMPTS else "pending"
-            break
-    save_backlog(data)
-    update_parked_report(data.get("tasks", []))
+    status = backlog_store.finalize_task(task["id"], ok, MAX_ATTEMPTS)
+    log(f"[{WORKER_ID}] Task {task['id']} -> {status}")
+    update_parked_report(backlog_store.read_backlog().get("tasks", []))
     time.sleep(1)
 
 
 def main_loop():
-    log(f"Autonomous runner started (model={COPILOT_MODEL}, min_pending={MIN_PENDING}). Press Ctrl+C to stop.")
+    log(f"[{WORKER_ID}] Autonomous runner started (model={COPILOT_MODEL}, min_pending={MIN_PENDING}, backlog={BACKLOG}). Press Ctrl+C to stop.")
     loop_count = 0
     while True:
         try:

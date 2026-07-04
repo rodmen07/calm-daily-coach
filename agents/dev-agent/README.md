@@ -80,6 +80,46 @@ python agents/dev-agent/runner.py
 
 ---
 
+## Scaling to N Concurrent Agents
+
+The single loop processes one task at a time. To run several agents in parallel
+against the same backlog, use the orchestrator:
+
+```powershell
+# Launch 3 agents; each gets its own isolated git worktree.
+python agents/dev-agent/orchestrator.py --workers 3
+
+# Reuse existing node_modules instead of running npm ci per worktree.
+python agents/dev-agent/orchestrator.py --workers 3 --skip-install
+
+# Remove all agent worktrees when finished.
+python agents/dev-agent/orchestrator.py --teardown
+```
+
+How it stays correct with N workers:
+
+- **Isolation via git worktrees.** Each worker runs in its own working directory
+  (`../.agent-worktrees/worker-N`) that shares the primary repo's object store but
+  has an independent index and HEAD. Workers never collide on files or
+  `.git/index.lock`, and each builds/tests/branches in isolation. Because the
+  shared `main` branch is owned by the primary checkout, workers run detached
+  (`AUTOMATION_DETACH=1`) and branch straight off `origin/main`.
+- **Atomic task claiming.** All workers point at one shared `backlog.json` via
+  `AUTOMATION_BACKLOG_PATH` and claim tasks through `backlog_store.py`, which
+  guards every mutation with a cross-process file lock. `claim_next_pending`
+  flips the first pending task to `claimed` under the lock, so two workers can
+  never grab the same task. Crashed-worker claims are auto-requeued after a lease
+  window.
+- **Safe merges.** Branch protection + GitHub auto-merge serialize merges into
+  `main`; each worker rebases onto the freshest `origin/main` before every task,
+  so parallel output integrates cleanly. Conflicting work simply fails CI and is
+  retried against the updated tree.
+
+Relevant env vars: `AUTOMATION_WORKER_ID`, `AUTOMATION_BACKLOG_PATH`,
+`AUTOMATION_MANAGED`, `AUTOMATION_DETACH`, `AUTOMATION_CLAIM_LEASE`.
+
+---
+
 ## Safety Constraints
 
 - **PR Guard**: Git branches are dynamically created for each task, avoiding uncommitted overlap in your working directory.
