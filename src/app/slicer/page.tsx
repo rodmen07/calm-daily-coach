@@ -6,7 +6,6 @@ import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import {
   SlicingDomain,
   IntimidationLevel,
-  SliceStep,
   SlicedTask,
   SLICING_DOMAINS,
   procedurallySliceTask,
@@ -24,6 +23,7 @@ export default function SlicerPage() {
   const [selectedIntimidation, setSelectedIntimidation] = useState<IntimidationLevel>("medium");
 
   // App states
+  const [loadedScope, setLoadedScope] = useState<string | null>(null);
   const [tasks, setTasks] = useState<SlicedTask[]>([]);
   const [activeTask, setActiveTask] = useState<SlicedTask | null>(null);
   const [focusMode, setFocusMode] = useState(true);
@@ -36,20 +36,16 @@ export default function SlicerPage() {
   // Confetti/success state
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Load initially
-  useEffect(() => {
+  // Load (or reload) persisted slices when the auth scope resolves or changes.
+  // Done during render (React's "adjust state when a prop changes" pattern) rather
+  // than in an effect, so it never triggers cascading set-state-in-effect renders.
+  if (scope !== loadedScope) {
     const loaded = loadSlicedTasks(scope);
+    setLoadedScope(scope);
     setTasks(loaded);
-    if (loaded.length > 0) {
-      // Auto-set the first incomplete task as active, if any
-      const incomplete = loaded.find((t) => !t.completedAt);
-      if (incomplete) {
-        setActiveTask(incomplete);
-      } else {
-        setActiveTask(loaded[0]);
-      }
-    }
-  }, [scope]);
+    const incomplete = loaded.find((t) => !t.completedAt);
+    setActiveTask(incomplete ?? (loaded.length > 0 ? loaded[0] : null));
+  }
 
   // Sync tasks
   const handleSaveTasks = (newTasks: SlicedTask[]) => {
@@ -70,7 +66,9 @@ export default function SlicerPage() {
               if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
                 window.navigator.vibrate([100, 100, 100]);
               }
-            } catch (e) {}
+            } catch {
+              // Vibration API is optional; ignore unsupported environments.
+            }
             return 0;
           }
           return prev !== null ? prev - 1 : null;

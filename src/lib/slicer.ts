@@ -52,13 +52,7 @@ export function procedurallySliceTask(
   let stepIdx = 1;
 
   const addStep = (text: string, minutes: number, alternativeText?: string) => {
-    steps.append ? (steps as any).push({
-      id: `step-${stepIdx++}`,
-      text,
-      minutes,
-      completed: false,
-      alternativeText,
-    }) : steps.push({
+    steps.push({
       id: `step-${stepIdx++}`,
       text,
       minutes,
