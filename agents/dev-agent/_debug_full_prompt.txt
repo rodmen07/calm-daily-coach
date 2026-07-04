@@ -1,0 +1,9 @@
+You are editing the calm-daily-coach Next.js + TypeScript repo. You cannot run shell/npm/tests - they are disabled. Do not ask questions. Just write the files.
+
+Implement: Add daily affirmation card. Create an AffirmationCard component that shows a rotating daily affirmation with a refresh action.
+
+Create these files with complete, strongly-typed, working code (no `any`, no TODO), importing only packages already in package.json:
+- src/components/AffirmationCard.tsx
+- src/lib/affirmations.ts
+
+Read an existing component under src/ first to match conventions. When done, list the files and stop.
