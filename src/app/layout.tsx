@@ -18,8 +18,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Calm Daily Coach",
-  description: "Self-improvement with deliberate daily dose limits.",
+  title: "Focus: Your ADHD friendly self-improvement coach",
+  description:
+    "Your ADHD friendly self-improvement coach. Small, deliberate daily steps that fit how your brain works.",
 };
 
 export default function RootLayout({
@@ -54,7 +55,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <header className="site-nav-shell">
           <div className="site-nav-inner">
-            <p className="site-nav-title">Calm Daily Coach</p>
+            <p className="site-nav-title">Focus</p>
             <div className="site-nav-actions">
               <nav className="site-nav-links" aria-label="Primary">
                 <Link href="/">Dashboard</Link>

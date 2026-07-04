@@ -1,6 +1,6 @@
-# Calm Daily Coach MVP
+# Focus: Your ADHD friendly self-improvement coach
 
-A deliberate self-improvement app where users choose a daily content dose and receive exactly that amount.
+A deliberate, ADHD friendly self-improvement app where users choose a daily content dose and receive exactly that amount.
 
 Live site: https://rodmen07.github.io/calm-daily-coach/
 

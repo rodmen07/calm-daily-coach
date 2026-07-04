@@ -31,7 +31,7 @@ function createTransport() {
 }
 
 export async function sendReminderEmail(input: ReminderEmailInput) {
-  const from = process.env.SMTP_FROM ?? "Calm Daily Coach <noreply@example.com>";
+  const from = process.env.SMTP_FROM ?? "Focus <noreply@example.com>";
   const { transporter, mode } = createTransport();
 
   const info = await transporter.sendMail({
