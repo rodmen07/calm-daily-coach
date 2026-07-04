@@ -58,6 +58,7 @@ export default function RootLayout({
             <div className="site-nav-actions">
               <nav className="site-nav-links" aria-label="Primary">
                 <Link href="/">Dashboard</Link>
+                <Link href="/ambient">Ambient</Link>
                 <Link href="/focus">Focus</Link>
                 <Link href="/execute">Execute</Link>
                 <Link href="/review">Review</Link>
