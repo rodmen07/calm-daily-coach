@@ -24,6 +24,16 @@ MANAGED = os.environ.get("AUTOMATION_MANAGED") == "1"
 STATE_PATH = pathlib.Path(__file__).parent / "state.json"
 MAX_ROUNDS = 30
 
+
+def _run_checked(cmd: List[str], *, cwd: pathlib.Path, context: str) -> subprocess.CompletedProcess:
+    res = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True)
+    if res.returncode != 0:
+        stderr = (res.stderr or "").strip()
+        stdout = (res.stdout or "").strip()
+        detail = stderr if stderr else stdout
+        raise RuntimeError(f"{context} failed: {' '.join(cmd)} :: {detail}")
+    return res
+
 def load_backlog() -> Dict[str, Any]:
     if BACKLOG_PATH.exists():
         return json.loads(BACKLOG_PATH.read_text(encoding="utf-8"))
@@ -64,39 +74,44 @@ def create_git_branch(branch_name: str):
     """Creates a local task-specific git branch off the latest origin/main."""
     log.info(f"Setting up branch: {branch_name}")
     detach = os.environ.get("AUTOMATION_DETACH") == "1"
-    try:
-        # Check if dirty
-        status = subprocess.run(["git", "status", "--porcelain"], cwd=str(WORKSPACE_ROOT), capture_output=True, text=True)
-        if status.stdout.strip():
-            log.warning("Git working tree is dirty! Stashing changes.")
-            subprocess.run(["git", "stash"], cwd=str(WORKSPACE_ROOT))
+    # Check if dirty
+    status = subprocess.run(["git", "status", "--porcelain"], cwd=str(WORKSPACE_ROOT), capture_output=True, text=True)
+    if status.returncode != 0:
+        raise RuntimeError(f"git status failed while preparing branch {branch_name}")
+    if status.stdout.strip():
+        log.warning("Git working tree is dirty! Stashing changes.")
+        _run_checked(["git", "stash"], cwd=WORKSPACE_ROOT, context="stash dirty tree")
 
-        subprocess.run(["git", "fetch", "origin", "main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
-        if detach:
-            # In a worktree the shared `main` branch is checked out elsewhere and
-            # cannot be checked out here; branch straight off origin/main instead.
-            subprocess.run(["git", "checkout", "-f", "--detach", "origin/main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
-        else:
-            subprocess.run(["git", "checkout", "main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
-            subprocess.run(["git", "pull", "origin", "main"], cwd=str(WORKSPACE_ROOT), capture_output=True)
+    _run_checked(["git", "fetch", "origin", "main"], cwd=WORKSPACE_ROOT, context="fetch origin/main")
+    if detach:
+        # In a worktree the shared `main` branch is checked out elsewhere and
+        # cannot be checked out here; branch straight off origin/main instead.
+        _run_checked(
+            ["git", "checkout", "-f", "--detach", "origin/main"],
+            cwd=WORKSPACE_ROOT,
+            context="checkout detached origin/main",
+        )
+    else:
+        _run_checked(["git", "checkout", "main"], cwd=WORKSPACE_ROOT, context="checkout main")
+        _run_checked(["git", "pull", "origin", "main"], cwd=WORKSPACE_ROOT, context="pull main")
 
-        # Create and checkout clean task branch
-        subprocess.run(["git", "checkout", "-b", branch_name], cwd=str(WORKSPACE_ROOT), capture_output=True)
-    except Exception as e:
-        log.error(f"Error creating git branch {branch_name}: {e}")
+    # Always force-reset/create the task branch off the current clean base to avoid
+    # collisions when a previous attempt already created the same branch name.
+    _run_checked(
+        ["git", "checkout", "-B", branch_name],
+        cwd=WORKSPACE_ROOT,
+        context=f"checkout/reset task branch {branch_name}",
+    )
 
 def commit_changes(task_id: str, title: str):
     """Commits modifications to git."""
     log.info("Committing task modifications to git...")
-    try:
-        # Stage everything the agent produced. Runtime bookkeeping files
-        # (backlog.json, state.json, logs, __pycache__) are git-ignored.
-        subprocess.run(["git", "add", "-A"], cwd=str(WORKSPACE_ROOT))
-        msg = f"feat({task_id}): {title}"
-        subprocess.run(["git", "commit", "-m", msg], cwd=str(WORKSPACE_ROOT))
-        log.info(f"Task committed successfully: '{msg}'")
-    except Exception as e:
-        log.error(f"Error committing git changes: {e}")
+    # Stage everything the agent produced. Runtime bookkeeping files
+    # (backlog.json, state.json, logs, __pycache__) are git-ignored.
+    _run_checked(["git", "add", "-A"], cwd=WORKSPACE_ROOT, context="stage changes")
+    msg = f"feat({task_id}): {title}"
+    _run_checked(["git", "commit", "-m", msg], cwd=WORKSPACE_ROOT, context="commit task changes")
+    log.info(f"Task committed successfully: '{msg}'")
 
 def run_agentic_loop(task: Dict[str, Any], report: Dict[str, Any] = None) -> bool:
     """Executes the tool interaction loop with the LLM client."""
@@ -215,7 +230,11 @@ def main():
     # Remove special characters
     branch_name = "".join(c for c in branch_name if c.isalnum() or c in "-/")
     
-    create_git_branch(branch_name)
+    try:
+        create_git_branch(branch_name)
+    except Exception as e:
+        log.error(f"Error creating git branch {branch_name}: {e}")
+        sys.exit(1)
     
     # Run the loop
     report: Dict[str, Any] = {}
@@ -248,7 +267,11 @@ def main():
 
     if final_success:
         log.info("Agent succeeded! Committing...")
-        commit_changes(task_to_run["id"], task_to_run["title"])
+        try:
+            commit_changes(task_to_run["id"], task_to_run["title"])
+        except Exception as e:
+            log.error(f"Error committing git changes: {e}")
+            sys.exit(1)
 
         # Update state and backlog. Under orchestration the parent runner owns
         # task status via the shared lock, so skip the backlog write here.
