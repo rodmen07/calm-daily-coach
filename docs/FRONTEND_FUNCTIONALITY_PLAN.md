@@ -136,14 +136,14 @@ Success criteria:
 - New users can reach a useful default setup in under a minute.
 - Returning users skip onboarding automatically.
 
-### 3. Weekly Insights
+### 3. Weekly Insights (Completed 2026-07-18)
 
 Add a more meaningful weekly summary that explains patterns, not just totals.
 
 Deliverables:
-- Focus-area trend breakdown.
-- Most-used dose and strongest completion window.
-- A short “what changed this week” summary.
+- [x] Focus-area trend breakdown.
+- [x] Most-used dose and strongest completion window.
+- [x] A short “what changed this week” summary: `getWeekOverWeekChange` in `src/lib/review-insights.ts` compares the current 7-day window against the prior 7 days (session and completion-rate deltas, top-focus shift) with calm, judgment-free narratives, rendered as a "What changed this week" card on the review route.
 
 Success criteria:
 - The weekly view helps users make a next-cycle decision.

@@ -8,6 +8,15 @@ export type SkipReasonInsight = {
   recommendation: string;
 };
 
+export type WeekOverWeekChange = {
+  hasPriorData: boolean;
+  doneDelta: number;
+  completionDelta: number;
+  currentTopFocus: string | null;
+  priorTopFocus: string | null;
+  narrative: string;
+};
+
 export function getCompletionPercent(weeklySummary: WeeklySummary | null): number {
   if (!weeklySummary || weeklySummary.total === 0) {
     return 0;
@@ -117,6 +126,104 @@ function recommendationForSkipReason(reason: string): string {
   }
 
   return "Simplify action steps or scale down the duration.";
+}
+
+function addDays(dateInput: string, delta: number): string {
+  const date = new Date(`${dateInput}T00:00:00`);
+  date.setDate(date.getDate() + delta);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function topFocusFromCheckins(checkins: BrowserCheckin[]): string | null {
+  const doneByFocus = new Map<string, number>();
+  for (const checkin of checkins) {
+    if (checkin.status === "done") {
+      doneByFocus.set(checkin.focus, (doneByFocus.get(checkin.focus) ?? 0) + 1);
+    }
+  }
+
+  let top: string | null = null;
+  let topCount = 0;
+  for (const [focus, count] of doneByFocus) {
+    if (count > topCount) {
+      top = focus;
+      topCount = count;
+    }
+  }
+
+  return top;
+}
+
+/**
+ * Compares the current 7-day summary window against the 7 days immediately
+ * before it, derived purely from the raw check-in list. Narratives stay calm
+ * and judgment-free: a slower week is framed as flexing, never as failure.
+ */
+export function getWeekOverWeekChange(
+  checkins: BrowserCheckin[],
+  weeklySummary: WeeklySummary | null,
+): WeekOverWeekChange | null {
+  if (!weeklySummary) {
+    return null;
+  }
+
+  const priorStart = addDays(weeklySummary.windowStart, -7);
+  const priorEnd = addDays(weeklySummary.windowStart, -1);
+  const priorCheckins = checkins.filter(
+    (checkin) => checkin.date >= priorStart && checkin.date <= priorEnd,
+  );
+
+  const currentTopFocus = topFocusFromCheckins(
+    checkins.filter(
+      (checkin) => checkin.date >= weeklySummary.windowStart && checkin.date <= weeklySummary.windowEnd,
+    ),
+  );
+
+  if (priorCheckins.length === 0) {
+    return {
+      hasPriorData: false,
+      doneDelta: 0,
+      completionDelta: 0,
+      currentTopFocus,
+      priorTopFocus: null,
+      narrative:
+        "This is your first tracked week in this window. Keep logging and next week's review will show what changed.",
+    };
+  }
+
+  const priorDone = priorCheckins.filter((checkin) => checkin.status === "done").length;
+  const priorCompletionPercent = Math.round((priorDone / priorCheckins.length) * 100);
+  const currentCompletionPercent = getCompletionPercent(weeklySummary);
+
+  const doneDelta = weeklySummary.done - priorDone;
+  const completionDelta = currentCompletionPercent - priorCompletionPercent;
+  const priorTopFocus = topFocusFromCheckins(priorCheckins);
+
+  const sessionWord = (count: number) => (Math.abs(count) === 1 ? "session" : "sessions");
+  let narrative: string;
+  if (doneDelta > 0) {
+    narrative = `You completed ${doneDelta} more ${sessionWord(doneDelta)} than last week. Whatever you changed is working, so keep the doses that felt natural.`;
+  } else if (doneDelta < 0) {
+    narrative = `You completed ${Math.abs(doneDelta)} fewer ${sessionWord(doneDelta)} than last week. Doses are meant to flex with real life; a lighter week still counts.`;
+  } else {
+    narrative = "You matched last week's completions. A steady rhythm is exactly what deliberate practice looks like.";
+  }
+
+  if (priorTopFocus && currentTopFocus && priorTopFocus !== currentTopFocus) {
+    narrative += ` Your energy shifted from ${priorTopFocus} to ${currentTopFocus}.`;
+  }
+
+  return {
+    hasPriorData: true,
+    doneDelta,
+    completionDelta,
+    currentTopFocus,
+    priorTopFocus,
+    narrative,
+  };
 }
 
 export function getSkipReasonInsights(checkinsInWindow: BrowserCheckin[]): SkipReasonInsight[] {
