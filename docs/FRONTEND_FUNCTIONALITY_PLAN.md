@@ -162,14 +162,14 @@ Success criteria:
 - Users can adjust today’s plan when reality changes.
 - The plan still feels bounded and intentional.
 
-### 5. Browser Reminders
+### 5. Browser Reminders (Completed 2026-07-18)
 
 Add reminder setup in the UI first, with the lightest delivery mechanism that fits the static site.
 
 Deliverables:
-- Reminder preference UI.
-- Optional browser scheduling or email draft support.
-- Clear copy explaining what is and is not sent automatically.
+- [x] Reminder preference UI: dashboard `ReminderSettingsPanel` with opt-in toggle, time picker, and channel choice, persisted per storage scope via `src/lib/reminder-preferences.ts`.
+- [x] Browser scheduling (in-session nudge at the chosen time while the app is open, via `src/lib/reminder-schedule.ts`) and email draft support (surfaces the planner's existing mailto draft flow).
+- [x] Clear copy explaining what is and is not sent automatically.
 
 Success criteria:
 - Users can opt into reminders without leaving the site flow.
