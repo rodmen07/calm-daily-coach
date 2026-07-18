@@ -4,16 +4,14 @@
 
 Introduce sustainable revenue without breaking the product promise of deliberate, low-noise coaching.
 
-## Packaging
+## Packaging (updated 2026-07-18)
 
-- Starter: Free habit loop with local storage and basic weekly summary.
-- Pro: Personal monetized tier focused on deeper insights, automation, and reliability.
-- Team: Higher-value tier for coaches and small teams.
+- One single membership, no tiers: every feature included after a 30-day free trial.
+- The Starter/Pro/Team split below is retired; historical sections are kept only where they describe shipped telemetry.
 
-## Price Hypothesis
+## Price
 
-- Pro: $8 per month.
-- Team: $24 per month starting point, then move to per-seat as usage proves value.
+- $5 per month, single membership (shipped model; replaces the earlier $8 Pro / $24 Team hypothesis).
 
 ## Monetization Ladder
 
@@ -26,9 +24,11 @@ Introduce sustainable revenue without breaking the product promise of deliberate
    - Early-access mailto flow.
    - Track click-through and interest by plan.
    - Expose an in-app local analytics snapshot to validate conversion UX changes quickly.
-3. Add billing integration:
-   - Stripe Checkout for Pro and Team.
-   - Simple post-checkout confirmation state.
+3. Add billing integration (shipped 2026-07-18, zero-backend mode):
+   - Stripe Payment Link for the single $5/month membership, driven by `NEXT_PUBLIC_STRIPE_PAYMENT_LINK` (no code deploy needed to change the link).
+   - The pricing CTA appends `client_reference_id=<firebase uid>` and `prefilled_email` so each payment is attributable without a backend.
+   - When the variable is unset, the CTA falls back to the early-access mailto flow.
+   - Entitlement flip stays manual for now: set `subscriptionStatus: "active"` on `users/{uid}` in Firestore after matching the payment's `client_reference_id`; webhook automation is a future step.
 4. Add entitlement controls:
    - Feature flags for Pro and Team surfaces.
    - Clear locked-state messaging in free mode.
@@ -56,6 +56,7 @@ Introduce sustainable revenue without breaking the product promise of deliberate
 
 - Pricing page visits.
 - Click-through rate on upgrade calls to action.
+- Pricing CTA channel split via event detail: `stripe_payment_link` vs `mailto_upgrade`.
 - Selected plan-interest distribution (Starter/Pro/Team).
 - Early access sign-up rate.
 - Free to Pro conversion rate.

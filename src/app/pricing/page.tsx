@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
+import { buildMembershipCheckoutUrl, getStripePaymentLink } from "@/lib/billing";
+import { trackMonetizationEvent } from "@/lib/monetization";
 
 export default function PricingPage() {
   const { authUser, signInWithGoogle } = useCoachAuth();
+  const paymentLink = getStripePaymentLink();
 
   return (
     <div className="page-shell">
@@ -51,12 +54,32 @@ export default function PricingPage() {
             </ul>
 
             {authUser ? (
-              <a
-                className="primary-button inline-flex w-full justify-center text-center font-bold"
-                href={`mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20Membership%20upgrade&body=Hi%2CCoach!%20My%20account%20uid%20is%20${authUser.uid}.%20Please%20upgrade%20me%20to%20the%20$5%2Fmonth%20plan.`}
-              >
-                Join Membership ($5/mo)
-              </a>
+              paymentLink ? (
+                <a
+                  className="primary-button inline-flex w-full justify-center text-center font-bold"
+                  href={buildMembershipCheckoutUrl(paymentLink, {
+                    uid: authUser.uid,
+                    email: authUser.email,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    trackMonetizationEvent("pricing_cta_clicked", "pro", "pricing", "stripe_payment_link")
+                  }
+                >
+                  Join Membership ($5/mo)
+                </a>
+              ) : (
+                <a
+                  className="primary-button inline-flex w-full justify-center text-center font-bold"
+                  href={`mailto:hello@calmdailycoach.com?subject=Calm%20Daily%20Coach%20Membership%20upgrade&body=Hi%2CCoach!%20My%20account%20uid%20is%20${authUser.uid}.%20Please%20upgrade%20me%20to%20the%20$5%2Fmonth%20plan.`}
+                  onClick={() =>
+                    trackMonetizationEvent("pricing_cta_clicked", "pro", "pricing", "mailto_upgrade")
+                  }
+                >
+                  Join Membership ($5/mo)
+                </a>
+              )
             ) : (
               <button
                 onClick={signInWithGoogle}
