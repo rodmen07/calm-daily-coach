@@ -8,6 +8,7 @@ import { getFirebaseFirestore } from "@/lib/firebase";
 import { getTrialDaysRemaining, getUserAccount } from "@/lib/firestore-user";
 import { getMonetizationEvents, summarizeMonetizationEvents, trackMonetizationEvent } from "@/lib/monetization";
 import { Onboarding } from "@/app/components/onboarding";
+import { AffirmationCard } from "@/app/components/AffirmationCard";
 import { ReminderSettingsPanel } from "@/app/components/reminder-settings";
 
 function subscribeMonetization(callback: () => void) {
@@ -363,7 +364,9 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          
+
+          <AffirmationCard />
+
           <p className="flow-detail text-xs sm:text-sm sr-only">
             Dashboard - Focus - Execute - Review - Dashboard
           </p>

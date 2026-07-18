@@ -40,6 +40,7 @@ Core principles:
 - Added monetization entry points with a dashboard Pro upsell panel and dedicated pricing route in [src/app/page.tsx](src/app/page.tsx), [src/app/pricing/page.tsx](src/app/pricing/page.tsx), and [src/app/layout.tsx](src/app/layout.tsx)
 - Added local monetization telemetry with plan-interest persistence and CTA click tracking in [src/lib/monetization.ts](src/lib/monetization.ts) and [src/app/hooks/use-monetization.ts](src/app/hooks/use-monetization.ts)
 - Added an in-app monetization analytics route for local conversion snapshots in [src/app/monetization/page.tsx](src/app/monetization/page.tsx)
+- Added a calm daily affirmation card on the dashboard with deterministic date-based rotation and a refresh action in [src/app/components/AffirmationCard.tsx](src/app/components/AffirmationCard.tsx) and [src/lib/affirmations.ts](src/lib/affirmations.ts)
 
 ## Added Google login
 
@@ -96,6 +97,7 @@ Rust bridge request and fallback behavior are covered in [src/lib/__tests__/rust
 Pricing route and monetization tier rendering are covered in [src/app/__tests__/pricing-page.test.tsx](src/app/__tests__/pricing-page.test.tsx).
 Dashboard and pricing monetization state behavior is covered in [src/app/__tests__/page.test.tsx](src/app/__tests__/page.test.tsx) and [src/app/__tests__/pricing-page.test.tsx](src/app/__tests__/pricing-page.test.tsx).
 Monetization summary calculations and analytics route rendering are covered in [src/lib/__tests__/monetization.test.ts](src/lib/__tests__/monetization.test.ts) and [src/app/__tests__/monetization-page.test.tsx](src/app/__tests__/monetization-page.test.tsx).
+Daily affirmation rotation and card behavior are covered in [src/lib/__tests__/affirmations.test.ts](src/lib/__tests__/affirmations.test.ts) and [src/app/components/__tests__/AffirmationCard.test.tsx](src/app/components/__tests__/AffirmationCard.test.tsx).
 Autonomous execution roadmap is tracked in `docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md`.
 The frontend-first functionality plan is tracked in [docs/FRONTEND_FUNCTIONALITY_PLAN.md](docs/FRONTEND_FUNCTIONALITY_PLAN.md).
 The monetization strategy is tracked in [docs/MONETIZATION_PLAN.md](docs/MONETIZATION_PLAN.md).
