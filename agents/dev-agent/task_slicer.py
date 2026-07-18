@@ -16,7 +16,7 @@ This module provides:
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 from llm_client import UnifiedLLMClient
 
 log = logging.getLogger("dev-agent.slicer")
