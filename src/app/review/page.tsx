@@ -13,6 +13,7 @@ import {
   getPatternSummary,
   getPeakCompletionWindow,
   getSkipReasonInsights,
+  getWeekOverWeekChange,
 } from "@/lib/review-insights";
 
 export default function ReviewPage() {
@@ -39,6 +40,11 @@ export default function ReviewPage() {
   const patternSummary = useMemo(() => getPatternSummary(completionPercent), [completionPercent]);
 
   const skipReasonsList = useMemo(() => getSkipReasonInsights(checkinsInWindow), [checkinsInWindow]);
+
+  const weekOverWeek = useMemo(() => {
+    const allCheckins = listCheckins(storageScope);
+    return getWeekOverWeekChange(allCheckins, weeklySummary);
+  }, [storageScope, weeklySummary]);
 
   const focusBreakdown = useMemo(() => {
     if (!weeklySummary) {
@@ -194,6 +200,34 @@ export default function ReviewPage() {
               </div>
               <p className="leading-6">{patternSummary}</p>
             </div>
+
+            {weekOverWeek && (
+              <div className="rounded-xl border border-(--line) bg-(--field) p-4 mt-4 text-sm text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-sm shrink-0" aria-hidden="true">🔁</span>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">What changed this week</p>
+                </div>
+                <p className="leading-6">{weekOverWeek.narrative}</p>
+                {weekOverWeek.hasPriorData && (
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    <span
+                      className="rounded-full border border-(--line) bg-(--surface-strong) px-3 py-1 font-semibold"
+                      data-testid="wow-sessions-delta"
+                    >
+                      {weekOverWeek.doneDelta >= 0 ? "+" : ""}
+                      {weekOverWeek.doneDelta} sessions vs last week
+                    </span>
+                    <span
+                      className="rounded-full border border-(--line) bg-(--surface-strong) px-3 py-1 font-semibold"
+                      data-testid="wow-completion-delta"
+                    >
+                      {weekOverWeek.completionDelta >= 0 ? "+" : ""}
+                      {weekOverWeek.completionDelta} pts completion rate
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {focusBreakdown.length > 0 && (
               <div className="focus-breakdown-list mt-5 space-y-2">
