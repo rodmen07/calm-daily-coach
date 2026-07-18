@@ -175,14 +175,14 @@ Success criteria:
 - Users can opt into reminders without leaving the site flow.
 - Reminder behavior stays compatible with GitHub Pages deployment.
 
-### 6. Offline and Sync Status
+### 6. Offline and Sync Status (Completed 2026-07-18)
 
 Expose whether the app is using local data or account-backed sync, and make that state visible in the dashboard.
 
 Deliverables:
-- Sync/local status indicator.
-- Clear fallback messaging when backend support is unavailable.
-- Explicit status in the dashboard header or action rail.
+- [x] Sync/local status indicator: header `SyncStatusBadge` now derives its state from the check-in store's resolved backend, not just auth state.
+- [x] Clear fallback messaging when backend support is unavailable: `SYNC OFF (LOCAL)` when Firestore mode is configured but unreachable, `SIGNED IN (LOCAL)` when the deployment keeps data on-device.
+- [x] Explicit status in the dashboard header or action rail (site-wide header badge in `src/app/layout.tsx`).
 
 Success criteria:
 - Users know whether their data is local or synced.
