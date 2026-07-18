@@ -8,6 +8,7 @@ import { getFirebaseFirestore } from "@/lib/firebase";
 import { getTrialDaysRemaining, getUserAccount } from "@/lib/firestore-user";
 import { getMonetizationEvents, summarizeMonetizationEvents, trackMonetizationEvent } from "@/lib/monetization";
 import { Onboarding } from "@/app/components/onboarding";
+import { ReminderSettingsPanel } from "@/app/components/reminder-settings";
 
 function subscribeMonetization(callback: () => void) {
   if (typeof window === "undefined") {
@@ -91,6 +92,10 @@ export default function Home() {
     topFocus,
     setFocus,
     setDose,
+    email,
+    setEmail,
+    sendReminder,
+    reminderStatus,
   } = useCoachPlanner({
     storageScope,
     authEmail: authUser?.email,
@@ -503,6 +508,17 @@ export default function Home() {
               ))}
             </div>
           </div>
+
+          <ReminderSettingsPanel
+            storageScope={storageScope}
+            email={email}
+            onEmailChange={setEmail}
+            onSendEmailDraft={() => {
+              void sendReminder();
+            }}
+            draftStatus={reminderStatus}
+            canSendDraft={hasPlan}
+          />
 
           <div className="monetization-panel mt-4" aria-label="Membership status">
             <div className="monetization-copy">

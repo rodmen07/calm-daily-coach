@@ -160,6 +160,8 @@ The app now shows Firebase error codes/messages in UI to make production diagnos
 ## Email reminders
 
 Reminder uses a `mailto:` draft flow in static mode so it works on GitHub Pages with zero backend cost.
+Reminder preferences (opt-in, daily time, browser or email channel) are configured from the dashboard `ReminderSettingsPanel` in [src/app/components/reminder-settings.tsx](src/app/components/reminder-settings.tsx) and persist per user scope via [src/lib/reminder-preferences.ts](src/lib/reminder-preferences.ts).
+The browser channel shows an in-session nudge at the chosen time while the app is open (scheduling math in [src/lib/reminder-schedule.ts](src/lib/reminder-schedule.ts)); nothing is ever sent automatically.
 
 ## API contracts
 

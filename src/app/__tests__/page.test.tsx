@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "@/app/page";
 import { getWeeklySummary } from "@/lib/browser-checkins";
@@ -131,6 +131,27 @@ describe("Dashboard page", () => {
       expect(screen.getByRole("link", { name: "Tune focus" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "Open execute" }).getAttribute("href")).toBe("/execute");
     });
+  });
+
+  it("surfaces reminder settings on the dashboard and persists the guest opt-in", async () => {
+    window.localStorage.setItem(
+      "calm-daily-coach:onboarding",
+      JSON.stringify({ defaultFocus: "Deep Work", defaultDose: "light", defaultTheme: "dark" }),
+    );
+
+    render(<Home />);
+
+    expect(screen.getByText("Reminders")).toBeTruthy();
+    expect(screen.getByText("Off")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Enable a daily reminder" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Daily at 18:00")).toBeTruthy();
+    });
+    expect(
+      JSON.parse(window.localStorage.getItem("calm-daily-coach:reminder-prefs:guest") ?? "{}"),
+    ).toMatchObject({ enabled: true, time: "18:00", channel: "browser" });
   });
 
   it("shows account mode and auth configuration warning when Firebase auth is unavailable", async () => {
