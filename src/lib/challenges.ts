@@ -11,8 +11,6 @@ export interface MicroChallenge {
 export interface ChallengeProgress {
   completedIds: string[];
   lastCompletedDate: string | null; // YYYY-MM-DD
-  currentStreak: number;
-  longestStreak: number;
 }
 
 export const MICRO_CHALLENGES: MicroChallenge[] = [
@@ -134,24 +132,23 @@ export const STORAGE_CHALLENGES_KEY = "calm-daily-coach:challenges";
 
 export function loadChallengeProgress(): ChallengeProgress {
   if (typeof window === "undefined") {
-    return { completedIds: [], lastCompletedDate: null, currentStreak: 0, longestStreak: 0 };
+    return { completedIds: [], lastCompletedDate: null };
   }
 
   const stored = window.localStorage.getItem(STORAGE_CHALLENGES_KEY);
   if (!stored) {
-    return { completedIds: [], lastCompletedDate: null, currentStreak: 0, longestStreak: 0 };
+    return { completedIds: [], lastCompletedDate: null };
   }
 
   try {
+    // Legacy stored payloads may still carry streak fields; they are dropped here.
     const parsed = JSON.parse(stored);
     return {
       completedIds: Array.isArray(parsed.completedIds) ? parsed.completedIds : [],
       lastCompletedDate: parsed.lastCompletedDate || null,
-      currentStreak: typeof parsed.currentStreak === "number" ? parsed.currentStreak : 0,
-      longestStreak: typeof parsed.longestStreak === "number" ? parsed.longestStreak : 0,
     };
   } catch {
-    return { completedIds: [], lastCompletedDate: null, currentStreak: 0, longestStreak: 0 };
+    return { completedIds: [], lastCompletedDate: null };
   }
 }
 
@@ -170,72 +167,22 @@ export function getTodayStr(): string {
   return `${y}-${m}-${day}`;
 }
 
-export function getYesterdayStr(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 /**
- * Calculates updated streak state when completing a new challenge today.
+ * Records a challenge completion without any streak mechanics: the id is added
+ * once and today's date is stamped so the UI can show a calm daily status.
  */
-export function calculateStreakUpdate(
+export function recordChallengeCompletion(
   currentProgress: ChallengeProgress,
   completedId: string,
   today: string,
-  yesterday: string
 ): ChallengeProgress {
   const completedIds = [...currentProgress.completedIds];
   if (!completedIds.includes(completedId)) {
     completedIds.push(completedId);
   }
 
-  // Already completed something today? Streak holds
-  if (currentProgress.lastCompletedDate === today) {
-    return {
-      ...currentProgress,
-      completedIds,
-    };
-  }
-
-  let newStreak = 1;
-  if (currentProgress.lastCompletedDate === yesterday) {
-    newStreak = currentProgress.currentStreak + 1;
-  }
-
-  const longestStreak = Math.max(currentProgress.longestStreak, newStreak);
-
   return {
     completedIds,
     lastCompletedDate: today,
-    currentStreak: newStreak,
-    longestStreak,
-  };
-}
-
-/**
- * Validates and resets streak if the last completion was before yesterday.
- */
-export function checkAndDecayStreak(
-  currentProgress: ChallengeProgress,
-  today: string,
-  yesterday: string
-): ChallengeProgress {
-  if (!currentProgress.lastCompletedDate) {
-    return currentProgress;
-  }
-
-  // If last completion was today or yesterday, streak is safely preserved.
-  if (currentProgress.lastCompletedDate === today || currentProgress.lastCompletedDate === yesterday) {
-    return currentProgress;
-  }
-
-  // Otherwise, streak resets
-  return {
-    ...currentProgress,
-    currentStreak: 0,
   };
 }

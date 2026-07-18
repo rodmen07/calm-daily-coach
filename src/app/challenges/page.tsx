@@ -6,10 +6,8 @@ import {
   MICRO_CHALLENGES,
   loadChallengeProgress,
   saveChallengeProgress,
-  calculateStreakUpdate,
-  checkAndDecayStreak,
+  recordChallengeCompletion,
   getTodayStr,
-  getYesterdayStr,
   ChallengeProgress,
   ChallengeCategory,
 } from "@/lib/challenges";
@@ -17,12 +15,7 @@ import {
 export default function ChallengesPage(): React.JSX.Element {
   // Use lazy state initialization to load local storage status directly on construction.
   // This bypasses triggers for the 'react-hooks/set-state-in-effect' ESLint checks.
-  const [progress, setProgress] = useState<ChallengeProgress>(() => {
-    const stored = loadChallengeProgress();
-    const today = getTodayStr();
-    const yesterday = getYesterdayStr();
-    return checkAndDecayStreak(stored, today, yesterday);
-  });
+  const [progress, setProgress] = useState<ChallengeProgress>(() => loadChallengeProgress());
 
   const [activeCategory, setActiveCategory] = useState<ChallengeCategory | "all">("all");
   // Use lazy state initialization to initialize offset directly without an effect.
@@ -37,7 +30,7 @@ export default function ChallengesPage(): React.JSX.Element {
   }, [progress]);
 
   const today = getTodayStr();
-  const yesterday = getYesterdayStr();
+  const practicedToday = progress.lastCompletedDate === today;
 
   // Filter tasks
   const filtered = MICRO_CHALLENGES.filter((c) => {
@@ -51,7 +44,7 @@ export default function ChallengesPage(): React.JSX.Element {
   const recommendedChallenge = MICRO_CHALLENGES[dailyFocusIndex] || MICRO_CHALLENGES[0];
 
   const handleComplete = (id: string) => {
-    const updated = calculateStreakUpdate(progress, id, today, yesterday);
+    const updated = recordChallengeCompletion(progress, id, today);
     setProgress(updated);
     saveChallengeProgress(updated);
   };
@@ -60,8 +53,6 @@ export default function ChallengesPage(): React.JSX.Element {
     const fresh: ChallengeProgress = {
       completedIds: [],
       lastCompletedDate: null,
-      currentStreak: 0,
-      longestStreak: 0,
     };
     setProgress(fresh);
     saveChallengeProgress(fresh);
@@ -93,24 +84,24 @@ export default function ChallengesPage(): React.JSX.Element {
         </Link>
       </div>
 
-      {/* Streak Dashboard Stats Section */}
+      {/* Calm Progress Stats Section - deliberately streak-free */}
       <div className="mb-8 grid grid-cols-2 gap-4 rounded-2xl border border-[--line] bg-[--panel] p-5 shadow-xl">
         <div className="flex flex-col items-center justify-center p-3 text-center border-r border-[--line]">
-          <span className="text-3xl">🔥</span>
+          <span className="text-3xl">✅</span>
           <span className="mt-2 text-2xl font-black text-[--accent]">
-            {progress.currentStreak}
+            {progress.completedIds.length}
           </span>
           <span className="text-[11px] font-semibold uppercase tracking-wider text-[--muted]">
-            Current Streak
+            Challenges Completed
           </span>
         </div>
         <div className="flex flex-col items-center justify-center p-3 text-center">
-          <span className="text-3xl">🏆</span>
+          <span className="text-3xl">🌱</span>
           <span className="mt-2 text-2xl font-black text-[--foreground]">
-            {progress.longestStreak}
+            {practicedToday ? "Done" : "Open"}
           </span>
           <span className="text-[11px] font-semibold uppercase tracking-wider text-[--muted]">
-            Longest Streak
+            Today&apos;s Practice
           </span>
         </div>
       </div>
