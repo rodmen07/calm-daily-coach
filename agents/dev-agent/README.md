@@ -118,6 +118,24 @@ How it stays correct with N workers:
 Relevant env vars: `AUTOMATION_WORKER_ID`, `AUTOMATION_BACKLOG_PATH`,
 `AUTOMATION_MANAGED`, `AUTOMATION_DETACH`, `AUTOMATION_CLAIM_LEASE`.
 
+- **Duplicate-free replenishment.** `replenish_backlog` compares pool titles
+  against every existing backlog task (any status) before appending, so a task
+  that was ever queued, completed, or parked is never re-added under a new id.
+  Pool entries seed repo-conventional paths only (`src/app/components/`,
+  `src/app/hooks/`, `src/lib/`; Tailwind styling, no CSS files).
+
+---
+
+## Agent self-tests
+
+Backlog hygiene and import regressions are covered by a stdlib-only unittest
+suite (no LLM calls, no external deps):
+
+```powershell
+cd agents/dev-agent
+python -m unittest test_backlog_hygiene -v
+```
+
 ---
 
 ## Safety Constraints

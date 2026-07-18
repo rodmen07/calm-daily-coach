@@ -41,23 +41,27 @@ COPILOT_MODEL = os.environ.get("COPILOT_MODEL", "gpt-5.3-codex")
 
 # Rotating pool of frontend feature ideas for calm-daily-coach. Used to keep the
 # backlog non-empty so the automation always has work.
+#
+# Paths must match repo conventions: components in src/app/components/ (tests in
+# src/app/components/__tests__/), hooks in src/app/hooks/, shared logic in
+# src/lib/. Styling is Tailwind-in-component; never seed src/styles/*.css files.
+# No streak/pressure mechanics: the product promise is explicitly streak-free.
 FRONTEND_TASK_POOL = [
-    ("Add breathing exercise timer component", "Build a BreathingTimer React component with configurable inhale/hold/exhale durations and a calming animated ring.", ["src/components/BreathingTimer.tsx", "src/styles/breathing-timer.css"]),
-    ("Add daily affirmation card", "Create an AffirmationCard component that shows a rotating daily affirmation with a refresh action.", ["src/components/AffirmationCard.tsx", "src/lib/affirmations.ts"]),
-    ("Add mood tracker widget", "Implement a MoodTracker component allowing users to log their mood with emoji buttons and persist to local storage.", ["src/components/MoodTracker.tsx", "src/lib/mood-storage.ts"]),
-    ("Add gratitude journal entry form", "Create a GratitudeJournal component with a text entry form and a list of recent entries.", ["src/components/GratitudeJournal.tsx", "src/styles/gratitude.css"]),
-    ("Add streak progress indicator", "Build a StreakIndicator component that displays the user's current daily streak with a progress bar.", ["src/components/StreakIndicator.tsx", "src/lib/streak.ts"]),
-    ("Add calming color theme switcher", "Add a ThemeSwitcher component offering multiple calming color palettes stored in preferences.", ["src/components/ThemeSwitcher.tsx", "src/styles/themes.css"]),
-    ("Add guided meditation list", "Create a MeditationList component that renders available guided meditations with duration badges.", ["src/components/MeditationList.tsx", "src/lib/meditations.ts"]),
-    ("Add focus session countdown", "Implement a FocusSession component with a Pomodoro-style countdown and start/pause controls.", ["src/components/FocusSession.tsx", "src/lib/focus-timer.ts"]),
-    ("Add reminder settings panel", "Build a ReminderSettings component for enabling daily reminders and choosing a time.", ["src/components/ReminderSettings.tsx", "src/lib/reminders.ts"]),
-    ("Add responsive footer with links", "Create an accessible Footer component with navigation links and social icons.", ["src/components/Footer.tsx", "src/styles/footer.css"]),
-    ("Add loading spinner component", "Add a reusable Spinner component with size and color props plus unit tests.", ["src/components/Spinner.tsx", "src/components/__tests__/Spinner.test.tsx"]),
-    ("Add empty state illustration component", "Create an EmptyState component that shows an illustration and message when lists are empty.", ["src/components/EmptyState.tsx", "src/styles/empty-state.css"]),
-    ("Add keyboard shortcut help modal", "Implement a ShortcutsModal component listing keyboard shortcuts, toggled with '?'.", ["src/components/ShortcutsModal.tsx", "src/lib/shortcuts.ts"]),
-    ("Add progress ring visualization", "Build a ProgressRing SVG component that animates from 0 to a target percentage.", ["src/components/ProgressRing.tsx", "src/components/__tests__/ProgressRing.test.tsx"]),
-    ("Add tag filter chips", "Create a TagFilter component with selectable chips that filter a list of items.", ["src/components/TagFilter.tsx", "src/styles/tag-filter.css"]),
-    ("Add scroll-to-top button", "Add a ScrollToTop button that appears after scrolling and smoothly returns to the top.", ["src/components/ScrollToTop.tsx", "src/lib/use-scroll.ts"]),
+    ("Add breathing exercise timer component", "Build a BreathingTimer React component with configurable inhale/hold/exhale durations and a calming animated ring.", ["src/app/components/BreathingTimer.tsx", "src/app/components/__tests__/BreathingTimer.test.tsx"]),
+    ("Add daily affirmation card", "Create an AffirmationCard component that shows a rotating daily affirmation with a refresh action.", ["src/app/components/AffirmationCard.tsx", "src/lib/affirmations.ts"]),
+    ("Add mood tracker widget", "Implement a MoodTracker component allowing users to log their mood with emoji buttons and persist to local storage.", ["src/app/components/MoodTracker.tsx", "src/lib/mood-storage.ts"]),
+    ("Add gratitude journal entry form", "Create a GratitudeJournal component with a text entry form and a list of recent entries.", ["src/app/components/GratitudeJournal.tsx", "src/app/components/__tests__/GratitudeJournal.test.tsx"]),
+    ("Add calming color theme switcher", "Add a ThemeSwitcher component offering multiple calming color palettes stored in preferences.", ["src/app/components/ThemeSwitcher.tsx", "src/lib/theme-palettes.ts"]),
+    ("Add guided meditation list", "Create a MeditationList component that renders available guided meditations with duration badges.", ["src/app/components/MeditationList.tsx", "src/lib/meditations.ts"]),
+    ("Add focus session countdown", "Implement a FocusSession component with a Pomodoro-style countdown and start/pause controls.", ["src/app/components/FocusSession.tsx", "src/lib/focus-timer.ts"]),
+    ("Add reminder settings panel", "Build a ReminderSettings component for enabling daily reminders and choosing a time.", ["src/app/components/ReminderSettings.tsx", "src/lib/reminders.ts"]),
+    ("Add responsive footer with links", "Create an accessible Footer component with navigation links and social icons.", ["src/app/components/Footer.tsx", "src/app/components/__tests__/Footer.test.tsx"]),
+    ("Add loading spinner component", "Add a reusable Spinner component with size and color props plus unit tests.", ["src/app/components/Spinner.tsx", "src/app/components/__tests__/Spinner.test.tsx"]),
+    ("Add empty state illustration component", "Create an EmptyState component that shows an illustration and message when lists are empty.", ["src/app/components/EmptyState.tsx", "src/app/components/__tests__/EmptyState.test.tsx"]),
+    ("Add keyboard shortcut help modal", "Implement a ShortcutsModal component listing keyboard shortcuts, toggled with '?'.", ["src/app/components/ShortcutsModal.tsx", "src/lib/shortcuts.ts"]),
+    ("Add progress ring visualization", "Build a ProgressRing SVG component that animates from 0 to a target percentage.", ["src/app/components/ProgressRing.tsx", "src/app/components/__tests__/ProgressRing.test.tsx"]),
+    ("Add tag filter chips", "Create a TagFilter component with selectable chips that filter a list of items.", ["src/app/components/TagFilter.tsx", "src/app/components/__tests__/TagFilter.test.tsx"]),
+    ("Add scroll-to-top button", "Add a ScrollToTop button that appears after scrolling and smoothly returns to the top.", ["src/app/components/ScrollToTop.tsx", "src/app/hooks/use-scroll.ts"]),
 ]
 
 
@@ -115,15 +119,34 @@ def next_task_number(data):
     return highest + 1
 
 
-def replenish_backlog(data):
+def _normalized_title(title):
+    return " ".join((title or "").lower().split())
+
+
+def select_fresh_pool_tasks(existing_tasks, pool, batch):
+    """Pick up to ``batch`` pool entries whose titles are not already in the backlog.
+
+    Titles are compared case/whitespace-insensitively against every existing task
+    regardless of status, so a completed or parked task is never re-queued as a
+    duplicate under a new id.
+    """
+    existing = {_normalized_title(t.get("title")) for t in existing_tasks}
+    fresh = [p for p in pool if _normalized_title(p[0]) not in existing]
+    if len(fresh) <= batch:
+        return fresh
+    return random.sample(fresh, batch)
+
+
+def replenish_backlog():
     """Append fresh frontend tasks so the backlog is never empty. Runs under lock
     via backlog_store so concurrent workers cannot double-number new task ids."""
     def _replenish(data):
+        tasks = data.setdefault("tasks", [])
+        picks = select_fresh_pool_tasks(tasks, FRONTEND_TASK_POOL, REPLENISH_BATCH)
         start = next_task_number(data)
-        picks = random.sample(FRONTEND_TASK_POOL, min(REPLENISH_BATCH, len(FRONTEND_TASK_POOL)))
         for i, (title, description, files) in enumerate(picks):
             num = start + i
-            data["tasks"].append({
+            tasks.append({
                 "id": f"cdc-{num:03d}",
                 "title": title,
                 "description": description,
@@ -133,7 +156,10 @@ def replenish_backlog(data):
         return len(picks), start
 
     added, start = backlog_store.mutate(_replenish)
-    log(f"[{WORKER_ID}] Replenished backlog with {added} new frontend tasks (starting cdc-{start:03d}).")
+    if added:
+        log(f"[{WORKER_ID}] Replenished backlog with {added} new frontend tasks (starting cdc-{start:03d}).")
+    else:
+        log(f"[{WORKER_ID}] Replenish skipped: every pool task already exists in the backlog.")
 
 
 def clean_git_state():
@@ -332,7 +358,7 @@ def process_once(loop_count):
 
     # Keep the backlog stocked with frontend work.
     if backlog_store.count_by_status("pending") < MIN_PENDING:
-        replenish_backlog(None)
+        replenish_backlog()
 
     # Coordinated Failure Remediation Guard:
     # Before grabbing any task, let the master or solo lock owner sweep the backlog
