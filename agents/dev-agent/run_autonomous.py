@@ -166,28 +166,61 @@ def clean_git_state():
 
 def create_pr_and_enable_auto(branch_name, title, body):
     try:
+        pr_num = ""
+        pr_url = ""
         res = subprocess.run(
             ["gh", "pr", "create", "--base", "main", "--head", branch_name, "--title", title, "--body", body],
             cwd=str(REPO_ROOT), capture_output=True, text=True,
         )
         if res.returncode != 0:
             log(f"gh pr create failed: {res.stderr.strip()}")
-            return None
-        url = res.stdout.strip().splitlines()[-1] if res.stdout.strip() else ""
-        num = subprocess.run(
-            ["gh", "pr", "view", branch_name, "--json", "number", "--jq", ".number"],
-            cwd=str(REPO_ROOT), capture_output=True, text=True,
-        )
-        pr_num = num.stdout.strip()
+            existing = subprocess.run(
+                ["gh", "pr", "view", branch_name, "--json", "number,url"],
+                cwd=str(REPO_ROOT), capture_output=True, text=True,
+            )
+            if existing.returncode != 0:
+                log(f"gh pr view failed after create failure: {existing.stderr.strip()}")
+                return None
+            try:
+                existing_data = json.loads(existing.stdout or "{}")
+                pr_num = str(existing_data.get("number", "")).strip()
+                pr_url = str(existing_data.get("url", "")).strip()
+            except json.JSONDecodeError:
+                log("gh pr view returned invalid JSON.")
+                return None
+        else:
+            pr_url = res.stdout.strip().splitlines()[-1] if res.stdout.strip() else ""
+            num = subprocess.run(
+                ["gh", "pr", "view", branch_name, "--json", "number", "--jq", ".number"],
+                cwd=str(REPO_ROOT), capture_output=True, text=True,
+            )
+            pr_num = num.stdout.strip()
+
         if pr_num:
-            subprocess.run(
+            merge_res = subprocess.run(
                 ["gh", "pr", "merge", pr_num, "--auto", "--merge"],
                 cwd=str(REPO_ROOT), capture_output=True, text=True,
             )
-        return url
+            if merge_res.returncode != 0:
+                log(f"gh pr merge --auto failed for #{pr_num}: {merge_res.stderr.strip()}")
+
+        if not pr_url:
+            url_res = subprocess.run(
+                ["gh", "pr", "view", branch_name, "--json", "url", "--jq", ".url"],
+                cwd=str(REPO_ROOT), capture_output=True, text=True,
+            )
+            if url_res.returncode == 0:
+                pr_url = url_res.stdout.strip()
+
+        return pr_url or None
     except Exception as e:
         log(f"Error creating PR: {e}")
         return None
+
+
+def _sanitize_branch_name(task_id, title):
+    branch_name = f"dev-agent/{task_id}-{title.lower().replace(' ', '-')}"
+    return "".join(c for c in branch_name if c.isalnum() or c in "-/")
 
 
 def run_task(task):
@@ -228,10 +261,18 @@ def run_task(task):
         log(proc.stdout)
 
     if proc.returncode == 0:
-        branch_name = f"dev-agent/{task_id}-{task['title'].lower().replace(' ', '-')}"
-        branch_name = "".join(c for c in branch_name if c.isalnum() or c in "-/")
-        subprocess.run(["git", "push", "-u", "origin", branch_name], cwd=str(REPO_ROOT), capture_output=True, text=True)
+        branch_name = _sanitize_branch_name(task_id, task["title"])
+        push_res = subprocess.run(
+            ["git", "push", "-u", "origin", branch_name, "--force-with-lease"],
+            cwd=str(REPO_ROOT), capture_output=True, text=True,
+        )
+        if push_res.returncode != 0:
+            log(f"[{WORKER_ID}] git push failed for {branch_name}: {push_res.stderr.strip()}")
+            return False
         pr_url = create_pr_and_enable_auto(branch_name, f"feat({task_id}): {task['title']}", f"Automated frontend change for {task_id}.")
+        if not pr_url:
+            log(f"[{WORKER_ID}] PR create/view failed for branch {branch_name}.")
+            return False
         log(f"[{WORKER_ID}] PR created: {pr_url}")
         return True
 
