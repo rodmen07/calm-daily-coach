@@ -171,6 +171,7 @@ No server API routes in Pages mode.
 
 - Check-ins are stored in browser local storage for zero-cost hosting.
 - Data is device/browser specific until database-backed auth is added.
+- The header sync badge in [src/app/components/sync-status-badge.tsx](src/app/components/sync-status-badge.tsx) reflects the actual check-in backend: `CLOUD SYNCED` only when `NEXT_PUBLIC_CHECKIN_BACKEND=firestore` resolves to a live Firestore, `SYNC OFF (LOCAL)` when Firestore mode is configured but unavailable, and `SIGNED IN (LOCAL)` when the deployment keeps data on-device.
 
 ## Deploy to GitHub Pages
 
