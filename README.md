@@ -125,6 +125,14 @@ The monetization strategy is tracked in [docs/MONETIZATION_PLAN.md](docs/MONETIZ
 - Firestore collection path is `users/{uid}/checkins`.
 - On sign-in, guest check-ins are migrated to the signed-in scope once per backend mode with an idempotent migration marker.
 
+### Stripe billing (Payment Link mode)
+
+- Configure `NEXT_PUBLIC_STRIPE_PAYMENT_LINK` with a Stripe-hosted Payment Link URL for the $5/month membership; set it as the repository Variable `NEXT_PUBLIC_STRIPE_PAYMENT_LINK` so [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) inlines it at build time.
+- When set, the signed-in pricing CTA opens the Payment Link in a new tab with `client_reference_id=<firebase uid>` and `prefilled_email` appended, so payments are attributable with zero backend.
+- When unset, the pricing CTA keeps the early-access mailto flow; both channels log `pricing_cta_clicked` with a channel detail for conversion analysis.
+- Entitlement remains manual for now: after a payment, set `subscriptionStatus: "active"` on the matching `users/{uid}` Firestore document.
+- Billing helpers and CTA behavior are covered in [src/lib/__tests__/billing.test.ts](src/lib/__tests__/billing.test.ts) and [src/app/__tests__/pricing-page-billing.test.tsx](src/app/__tests__/pricing-page-billing.test.tsx).
+
 ### Rust coaching bridge mode
 
 - Configure `NEXT_PUBLIC_RUST_COACH_BRIDGE_URL` to enable optional Rust-powered coaching hints.
@@ -191,4 +199,4 @@ No server API routes in Pages mode.
 
 1. Replace local browser storage with Firestore sync per authenticated user.
 2. Add time-based reminder scheduling through a backend worker.
-3. Add Stripe billing and paid trial gating.
+3. Automate Stripe entitlement (webhook -> Firestore `subscriptionStatus`) on top of the shipped Payment Link checkout, then add paid trial gating.
