@@ -1,12 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   MICRO_CHALLENGES,
-  calculateStreakUpdate,
-  checkAndDecayStreak,
+  STORAGE_CHALLENGES_KEY,
+  loadChallengeProgress,
+  recordChallengeCompletion,
   ChallengeProgress,
 } from "@/lib/challenges";
 
 describe("Challenges Logic", () => {
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
   it("rolls a complete set of micro-habits correctly", () => {
     expect(MICRO_CHALLENGES.length).toBeGreaterThan(5);
     const first = MICRO_CHALLENGES[0];
@@ -15,49 +20,40 @@ describe("Challenges Logic", () => {
     expect(first.description).toBeTruthy();
   });
 
-  it("advances and retains streaks when checking off items on successive days", () => {
+  it("records completions with today's date and no duplicate ids", () => {
     const start: ChallengeProgress = {
       completedIds: [],
       lastCompletedDate: "2026-07-02",
-      currentStreak: 4,
-      longestStreak: 4,
     };
 
-    // Complete a task today
-    const res = calculateStreakUpdate(start, "mind-001", "2026-07-03", "2026-07-02");
+    const res = recordChallengeCompletion(start, "mind-001", "2026-07-03");
     expect(res.completedIds).toEqual(["mind-001"]);
-    expect(res.currentStreak).toBe(5);
-    expect(res.longestStreak).toBe(5);
     expect(res.lastCompletedDate).toBe("2026-07-03");
 
-    // Completing another task on the same day holds/maintains the exact streak
-    const resSameDay = calculateStreakUpdate(res, "well-001", "2026-07-03", "2026-07-02");
+    const resSameDay = recordChallengeCompletion(res, "well-001", "2026-07-03");
     expect(resSameDay.completedIds).toEqual(["mind-001", "well-001"]);
-    expect(resSameDay.currentStreak).toBe(5);
     expect(resSameDay.lastCompletedDate).toBe("2026-07-03");
+
+    const resRepeat = recordChallengeCompletion(resSameDay, "mind-001", "2026-07-03");
+    expect(resRepeat.completedIds).toEqual(["mind-001", "well-001"]);
   });
 
-  it("keeps streaks alive if last completed was yesterday, resets if missed", () => {
-    const alive: ChallengeProgress = {
+  it("drops legacy streak fields when loading stored progress", () => {
+    window.localStorage.setItem(
+      STORAGE_CHALLENGES_KEY,
+      JSON.stringify({
+        completedIds: ["mind-001"],
+        lastCompletedDate: "2026-07-02",
+        currentStreak: 9,
+        longestStreak: 12,
+      }),
+    );
+
+    const loaded = loadChallengeProgress();
+    expect(loaded).toEqual({
       completedIds: ["mind-001"],
       lastCompletedDate: "2026-07-02",
-      currentStreak: 3,
-      longestStreak: 5,
-    };
-
-    // Stays alive if checked on today (preserves streak for rendering)
-    const preserve = checkAndDecayStreak(alive, "2026-07-03", "2026-07-02");
-    expect(preserve.currentStreak).toBe(3);
-
-    const stale: ChallengeProgress = {
-      completedIds: ["mind-001"],
-      lastCompletedDate: "2026-06-30", // missed several days!
-      currentStreak: 3,
-      longestStreak: 5,
-    };
-
-    // Resets streak to 0 due to inactivity gap
-    const decay = checkAndDecayStreak(stale, "2026-07-03", "2026-07-02");
-    expect(decay.currentStreak).toBe(0);
+    });
+    expect("currentStreak" in loaded).toBe(false);
   });
 });

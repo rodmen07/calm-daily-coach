@@ -7,12 +7,14 @@ afterEach(() => {
 });
 
 describe("Challenges Page", () => {
-  it("renders with a streak tracker, daily recommendation and complete control filters", () => {
+  it("renders streak-free progress stats, daily recommendation and complete control filters", () => {
     render(<ChallengesPage />);
 
     expect(screen.getByText("Micro-Challenges")).toBeTruthy();
-    expect(screen.getByText("Current Streak")).toBeTruthy();
-    expect(screen.getByText("Longest Streak")).toBeTruthy();
+    expect(screen.getByText("Challenges Completed")).toBeTruthy();
+    expect(screen.getByText("Today's Practice")).toBeTruthy();
+    expect(screen.queryByText("Current Streak")).toBeNull();
+    expect(screen.queryByText("Longest Streak")).toBeNull();
     expect(screen.getByText("Discover Habits Card")).toBeTruthy();
 
     expect(screen.getByRole("button", { name: "📋 All Tasks" })).toBeTruthy();
