@@ -8,15 +8,26 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  statuses: write
+  checks: write
+
+# Cancel superseded PR runs when new commits are pushed to the same PR.
+# Push runs on main are never cancelled (cancel-in-progress evaluates false).
+concurrency:
+  group: quality-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   quality-gate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -24,8 +35,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Quality check
-        run: npm run check
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Build
         run: npm run build
@@ -33,11 +47,53 @@ jobs:
       - name: Dependency audit (high severity)
         run: npm audit --audit-level=high
 
-      - name: Coverage
+      # Tests gate the job here. The coverage run executes the full vitest
+      # suite and fails on any test failure, so a separate plain "vitest run"
+      # would only repeat the same work.
+      - name: Tests with coverage
         run: npm run test:coverage
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
+
+      # Branch protection requires a status/check named "lint-and-build"
+      # (legacy name from the pre-consolidation workflow). It is now attested
+      # by this full gate: lint, typecheck, build, audit, and tests must all
+      # pass. Pull requests only. On a cancelled (superseded) run this step is
+      # skipped; the superseding run reports on the new head SHA.
+      - name: Report required lint-and-build status
+        if: (success() || failure()) && github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const state = "${{ job.status }}" === "success" ? "success" : "failure";
+            const description = state === "success"
+              ? "Quality gate passed (lint, typecheck, build, audit, tests)"
+              : "Quality gate failed";
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state,
+              context: "lint-and-build",
+              description,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: "lint-and-build",
+              head_sha: context.payload.pull_request.head.sha,
+              status: "completed",
+              conclusion: state,
+              details_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              output: {
+                title: "lint-and-build (quality gate)",
+                summary: description,
+              },
+            });
