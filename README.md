@@ -52,7 +52,7 @@ Core principles:
 
 - This app is configured as a fully static Next.js export for GitHub Pages.
 - Plan generation, check-ins, and weekly summaries run in-browser and persist via local storage.
-- Reminder action opens a pre-filled email draft using `mailto:`.
+- Reminders are user-driven: an in-session browser nudge, a pre-filled `mailto:` email draft, or a downloadable `.ics` calendar file the user imports themselves.
 
 ## Run locally
 
@@ -91,6 +91,7 @@ The route loop across Dashboard, Focus, Execute, and Review is covered in [src/a
 Review insight derivation helpers are covered in [src/lib/__tests__/review-insights.test.ts](src/lib/__tests__/review-insights.test.ts).
 Planner state and helper derivation modules are covered in [src/lib/__tests__/planner-state.test.ts](src/lib/__tests__/planner-state.test.ts), [src/lib/__tests__/planner-derivations.test.ts](src/lib/__tests__/planner-derivations.test.ts), and [src/lib/__tests__/reminder-draft.test.ts](src/lib/__tests__/reminder-draft.test.ts).
 Check-in submission workflow behavior is covered in [src/lib/__tests__/checkin-workflow.test.ts](src/lib/__tests__/checkin-workflow.test.ts).
+Calendar (.ics) reminder generation, folding, escaping, and download behavior are covered in [src/lib/__tests__/reminder-ics.test.ts](src/lib/__tests__/reminder-ics.test.ts) and [src/app/components/__tests__/reminder-settings.test.tsx](src/app/components/__tests__/reminder-settings.test.tsx).
 Planner session hydration behavior is covered in [src/lib/__tests__/planner-session.test.ts](src/lib/__tests__/planner-session.test.ts).
 The theme toggle and persistence behavior are covered in [src/app/components/__tests__/theme-toggle.test.tsx](src/app/components/__tests__/theme-toggle.test.tsx).
 Rust bridge request and fallback behavior are covered in [src/lib/__tests__/rust-coach-bridge.test.ts](src/lib/__tests__/rust-coach-bridge.test.ts).
@@ -167,11 +168,13 @@ If Google login fails on the live site, verify these first:
 
 The app now shows Firebase error codes/messages in UI to make production diagnosis faster.
 
-## Email reminders
+## Reminders
 
-Reminder uses a `mailto:` draft flow in static mode so it works on GitHub Pages with zero backend cost.
-Reminder preferences (opt-in, daily time, browser or email channel) are configured from the dashboard `ReminderSettingsPanel` in [src/app/components/reminder-settings.tsx](src/app/components/reminder-settings.tsx) and persist per user scope via [src/lib/reminder-preferences.ts](src/lib/reminder-preferences.ts).
-The browser channel shows an in-session nudge at the chosen time while the app is open (scheduling math in [src/lib/reminder-schedule.ts](src/lib/reminder-schedule.ts)); nothing is ever sent automatically.
+Reminder preferences (opt-in, daily time, and channel) are configured from the dashboard `ReminderSettingsPanel` in [src/app/components/reminder-settings.tsx](src/app/components/reminder-settings.tsx) and persist per user scope via [src/lib/reminder-preferences.ts](src/lib/reminder-preferences.ts). Nothing is ever sent automatically; all three channels work on GitHub Pages with zero backend cost.
+
+- Browser channel: an in-session nudge at the chosen time while the app is open (scheduling math in [src/lib/reminder-schedule.ts](src/lib/reminder-schedule.ts)).
+- Email channel: opens a prefilled `mailto:` draft that the user sends themselves ([src/lib/reminder-draft.ts](src/lib/reminder-draft.ts)).
+- Calendar channel: generates a `focus-daily-reminder.ics` file entirely in the browser ([src/lib/reminder-ics.ts](src/lib/reminder-ics.ts)) with a daily recurring event, a display alarm, and a stable UID so re-importing an updated file replaces the event in most calendar apps. The user imports the file into Google Calendar, Apple Calendar, or Outlook, and their calendar app does the reminding, even while Focus is closed. Event times are floating local times (no timezone id), so they ring at the chosen wall-clock time in most clients; Google Calendar pins floating times to the calendar's home timezone. After changing the reminder time, download and import a fresh file to replace the old event.
 
 ## API contracts
 

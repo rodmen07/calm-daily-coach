@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AsyncStatus } from "@/lib/async-status";
+import { downloadReminderCalendar } from "@/lib/reminder-ics";
 import {
   loadReminderPreferences,
   saveReminderPreferences,
@@ -30,19 +31,26 @@ export function ReminderSettingsPanel({
   const [prefs, setPrefs] = useState<ReminderPreferences>(() => loadReminderPreferences(storageScope));
   const [loadedScope, setLoadedScope] = useState(storageScope);
   const [nudgeVisible, setNudgeVisible] = useState(false);
+  const [calendarSaved, setCalendarSaved] = useState(false);
 
   if (storageScope !== loadedScope) {
     setLoadedScope(storageScope);
     setPrefs(loadReminderPreferences(storageScope));
     setNudgeVisible(false);
+    setCalendarSaved(false);
   }
 
   function updatePrefs(update: Partial<ReminderPreferences>) {
+    setCalendarSaved(false);
     setPrefs((prev) => {
       const next = { ...prev, ...update };
       saveReminderPreferences(storageScope, next);
       return next;
     });
+  }
+
+  function handleCalendarDownload() {
+    setCalendarSaved(downloadReminderCalendar(prefs));
   }
 
   useEffect(() => {
@@ -87,7 +95,8 @@ export function ReminderSettingsPanel({
 
       <p className="field-hint mt-2">
         Focus never sends anything automatically. Browser nudges appear only while the app is
-        open, and email reminders open a prefilled draft in your mail app.
+        open, email reminders open a prefilled draft in your mail app, and the calendar option
+        downloads a file for you to import yourself.
       </p>
 
       {prefs.enabled ? (
@@ -108,6 +117,7 @@ export function ReminderSettingsPanel({
               [
                 { value: "browser", label: "Browser nudge (while the app is open)" },
                 { value: "email", label: "Email draft" },
+                { value: "calendar", label: "Calendar file (your calendar app reminds you)" },
               ] as { value: ReminderChannel; label: string }[]
             ).map((channel) => (
               <label key={channel.value} className="flex items-center gap-2">
@@ -156,6 +166,30 @@ export function ReminderSettingsPanel({
               {draftStatus.type === "error" ? (
                 <p className="text-sm text-rose-700" role="alert" aria-live="assertive">
                   {draftStatus.message}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {prefs.channel === "calendar" ? (
+            <div className="flex flex-col gap-2">
+              <p className="field-hint">
+                Focus creates the file on your device; nothing is uploaded or sent. Import it
+                into Google Calendar, Apple Calendar, or Outlook, and your calendar app does the
+                reminding, even while Focus is closed.
+              </p>
+              <div>
+                <button className="secondary-button" type="button" onClick={handleCalendarDownload}>
+                  Download calendar reminder (.ics)
+                </button>
+              </div>
+              <p className="field-hint">
+                Changed the time? Download a fresh file and import it again to replace the old
+                event.
+              </p>
+              {calendarSaved ? (
+                <p className="text-sm text-emerald-700" aria-live="polite">
+                  Calendar file saved. Import it into your calendar app whenever you are ready.
                 </p>
               ) : null}
             </div>
