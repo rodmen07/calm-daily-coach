@@ -43,6 +43,29 @@ describe("Execute Page plan adjustments", () => {
     vi.clearAllMocks();
   });
 
+  it("shows a calm empty state with a Focus link when no plan exists", () => {
+    vi.mocked(useCoachAuth).mockReturnValue(authMock as never);
+    vi.mocked(useCoachPlanner).mockReturnValue({
+      plan: null,
+      checkinStatus: { type: "idle" },
+      submitCheckin: vi.fn(),
+      skipReason: "",
+      setSkipReason: vi.fn(),
+      startNextDay: vi.fn(),
+      updatePlan: vi.fn(),
+    } as never);
+
+    render(<ExecutePage />);
+
+    expect(screen.getByTestId("empty-state-plan")).toBeTruthy();
+    expect(screen.getByText("No plan yet, and that is okay")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Start in Focus" }).getAttribute("href")).toBe(
+      "/focus",
+    );
+    // The plan surface itself stays hidden until a plan exists.
+    expect(screen.queryByText("Today's deliberate dose")).toBeNull();
+  });
+
   it("allows starting plan adjustments and saving them", () => {
     vi.mocked(useCoachAuth).mockReturnValue(authMock as never);
     
@@ -59,6 +82,8 @@ describe("Execute Page plan adjustments", () => {
 
     render(<ExecutePage />);
 
+    // With an active plan the empty state disappears.
+    expect(screen.queryByTestId("empty-state-plan")).toBeNull();
     expect(screen.getByText("Adjust plan targets")).toBeTruthy();
     
     // Toggle edit targets form

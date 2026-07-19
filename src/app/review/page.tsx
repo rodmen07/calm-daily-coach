@@ -5,6 +5,7 @@ import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import type { FocusArea } from "@/lib/plan";
 import { SwipeStepCard } from "@/app/components/swipe-step-card";
+import { CalmEmptyState } from "@/app/components/empty-state";
 import { listCheckins } from "@/lib/browser-checkins";
 import {
   filterCheckinsInWindow,
@@ -75,10 +76,14 @@ export default function ReviewPage() {
           nextLabel="Complete loop: Dashboard"
         >
           {!weeklySummary ? (
-          <section className="rounded-xl border border-(--line) bg-(--field) p-4">
-            <p className="text-sm text-slate-700">
-              Complete at least one check-in to unlock weekly insights.
-            </p>
+          <section aria-label="No insights yet">
+            <CalmEmptyState
+              variant="insights"
+              title="Your insights are still sprouting"
+              message="Complete at least one check-in to unlock weekly insights. One calm session is all it takes to begin."
+              actionHref="/focus"
+              actionLabel="Set today's focus"
+            />
           </section>
         ) : (
           <section className="space-y-4">

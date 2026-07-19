@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import { SwipeStepCard } from "@/app/components/swipe-step-card";
+import { CalmEmptyState } from "@/app/components/empty-state";
 
 export default function ExecutePage() {
   const { authUser } = useCoachAuth();
@@ -61,13 +62,15 @@ export default function ExecutePage() {
           nextLabel="Next: Review"
         >
           {!plan ? (
-          <section className="rounded-xl border border-[var(--line)] bg-[var(--field)] p-4">
-            <p className="text-sm text-slate-700">
-              No active plan yet. Start from Focus to generate your deliberate daily plan.
-            </p>
-            <div className="flow-route-links mt-3">
-              <Link className="primary-button" href="/focus">Start in Focus</Link>
-            </div>
+          <section aria-label="No active plan">
+            <CalmEmptyState
+              variant="plan"
+              title="No plan yet, and that is okay"
+              message="Today is still open. Start from Focus to shape one small, deliberate step whenever you are ready."
+              actionHref="/focus"
+              actionLabel="Start in Focus"
+              actionVariant="primary"
+            />
           </section>
         ) : (
           <section>

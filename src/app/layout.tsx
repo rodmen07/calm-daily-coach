@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ThemeToggle } from "@/app/components/theme-toggle";
 import { SyncStatusBadge } from "@/app/components/sync-status-badge";
 import { SubscriptionGuard } from "@/app/components/subscription-guard";
+import { KeyboardHelp } from "@/app/components/keyboard-help";
 import "./globals.css";
 
 const sora = Sora({
@@ -71,6 +72,7 @@ export default function RootLayout({
               </nav>
               <div className="flex items-center gap-3">
                 <SyncStatusBadge />
+                <KeyboardHelp />
                 <ThemeToggle />
               </div>
             </div>
