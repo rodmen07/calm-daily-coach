@@ -1,5 +1,9 @@
 # Calm Daily Coach - Frontend Functionality Plan
 
+> STATUS (2026-07-18): SUPERSEDED. All six priority items are complete (weekly insights, browser reminders,
+> and offline/sync status shipped 2026-07-18). This doc is kept as a historical completion log; forward work
+> now lives in [ROADMAP.md](ROADMAP.md).
+
 ## Goal
 
 Grow the site from a polished flow shell into a more useful daily coaching product while keeping the work frontend-first.
