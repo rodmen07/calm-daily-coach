@@ -6,7 +6,13 @@ import { createCheckinStore } from "@/lib/checkin-store";
 
 export function SyncStatusBadge() {
   const { authUser, authConfigured } = useCoachAuth();
-  const backend = useMemo(() => createCheckinStore().backend, []);
+  // Recompute on auth changes: with NEXT_PUBLIC_CHECKIN_BACKEND unset, the
+  // backend resolves to Firestore only for signed-in users on Firebase-enabled
+  // deployments, so the badge must track sign-in state to stay truthful.
+  const backend = useMemo(
+    () => createCheckinStore(undefined, { signedIn: Boolean(authUser) }).backend,
+    [authUser],
+  );
 
   if (!authConfigured) {
     return (

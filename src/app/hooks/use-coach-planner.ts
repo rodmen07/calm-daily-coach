@@ -29,7 +29,14 @@ type UseCoachPlannerArgs = {
 };
 
 export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs) {
-  const checkinStore: CheckinStoreAdapter = useMemo(() => createCheckinStore(), []);
+  // Every page passes storageScope = authUser?.uid ?? "guest", so a non-guest
+  // scope means a signed-in user. The store is re-created on sign-in/sign-out
+  // so the unset-env default can resolve to Firestore for signed-in users.
+  const signedIn = storageScope !== "guest";
+  const checkinStore: CheckinStoreAdapter = useMemo(
+    () => createCheckinStore(undefined, { signedIn }),
+    [signedIn],
+  );
   const [stateHydrated, setStateHydrated] = useState(false);
   const [loadedScope, setLoadedScope] = useState<string | null>(null);
   const [focus, setFocus] = useState<FocusArea>("Deep Work");

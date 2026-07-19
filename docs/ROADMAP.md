@@ -26,9 +26,12 @@ and docs/MONETIZATION_PLAN.md; those files remain as historical records with sta
 - App: "Focus: Your ADHD friendly self-improvement coach" (rebranded from Calm Daily
   Coach in PR #59). Next.js 16 / React 19 TypeScript static export on GitHub Pages at
   https://rodmen07.github.io/calm-daily-coach/. No server routes.
-- Persistence: localStorage by default; optional Firebase Google auth plus a
-  `NEXT_PUBLIC_CHECKIN_BACKEND=local|firestore` check-in store with automatic local
-  fallback and idempotent guest-to-account migration.
+- Persistence: since the v0.4 flip (2026-07-19), an unset
+  `NEXT_PUBLIC_CHECKIN_BACKEND` resolves to Firestore for signed-in users on
+  Firebase-configured deployments and to localStorage otherwise; explicit
+  `local|firestore` values still force their mode. Automatic local fallback and
+  idempotent guest-to-account migration are unchanged. Signed-out and
+  Firebase-less usage stays localStorage-only.
 - Monetization: single $5/month membership after a 30-day free trial. Stripe Payment
   Link billing scaffolding shipped in PR #77 (src/lib/billing.ts,
   `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`, `client_reference_id` plus `prefilled_email`
@@ -83,14 +86,22 @@ BLOCKED until the v0.2 reminder design doc merges with user sign-off.
 The adapter, migration, and honest sync badge (PR #72) already exist, so the flip is
 small and testable. Agent-doable now, except the listed USER-ONLY item.
 
-- Flip the `NEXT_PUBLIC_CHECKIN_BACKEND` default to `firestore` with the existing
-  automatic local fallback; add migration notes and rollback instructions (1 PR).
-- Verify and extend sync-badge and fallback messaging tests for the new default
-  (CLOUD SYNCED, SYNC OFF (LOCAL), SIGNED IN (LOCAL) states).
-- Document Firestore security rules for `users/{uid}/checkins` in the repo (docs only;
+Status (2026-07-19): agent-side work implemented; awaiting the USER-ONLY items below.
+
+- DONE (2026-07-19): flipped the `NEXT_PUBLIC_CHECKIN_BACKEND` default with a safe
+  resolution matrix (unset resolves to `firestore` only when Firebase config is
+  present AND the user is signed in, `local` otherwise; explicit `local` still forces
+  local), kept the existing automatic local fallback, and added migration notes plus
+  a rollback lever (repository variable `NEXT_PUBLIC_CHECKIN_BACKEND=local`, inlined
+  by deploy-pages.yml) to the README.
+- DONE (2026-07-19): sync-badge and fallback tests extended for the new default
+  (CLOUD SYNCED, SYNC OFF (LOCAL), SIGNED IN (LOCAL) states plus the resolution
+  matrix and Firestore write/read/migration fallback paths).
+- DONE (2026-07-19): Firestore security rules for `users/{uid}` and
+  `users/{uid}/checkins` documented in docs/FIRESTORE_RULES.md (docs only;
   deploying the rules in the Firebase console is USER-ONLY).
 - USER-ONLY: confirm Firebase project quotas and billing before the default flip goes
-  live.
+  live, and publish the documented security rules in the Firebase console.
 - Done when: a fresh deploy defaults to Firestore sync for signed-in users, falls back
   to local cleanly when Firestore is unreachable, and the security rules doc is merged.
 
@@ -178,7 +189,8 @@ User-only (paid-account and console actions an agent must not perform):
   `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`.
 - Flip `subscriptionStatus` to "active" in Firestore for real paying users until
   webhook automation ships.
-- Deploy Firestore security rules in the Firebase console.
+- Deploy Firestore security rules in the Firebase console (ruleset documented in
+  docs/FIRESTORE_RULES.md).
 - Confirm Firebase quotas and billing before the v0.4 default flip.
 
 ## History and supersession

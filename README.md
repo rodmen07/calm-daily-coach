@@ -123,10 +123,11 @@ The monetization strategy is tracked in [docs/MONETIZATION_PLAN.md](docs/MONETIZ
 
 ### Check-in backend mode
 
-- Configure `NEXT_PUBLIC_CHECKIN_BACKEND` as `local` (default) or `firestore`.
-- In `firestore` mode, the app uses Firestore when available and automatically falls back to local storage on backend errors.
-- Firestore collection path is `users/{uid}/checkins`.
-- On sign-in, guest check-ins are migrated to the signed-in scope once per backend mode with an idempotent migration marker.
+- `NEXT_PUBLIC_CHECKIN_BACKEND` accepts `local` or `firestore`. When it is unset (or empty), the backend resolves automatically: `firestore` when the Firebase config is present AND the user is signed in, `local` otherwise (signed-out visitors, prerenders, and Firebase-less deployments always stay local). Setting `local` explicitly forces local mode regardless of auth state; unrecognized values also resolve to `local`. The full matrix is documented in [src/lib/checkin-store.ts](src/lib/checkin-store.ts).
+- In `firestore` mode, the app uses Firestore when available and automatically falls back to local storage on backend errors, so a check-in is never lost.
+- Firestore collection path is `users/{uid}/checkins`; the security rules the Firebase console needs are documented in [docs/FIRESTORE_RULES.md](docs/FIRESTORE_RULES.md) (deploying them is a user/console action).
+- On sign-in, guest check-ins are migrated to the signed-in scope once per backend mode with an idempotent migration marker. Because the marker is per backend, users who previously synced under the local default get a one-time migration of any remaining guest check-ins into Firestore on their first signed-in visit after the flip.
+- Rollback: set the repository variable `NEXT_PUBLIC_CHECKIN_BACKEND` to `local` (inlined at build time by [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml)) and re-deploy to force local-only check-ins without a code change. Local check-in data is never deleted by the flip in either direction.
 
 ### Stripe billing (Payment Link mode)
 
@@ -184,9 +185,9 @@ No server API routes in Pages mode.
 
 ## Persistence notes
 
-- Check-ins are stored in browser local storage for zero-cost hosting.
-- Data is device/browser specific until database-backed auth is added.
-- The header sync badge in [src/app/components/sync-status-badge.tsx](src/app/components/sync-status-badge.tsx) reflects the actual check-in backend: `CLOUD SYNCED` only when `NEXT_PUBLIC_CHECKIN_BACKEND=firestore` resolves to a live Firestore, `SYNC OFF (LOCAL)` when Firestore mode is configured but unavailable, and `SIGNED IN (LOCAL)` when the deployment keeps data on-device.
+- Signed-in users on Firebase-enabled deployments sync check-ins to Firestore by default (the v0.4 flip); every Firestore failure falls back to browser local storage so nothing is lost.
+- Signed-out usage, deployments without Firebase config, and deployments that set `NEXT_PUBLIC_CHECKIN_BACKEND=local` keep check-ins in browser local storage, where data stays device/browser specific.
+- The header sync badge in [src/app/components/sync-status-badge.tsx](src/app/components/sync-status-badge.tsx) reflects the actual resolved backend for the current auth state: `CLOUD SYNCED` when the signed-in session resolves to a live Firestore (the default when Firebase is configured), `SYNC OFF (LOCAL)` when Firestore mode is explicitly configured but unavailable, `SIGNED IN (LOCAL)` when the deployment forces the local backend, and `LOCAL WORKSPACE` / `GUEST (LOCAL)` for signed-out or unconfigured sessions.
 
 ## Deploy to GitHub Pages
 
@@ -204,6 +205,6 @@ No server API routes in Pages mode.
 
 The canonical forward roadmap now lives in [docs/ROADMAP.md](docs/ROADMAP.md) (as of 2026-07-18); the steps below are the earlier short list.
 
-1. Replace local browser storage with Firestore sync per authenticated user.
+1. Replace local browser storage with Firestore sync per authenticated user. (Shipped in v0.4: Firestore is now the default for signed-in users on Firebase-enabled deployments, with automatic local fallback.)
 2. Add time-based reminder scheduling through a backend worker.
 3. Automate Stripe entitlement (webhook -> Firestore `subscriptionStatus`) on top of the shipped Payment Link checkout, then add paid trial gating.
