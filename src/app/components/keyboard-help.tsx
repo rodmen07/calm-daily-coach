@@ -18,6 +18,7 @@ const GO_TO_TARGETS: Record<string, string> = {
   f: "/focus",
   e: "/execute",
   r: "/review",
+  j: "/journal",
 };
 
 // How long the "g" prefix stays armed before quietly resetting. Purely an
@@ -38,6 +39,7 @@ const SHORTCUT_ROWS: ShortcutRow[] = [
   { keys: ["g", "f"], separator: "then", description: "Go to Focus" },
   { keys: ["g", "e"], separator: "then", description: "Go to Execute" },
   { keys: ["g", "r"], separator: "then", description: "Go to Review" },
+  { keys: ["g", "j"], separator: "then", description: "Go to Journal" },
   {
     keys: ["Left / Right arrow"],
     description: "Previous or next step while a step card is focused",

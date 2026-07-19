@@ -34,6 +34,7 @@ describe("KeyboardHelp", () => {
     expect(screen.getByText("Go to Focus")).toBeTruthy();
     expect(screen.getByText("Go to Execute")).toBeTruthy();
     expect(screen.getByText("Go to Review")).toBeTruthy();
+    expect(screen.getByText("Go to Journal")).toBeTruthy();
     expect(
       screen.getByText("Previous or next step while a step card is focused"),
     ).toBeTruthy();
@@ -129,6 +130,11 @@ describe("KeyboardHelp", () => {
     fireEvent.keyDown(window, { key: "g" });
     fireEvent.keyDown(window, { key: "r" });
     expect(push).toHaveBeenCalledWith("/review");
+
+    push.mockReset();
+    fireEvent.keyDown(window, { key: "g" });
+    fireEvent.keyDown(window, { key: "j" });
+    expect(push).toHaveBeenCalledWith("/journal");
   });
 
   it("ignores chord keys while typing, without an armed prefix, and while the dialog is open", () => {

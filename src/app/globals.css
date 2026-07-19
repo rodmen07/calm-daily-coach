@@ -1131,6 +1131,45 @@ html[data-theme="dark"] .border-slate-200 {
   font-size: 0.78rem;
 }
 
+/* Gratitude journal: deliberately still, no animation to kill. */
+.journal-saved-note {
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.journal-history {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal-entry-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+  padding: 12px 14px;
+}
+
+.journal-entry-date {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-family: var(--font-plex-mono), monospace;
+}
+
+.journal-entry-text {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--foreground);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 @keyframes help-overlay-fade {
   0% {
     opacity: 0;

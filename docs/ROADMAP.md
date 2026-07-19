@@ -151,8 +151,18 @@ bodies but never edit agents/dev-agent/ files.
 
 Agent-doable now. A single small PR, matching the one-or-two-PR milestone size.
 
-- Gratitude journal entry form (cdc-014) as a bounded, dose-respecting reflection
-  surface: one entry per day, no feed, no streak counter (1 PR).
+- DONE (2026-07-19): gratitude journal entry form (cdc-014) at /journal as a
+  bounded reflection surface. Entries are keyed by local calendar date so
+  exactly one exists per day; after saving, the editor becomes a read view of
+  today's entry with a gentle note, and editing updates that same entry in
+  place. A soft prompt rotates deterministically by date. History is a finite
+  newest-first list revealed in chunks of 7 ("Show earlier entries"), with a
+  CalmEmptyState journal variant when empty; no streaks, counters, badges, or
+  missed-day mechanics anywhere. Persistence is localStorage-only scoped per
+  user (the slicer pattern); Firestore sync is deliberately deferred to
+  "Later / candidates" rather than half-wired. Shipped with a header nav link,
+  a "g then j" go-to chord listed in the keyboard help modal, and package.json
+  bumped to 0.7.0.
 - Done when: the journal PR is merged with tests and the surface enforces the
   one-entry-per-day bound.
 
@@ -173,6 +183,10 @@ v0.7 land.
   static export has no server routes to run it.
 - Paid value expansion (advanced weekly narratives, cloud restore): deferred until
   entitlement automation ships.
+- Gratitude journal cloud sync: move journal entries onto the check-in style
+  Firestore adapter once a users/{uid}/journal ruleset is documented next to
+  docs/FIRESTORE_RULES.md and deployed in the console (deploy is USER-ONLY).
+  Until then the journal stays localStorage-only by design.
 
 ## Blocked and user-only summary
 
