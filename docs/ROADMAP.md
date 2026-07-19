@@ -135,8 +135,13 @@ bodies but never edit agents/dev-agent/ files.
   It shows today's loop progress only (plan set is halfway, check-in submitted is
   complete), honors prefers-reduced-motion by rendering the final value with no
   fill animation, and keeps the zero state calm and inviting.
-- Keyboard shortcut help modal (cdc-004) plus empty-state illustration component
-  (cdc-012) (1 PR).
+- DONE (2026-07-19, v0.6 PR2): keyboard shortcut help modal (cdc-004) plus
+  empty-state illustration component (cdc-012). The header "?" button or the ?
+  key opens an accessible dialog (focus trap, Escape, reduced-motion aware)
+  listing only real shortcuts, including new "g then d/f/e/r" go-to chords that
+  never fire while typing. A reusable CalmEmptyState component with hand-drawn
+  inline SVG art now covers Execute (no plan), Review (no check-ins), and the
+  Slicer history list.
 - Backlog hygiene note: the PR #70 hygiene pass already closed cdc-010 (tag filter
   chips) and cdc-016 (scroll-to-top) as duplicates of cdc-007 and cdc-006, which stay
   pending. Skip any infinite-scroll-adjacent items as product-rule violations.

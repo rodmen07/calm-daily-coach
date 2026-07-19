@@ -13,6 +13,7 @@ if (typeof window !== "undefined") {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  window.localStorage.clear();
 });
 
 describe("ADHD Task Slicer Page", () => {
@@ -24,6 +25,10 @@ describe("ADHD Task Slicer Page", () => {
     expect(screen.getByText("The Intimidating Task")).toBeTruthy();
     expect(screen.getByText("Primary Domain")).toBeTruthy();
     expect(screen.getByText("Waiting for an intimidating task")).toBeTruthy();
+
+    // Before any slices exist, the history list shows a calm empty state.
+    expect(screen.getByTestId("empty-state-slices")).toBeTruthy();
+    expect(screen.getByText("No slices yet")).toBeTruthy();
   });
 
   it("procedurally generates step slices when submitting the form and shows the checklist", () => {
@@ -42,7 +47,10 @@ describe("ADHD Task Slicer Page", () => {
 
     // Should render active focus step block
     expect(screen.getByText("Current Focus Task")).toBeTruthy();
-    
+
+    // The empty state clears as soon as a slice exists.
+    expect(screen.queryByTestId("empty-state-slices")).toBeNull();
+
     // Total count of steps should show ("Micro-Step 1 of ...")
     expect(screen.queryByText(/micro-step 1 of/i)).toBeTruthy();
 

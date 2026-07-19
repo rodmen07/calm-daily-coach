@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
+import { CalmEmptyState } from "@/app/components/empty-state";
 import {
   SlicingDomain,
   IntimidationLevel,
@@ -370,9 +371,12 @@ export default function SlicerPage() {
           <section className="panel p-5 rounded-2xl border border-[var(--line)] bg-[var(--panel)] shadow-sm">
             <h2 className="text-md font-bold mb-3">Active Slices ({tasks.length})</h2>
             {tasks.length === 0 ? (
-              <p className="text-xs text-[var(--muted)] text-center py-4 leading-normal">
-                No sliced tasks yet. Submit the form above to break task paralysis!
-              </p>
+              <CalmEmptyState
+                variant="slices"
+                compact
+                title="No slices yet"
+                message="Slice a task above and its small, doable steps will wait for you here."
+              />
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {tasks.map((t) => {
