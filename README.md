@@ -197,6 +197,8 @@ No server API routes in Pages mode.
 
 ## Next implementation steps
 
+The canonical forward roadmap now lives in [docs/ROADMAP.md](docs/ROADMAP.md) (as of 2026-07-18); the steps below are the earlier short list.
+
 1. Replace local browser storage with Firestore sync per authenticated user.
 2. Add time-based reminder scheduling through a backend worker.
 3. Automate Stripe entitlement (webhook -> Firestore `subscriptionStatus`) on top of the shipped Payment Link checkout, then add paid trial gating.

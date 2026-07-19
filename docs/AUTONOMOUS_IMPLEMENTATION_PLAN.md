@@ -1,5 +1,9 @@
 # Calm Daily Coach - Autonomous Implementation Plan
 
+> STATUS (2026-07-18): PARTIALLY SUPERSEDED. Phases 1 to 3 are done except Phase 3 item 4, server-side scheduled
+> reminders (the progress log ends 2026-06-27 and misses PR #52 onward); Phases 4 to 6 and that open
+> reminder-scheduling decision are folded into [ROADMAP.md](ROADMAP.md), the canonical forward roadmap.
+
 ## Mission
 
 Improve the product across six dimensions while maintaining release stability:
