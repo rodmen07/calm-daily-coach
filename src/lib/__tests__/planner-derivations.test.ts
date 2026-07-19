@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { doseToRustEffort, deriveTopFocus, parsePlannerDate } from "@/lib/planner-derivations";
+import {
+  doseToRustEffort,
+  deriveTodayLoopPercent,
+  deriveTopFocus,
+  parsePlannerDate,
+} from "@/lib/planner-derivations";
 import type { WeeklySummary } from "@/lib/browser-checkins";
 
 function emptySummary(): WeeklySummary {
@@ -35,6 +40,14 @@ describe("planner derivations", () => {
     expect(doseToRustEffort("light")).toBe("low");
     expect(doseToRustEffort("medium")).toBe("medium");
     expect(doseToRustEffort("deep")).toBe("high");
+  });
+
+  it("derives today loop percent from plan and check-in state", () => {
+    expect(deriveTodayLoopPercent(false, false)).toBe(0);
+    expect(deriveTodayLoopPercent(true, false)).toBe(50);
+    expect(deriveTodayLoopPercent(true, true)).toBe(100);
+    // A submitted check-in always counts as a completed day.
+    expect(deriveTodayLoopPercent(false, true)).toBe(100);
   });
 
   it("derives top focus from weekly summary", () => {

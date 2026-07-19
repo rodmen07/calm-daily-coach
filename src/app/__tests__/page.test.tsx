@@ -33,10 +33,26 @@ describe("Dashboard page", () => {
     window.localStorage.clear();
     (window as unknown as { __ANIMATE_COUNTERS__?: boolean }).__ANIMATE_COUNTERS__ = false;
     vi.useRealTimers();
+    // Dashboard tests run under prefers-reduced-motion so the today progress
+    // ring renders its final value instantly instead of animating.
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        matches: true,
+        media: "(prefers-reduced-motion: reduce)",
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    );
   });
 
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
   });
 
   it("shows dashboard framing and loop navigation", async () => {
@@ -100,6 +116,24 @@ describe("Dashboard page", () => {
     });
   });
 
+  it("renders a calm zero-state today progress ring before any plan exists", async () => {
+    window.localStorage.setItem(
+      "calm-daily-coach:onboarding",
+      JSON.stringify({ defaultFocus: "Deep Work", defaultDose: "light", defaultTheme: "dark" }),
+    );
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Today's progress: 0 percent" })).toBeTruthy();
+      expect(screen.getByText("Today's progress")).toBeTruthy();
+      // Zero state stays inviting: neutral ring plus a gentle label, no alarm.
+      expect(screen.getByText("A calm start is ready whenever you are.")).toBeTruthy();
+      // Under the stubbed prefers-reduced-motion the value is already final.
+      expect(screen.getByTestId("progress-text").textContent).toBe("0%");
+    });
+  });
+
   it("shows active-cycle link to Execute when a plan already exists", async () => {
     const today = new Date().toISOString().slice(0, 10);
     window.localStorage.setItem(
@@ -130,6 +164,10 @@ describe("Dashboard page", () => {
       expect(screen.getByText("Run your active plan, then mark the day done or skipped.")).toBeTruthy();
       expect(screen.getByRole("link", { name: "Tune focus" }).getAttribute("href")).toBe("/focus");
       expect(screen.getByRole("link", { name: "Open execute" }).getAttribute("href")).toBe("/execute");
+      // The today ring reflects the plan-in-progress half of the daily loop.
+      expect(screen.getByRole("img", { name: "Today's progress: 50 percent" })).toBeTruthy();
+      expect(screen.getByTestId("progress-text").textContent).toBe("50%");
+      expect(screen.getByText("Plan in motion. Move at your own pace.")).toBeTruthy();
     });
   });
 

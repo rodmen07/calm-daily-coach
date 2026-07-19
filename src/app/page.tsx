@@ -7,8 +7,10 @@ import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import { getFirebaseFirestore } from "@/lib/firebase";
 import { getTrialDaysRemaining, getUserAccount } from "@/lib/firestore-user";
 import { getMonetizationEvents, summarizeMonetizationEvents, trackMonetizationEvent } from "@/lib/monetization";
+import { deriveTodayLoopPercent } from "@/lib/planner-derivations";
 import { Onboarding } from "@/app/components/onboarding";
 import { AffirmationCard } from "@/app/components/AffirmationCard";
+import ProgressRing from "@/app/components/ProgressRing";
 import { ReminderSettingsPanel } from "@/app/components/reminder-settings";
 
 function subscribeMonetization(callback: () => void) {
@@ -241,6 +243,14 @@ export default function Home() {
       ? "Your check-in is done. Use reflection to close the loop with intent."
       : "You already have a plan. Execute the session and check in when done.";
 
+  // Today only, presented gently: no history, no streaks, no pressure.
+  const todayProgressPercent = deriveTodayLoopPercent(hasPlan, hasCheckedIn);
+  const todayProgressCaption = !hasPlan
+    ? "A calm start is ready whenever you are."
+    : hasCheckedIn
+      ? "Today's loop is complete. Nothing more is asked of you."
+      : "Plan in motion. Move at your own pace.";
+
   const actionRail = [
     {
       label: "Focus",
@@ -354,6 +364,22 @@ export default function Home() {
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Today status</p>
               <h2 className="mt-1 text-xl font-semibold tracking-tight">{todayStatus}</h2>
               <p className="mt-1 text-sm text-slate-700">{todayStatusDetail}</p>
+            </div>
+            <div className="today-ring" data-testid="today-progress">
+              <div className="today-ring-visual">
+                <ProgressRing
+                  percentage={todayProgressPercent}
+                  radius={30}
+                  strokeWidth={6}
+                  ariaLabel={`Today's progress: ${todayProgressPercent} percent`}
+                />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Today&apos;s progress
+                </p>
+                <p className="mt-1 text-sm text-slate-700">{todayProgressCaption}</p>
+              </div>
             </div>
             <div className="flow-route-links text-sm">
               <Link className="primary-button" href={nextCycleHref}>
