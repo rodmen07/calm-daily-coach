@@ -66,6 +66,7 @@ they wait on. All items agent-doable now.
 
 BLOCKED until the v0.2 reminder design doc merges with user sign-off.
 
+- Design doc under review: [docs/design/REMINDER_SCHEDULING.md](design/REMINDER_SCHEDULING.md) scores the delivery options and proposes the phased plan this milestone implements.
 - BLOCKED (design approval): implement the approved delivery mechanism (for example
   Web Notifications opt-in nudges that fire with the tab backgrounded, or a GitHub
   Actions cron email digest) behind the existing ReminderSettingsPanel channel choice
