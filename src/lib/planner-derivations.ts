@@ -26,6 +26,21 @@ export function deriveTopFocus(weeklySummary: WeeklySummary | null): FocusArea |
   return ranked[0]?.completed > 0 ? ranked[0].focus : null;
 }
 
+/**
+ * Today's loop progress for the dashboard ring. The daily cycle has two
+ * tracked milestones: a plan exists (halfway) and the check-in is submitted
+ * (complete). This intentionally presents today only: no history, no streaks.
+ */
+export function deriveTodayLoopPercent(hasPlan: boolean, hasCheckedIn: boolean): number {
+  if (hasCheckedIn) {
+    return 100;
+  }
+  if (hasPlan) {
+    return 50;
+  }
+  return 0;
+}
+
 export function parsePlannerDate(input: string | Date | null | undefined): string | null {
   if (!input) {
     return null;

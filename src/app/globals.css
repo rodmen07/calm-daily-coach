@@ -204,6 +204,23 @@ html[data-theme="dark"] .border-slate-200 {
   gap: 10px;
 }
 
+.today-ring {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.today-ring-visual {
+  flex: none;
+  color: var(--accent);
+}
+
+.today-ring-visual svg text {
+  fill: var(--foreground);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .insights-collapsible {
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -989,7 +1006,9 @@ html[data-theme="dark"] .border-slate-200 {
   .summary-card,
   .status-banner,
   .primary-button,
-  .secondary-button {
+  .secondary-button,
+  .today-ring,
+  .today-ring svg * {
     animation: none !important;
     transition-duration: 0ms !important;
   }

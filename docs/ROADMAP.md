@@ -130,10 +130,11 @@ Burns down pending cdc items that fit the product rules, keeping the autonomous
 pipeline fed with small well-scoped work. Agent-doable now. Reference cdc ids in PR
 bodies but never edit agents/dev-agent/ files.
 
-- Wire the already-built ProgressRing component into the dashboard. cdc-003 is marked
-  completed (cdc-015 was closed as its duplicate): src/app/components/ProgressRing.tsx
-  exists on main with tests, but no page renders it yet and its fill animation ignores
-  prefers-reduced-motion. Integrate it and add reduced-motion support (1 PR).
+- DONE (2026-07-19, v0.6 PR1): wired the already-built ProgressRing component
+  (cdc-003; cdc-015 was closed as its duplicate) into the dashboard today spotlight.
+  It shows today's loop progress only (plan set is halfway, check-in submitted is
+  complete), honors prefers-reduced-motion by rendering the final value with no
+  fill animation, and keeps the zero state calm and inviting.
 - Keyboard shortcut help modal (cdc-004) plus empty-state illustration component
   (cdc-012) (1 PR).
 - Backlog hygiene note: the PR #70 hygiene pass already closed cdc-010 (tag filter
