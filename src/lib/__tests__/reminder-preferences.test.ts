@@ -28,6 +28,20 @@ describe("reminder preferences", () => {
     });
   });
 
+  it("round-trips the calendar channel", () => {
+    saveReminderPreferences("guest", {
+      enabled: true,
+      time: "08:15",
+      channel: "calendar",
+    });
+
+    expect(loadReminderPreferences("guest")).toEqual({
+      enabled: true,
+      time: "08:15",
+      channel: "calendar",
+    });
+  });
+
   it("normalizes invalid stored values", () => {
     window.localStorage.setItem(
       "calm-daily-coach:reminder-prefs:guest",

@@ -29,6 +29,9 @@ describe("ReminderSettingsPanel", () => {
     cleanup();
     window.localStorage.clear();
     vi.useRealTimers();
+    vi.restoreAllMocks();
+    Reflect.deleteProperty(URL, "createObjectURL");
+    Reflect.deleteProperty(URL, "revokeObjectURL");
   });
 
   it("renders reminders off by default with honest no-auto-send copy", () => {
@@ -40,7 +43,7 @@ describe("ReminderSettingsPanel", () => {
     expect(toggle.checked).toBe(false);
     expect(
       screen.getByText(
-        "Focus never sends anything automatically. Browser nudges appear only while the app is open, and email reminders open a prefilled draft in your mail app.",
+        "Focus never sends anything automatically. Browser nudges appear only while the app is open, email reminders open a prefilled draft in your mail app, and the calendar option downloads a file for you to import yourself.",
       ),
     ).toBeTruthy();
     expect(screen.queryByLabelText("Reminder time")).toBeNull();
@@ -94,6 +97,67 @@ describe("ReminderSettingsPanel", () => {
     expect(JSON.parse(window.localStorage.getItem(PREFS_KEY) ?? "{}")).toMatchObject({
       channel: "email",
     });
+  });
+
+  it("reveals the calendar download flow only for the calendar channel", () => {
+    renderPanel();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Enable a daily reminder" }));
+    expect(screen.queryByRole("button", { name: "Download calendar reminder (.ics)" })).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole("radio", { name: "Calendar file (your calendar app reminds you)" }),
+    );
+
+    expect(screen.getByRole("button", { name: "Download calendar reminder (.ics)" })).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Focus creates the file on your device; nothing is uploaded or sent. Import it into Google Calendar, Apple Calendar, or Outlook, and your calendar app does the reminding, even while Focus is closed.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Changed the time? Download a fresh file and import it again to replace the old event.",
+      ),
+    ).toBeTruthy();
+    expect(JSON.parse(window.localStorage.getItem(PREFS_KEY) ?? "{}")).toMatchObject({
+      channel: "calendar",
+    });
+  });
+
+  it("downloads the .ics file and confirms without claiming a reminder is set", () => {
+    window.localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ enabled: true, time: "08:30", channel: "calendar" }),
+    );
+    const createObjectURL = vi.fn<(blob: Blob) => string>(() => "blob:focus-reminder");
+    const revokeObjectURL = vi.fn();
+    Object.assign(URL, { createObjectURL, revokeObjectURL });
+
+    let downloadName = "";
+    vi.spyOn(HTMLElement.prototype, "click").mockImplementation(function (this: HTMLElement) {
+      downloadName = (this as HTMLAnchorElement).download;
+    });
+
+    renderPanel();
+
+    fireEvent.click(screen.getByRole("button", { name: "Download calendar reminder (.ics)" }));
+
+    expect(downloadName).toBe("focus-daily-reminder.ics");
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const blob = createObjectURL.mock.calls[0][0];
+    expect(blob.type).toBe("text/calendar;charset=utf-8");
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:focus-reminder");
+    expect(
+      screen.getByText("Calendar file saved. Import it into your calendar app whenever you are ready."),
+    ).toBeTruthy();
+    expect(screen.queryByText(/is set/i)).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Reminder time"), { target: { value: "09:00" } });
+
+    expect(
+      screen.queryByText("Calendar file saved. Import it into your calendar app whenever you are ready."),
+    ).toBeNull();
   });
 
   it("disables the draft button without a plan and explains why", () => {

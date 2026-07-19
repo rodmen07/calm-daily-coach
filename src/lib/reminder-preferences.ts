@@ -1,4 +1,4 @@
-export type ReminderChannel = "browser" | "email";
+export type ReminderChannel = "browser" | "email" | "calendar";
 
 export type ReminderPreferences = {
   enabled: boolean;
@@ -43,7 +43,8 @@ export function loadReminderPreferences(scope: string): ReminderPreferences {
     return {
       enabled: Boolean(parsed.enabled),
       time: normalizeTime(parsed.time),
-      channel: parsed.channel === "email" ? "email" : "browser",
+      channel:
+        parsed.channel === "email" || parsed.channel === "calendar" ? parsed.channel : "browser",
     };
   } catch {
     return getDefaultReminderPreferences();
