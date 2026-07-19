@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export type CalmEmptyStateVariant = "plan" | "insights" | "slices";
+export type CalmEmptyStateVariant = "plan" | "insights" | "slices" | "journal";
 
 type CalmEmptyStateProps = {
   variant: CalmEmptyStateVariant;
@@ -69,6 +69,34 @@ function EmptyStateArt({ variant }: { variant: CalmEmptyStateVariant }) {
         />
         <path d="M31 26h6M34 23v6" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
         <path d="M86 20h6M89 17v6" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+      </svg>
+    );
+  }
+
+  if (variant === "journal") {
+    // An open notebook resting on a table: blank pages are restful, not late.
+    return (
+      <svg {...shared}>
+        <line x1="16" y1="58" x2="104" y2="58" stroke="var(--line)" strokeWidth="2.5" strokeLinecap="round" />
+        <path
+          d="M60 26c-8-5-19-5-27-1v29c8-4 19-4 27 1z"
+          fill="currentColor"
+          fillOpacity="0.14"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M60 26c8-5 19-5 27-1v29c-8 4-19 4-27 1z"
+          fill="currentColor"
+          fillOpacity="0.14"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+        <line x1="60" y1="26" x2="60" y2="55" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M27 14h6M30 11v6" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+        <path d="M88 12h6M91 9v6" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
       </svg>
     );
   }

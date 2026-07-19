@@ -1,0 +1,157 @@
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import JournalPage from "@/app/journal/page";
+import { useCoachAuth } from "@/app/hooks/use-coach-auth";
+import {
+  getJournalPrompt,
+  listJournalEntries,
+  localDateKey,
+  saveJournalEntry,
+} from "@/lib/journal";
+
+vi.mock("@/app/hooks/use-coach-auth", () => ({
+  useCoachAuth: vi.fn(),
+}));
+
+const authMock = {
+  authUser: null,
+  authMessage: "",
+  authConfigured: false,
+  signInWithGoogle: vi.fn(),
+  signOutUser: vi.fn(),
+};
+
+function pastDateKey(daysAgo: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  return localDateKey(date);
+}
+
+describe("Journal page", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.mocked(useCoachAuth).mockReturnValue(authMock as never);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it("invites a first entry with today's prompt and a calm empty history", () => {
+    render(<JournalPage />);
+
+    const prompt = getJournalPrompt(localDateKey());
+    const textarea = screen.getByLabelText(prompt);
+    expect(textarea.tagName).toBe("TEXTAREA");
+
+    // Nothing written yet: saving stays quietly unavailable, never demanded.
+    const saveButton = screen.getByRole("button", { name: "Save today's entry" });
+    expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+
+    expect(screen.getByTestId("empty-state-journal")).toBeTruthy();
+    expect(screen.getByText("No earlier entries, and that is fine")).toBeTruthy();
+  });
+
+  it("keeps the save button disabled for whitespace-only drafts", () => {
+    render(<JournalPage />);
+
+    fireEvent.change(screen.getByLabelText(getJournalPrompt(localDateKey())), {
+      target: { value: "   " },
+    });
+
+    const saveButton = screen.getByRole("button", { name: "Save today's entry" });
+    expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("saving today's entry switches the editor to a gentle read view", () => {
+    render(<JournalPage />);
+
+    const prompt = getJournalPrompt(localDateKey());
+    fireEvent.change(screen.getByLabelText(prompt), {
+      target: { value: "Grateful for rain on the window." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save today's entry" }));
+
+    expect(screen.getByTestId("journal-saved-note").textContent).toBe(
+      "Saved for today. One grateful thought is plenty.",
+    );
+    expect(screen.getByText("Grateful for rain on the window.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Edit today's entry" })).toBeTruthy();
+    expect(screen.queryByLabelText(prompt)).toBeNull();
+
+    const stored = listJournalEntries("guest");
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.date).toBe(localDateKey());
+  });
+
+  it("shows the read view when today's entry already exists", () => {
+    saveJournalEntry(localDateKey(), "Already written this morning.", "guest");
+
+    render(<JournalPage />);
+
+    expect(screen.getByTestId("journal-saved-note")).toBeTruthy();
+    expect(screen.getByText("Already written this morning.")).toBeTruthy();
+    expect(screen.queryByLabelText(getJournalPrompt(localDateKey()))).toBeNull();
+    // Today's entry does not count as history.
+    expect(screen.getByTestId("empty-state-journal")).toBeTruthy();
+  });
+
+  it("edits today's entry in place instead of adding a second one", () => {
+    saveJournalEntry(localDateKey(), "Original words", "guest");
+
+    render(<JournalPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit today's entry" }));
+
+    const prompt = getJournalPrompt(localDateKey());
+    const textarea = screen.getByLabelText(prompt) as HTMLTextAreaElement;
+    expect(textarea.value).toBe("Original words");
+
+    fireEvent.change(textarea, {
+      target: { value: "Original words, plus the evening light" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save today's entry" }));
+
+    expect(screen.getByText("Original words, plus the evening light")).toBeTruthy();
+    const stored = listJournalEntries("guest");
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.text).toBe("Original words, plus the evening light");
+  });
+
+  it("lets an edit be abandoned without changing the saved entry", () => {
+    saveJournalEntry(localDateKey(), "Original words", "guest");
+
+    render(<JournalPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit today's entry" }));
+    fireEvent.change(screen.getByLabelText(getJournalPrompt(localDateKey())), {
+      target: { value: "A change of heart" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Keep it as it was" }));
+
+    expect(screen.getByText("Original words")).toBeTruthy();
+    expect(listJournalEntries("guest")[0]?.text).toBe("Original words");
+  });
+
+  it("shows earlier entries newest first in modest finite chunks", () => {
+    for (let daysAgo = 1; daysAgo <= 10; daysAgo += 1) {
+      saveJournalEntry(pastDateKey(daysAgo), `Thankful note ${daysAgo}`, "guest");
+    }
+
+    render(<JournalPage />);
+
+    expect(screen.queryByTestId("empty-state-journal")).toBeNull();
+
+    const visible = screen.getAllByRole("listitem");
+    expect(visible).toHaveLength(7);
+    expect(visible[0]?.textContent).toContain("Thankful note 1");
+    expect(visible[6]?.textContent).toContain("Thankful note 7");
+    expect(screen.queryByText("Thankful note 8")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Show earlier entries" }));
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(10);
+    expect(screen.getByText("Thankful note 10")).toBeTruthy();
+    // Everything is visible now, so the invitation quietly leaves.
+    expect(screen.queryByRole("button", { name: "Show earlier entries" })).toBeNull();
+  });
+});

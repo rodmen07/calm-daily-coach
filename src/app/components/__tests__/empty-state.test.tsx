@@ -45,6 +45,20 @@ describe("CalmEmptyState", () => {
     expect(screen.queryByRole("link")).toBeNull();
   });
 
+  it("offers a journal variant with decorative-only art", () => {
+    render(
+      <CalmEmptyState
+        variant="journal"
+        title="No earlier entries, and that is fine"
+        message="Anything you save will rest here quietly."
+      />,
+    );
+
+    const shell = screen.getByTestId("empty-state-journal");
+    expect(screen.getByText("No earlier entries, and that is fine")).toBeTruthy();
+    expect(shell.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+  });
+
   it("supports a compact layout for tight side panels", () => {
     render(
       <CalmEmptyState
