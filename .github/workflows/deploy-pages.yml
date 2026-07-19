@@ -45,6 +45,11 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          # Rollback lever for the v0.4 sync-by-default flip: set the repository
+          # variable NEXT_PUBLIC_CHECKIN_BACKEND to "local" to force local-only
+          # check-ins. Unset (empty) keeps the automatic default: firestore for
+          # signed-in users when Firebase is configured, local otherwise.
+          NEXT_PUBLIC_CHECKIN_BACKEND: ${{ vars.NEXT_PUBLIC_CHECKIN_BACKEND }}
           NEXT_PUBLIC_STRIPE_PAYMENT_LINK: ${{ vars.NEXT_PUBLIC_STRIPE_PAYMENT_LINK }}
         run: npm run build
 

@@ -7,10 +7,14 @@ vi.mock("@/app/hooks/use-coach-auth", () => ({
   useCoachAuth: () => mockUseCoachAuth(),
 }));
 
-const mockBackend = vi.fn();
+const mockCreateCheckinStore = vi.fn<(...args: unknown[]) => { backend: string }>();
 vi.mock("@/lib/checkin-store", () => ({
-  createCheckinStore: () => ({ backend: mockBackend() }),
+  createCheckinStore: (...args: unknown[]) => mockCreateCheckinStore(...args),
 }));
+
+function mockBackendValue(backend: string) {
+  mockCreateCheckinStore.mockReturnValue({ backend });
+}
 
 const signedInUser = { uid: "user-1", email: "me@example.com" };
 
@@ -22,7 +26,7 @@ describe("SyncStatusBadge", () => {
 
   it("shows guest local mode when Firebase auth is unconfigured", () => {
     mockUseCoachAuth.mockReturnValue({ authUser: null, authConfigured: false });
-    mockBackend.mockReturnValue("local");
+    mockBackendValue("local");
 
     render(<SyncStatusBadge />);
 
@@ -31,7 +35,7 @@ describe("SyncStatusBadge", () => {
 
   it("shows cloud synced only when signed in and the store backend is firestore", () => {
     mockUseCoachAuth.mockReturnValue({ authUser: signedInUser, authConfigured: true });
-    mockBackend.mockReturnValue("firestore");
+    mockBackendValue("firestore");
 
     render(<SyncStatusBadge />);
 
@@ -40,7 +44,7 @@ describe("SyncStatusBadge", () => {
 
   it("shows sync off when firestore mode is configured but unavailable", () => {
     mockUseCoachAuth.mockReturnValue({ authUser: signedInUser, authConfigured: true });
-    mockBackend.mockReturnValue("firestore-fallback");
+    mockBackendValue("firestore-fallback");
 
     render(<SyncStatusBadge />);
 
@@ -50,7 +54,7 @@ describe("SyncStatusBadge", () => {
 
   it("shows signed-in local mode when the deployment uses the local backend", () => {
     mockUseCoachAuth.mockReturnValue({ authUser: signedInUser, authConfigured: true });
-    mockBackend.mockReturnValue("local");
+    mockBackendValue("local");
 
     render(<SyncStatusBadge />);
 
@@ -60,10 +64,28 @@ describe("SyncStatusBadge", () => {
 
   it("shows local workspace when signed out with auth configured", () => {
     mockUseCoachAuth.mockReturnValue({ authUser: null, authConfigured: true });
-    mockBackend.mockReturnValue("local");
+    mockBackendValue("local");
 
     render(<SyncStatusBadge />);
 
     expect(screen.getByText("LOCAL WORKSPACE")).toBeTruthy();
+  });
+
+  it("resolves the backend with signedIn true for a signed-in user", () => {
+    mockUseCoachAuth.mockReturnValue({ authUser: signedInUser, authConfigured: true });
+    mockBackendValue("firestore");
+
+    render(<SyncStatusBadge />);
+
+    expect(mockCreateCheckinStore).toHaveBeenCalledWith(undefined, { signedIn: true });
+  });
+
+  it("resolves the backend with signedIn false when signed out", () => {
+    mockUseCoachAuth.mockReturnValue({ authUser: null, authConfigured: true });
+    mockBackendValue("local");
+
+    render(<SyncStatusBadge />);
+
+    expect(mockCreateCheckinStore).toHaveBeenCalledWith(undefined, { signedIn: false });
   });
 });

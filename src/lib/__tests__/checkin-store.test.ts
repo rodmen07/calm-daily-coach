@@ -69,10 +69,11 @@ vi.mock("@/lib/firestore-checkins", () => ({
 describe("checkin-store", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getFirebaseFirestore).mockReturnValue(null);
     window.localStorage.clear();
   });
 
-  it("resolves local mode by default", () => {
+  it("resolves local mode by default when signed out or unconfigured", () => {
     expect(resolveCheckinBackend(undefined)).toBe("local");
     expect(resolveCheckinBackend("LOCAL")).toBe("local");
   });
@@ -80,6 +81,95 @@ describe("checkin-store", () => {
   it("resolves firestore mode explicitly", () => {
     expect(resolveCheckinBackend("firestore")).toBe("firestore");
     expect(resolveCheckinBackend("FIRESTORE")).toBe("firestore");
+  });
+
+  describe("backend resolution matrix (unset env default)", () => {
+    it("auto-resolves to firestore only when configured and signed in", () => {
+      expect(
+        resolveCheckinBackend(undefined, { firebaseConfigured: true, signedIn: true }),
+      ).toBe("firestore");
+    });
+
+    it("auto-resolves to local when configured but signed out", () => {
+      expect(
+        resolveCheckinBackend(undefined, { firebaseConfigured: true, signedIn: false }),
+      ).toBe("local");
+    });
+
+    it("auto-resolves to local when signed in but unconfigured", () => {
+      expect(
+        resolveCheckinBackend(undefined, { firebaseConfigured: false, signedIn: true }),
+      ).toBe("local");
+    });
+
+    it("auto-resolves to local when unconfigured and signed out", () => {
+      expect(
+        resolveCheckinBackend(undefined, { firebaseConfigured: false, signedIn: false }),
+      ).toBe("local");
+    });
+
+    it("treats empty and whitespace-only values as unset", () => {
+      expect(
+        resolveCheckinBackend("", { firebaseConfigured: true, signedIn: true }),
+      ).toBe("firestore");
+      expect(
+        resolveCheckinBackend("   ", { firebaseConfigured: true, signedIn: true }),
+      ).toBe("firestore");
+    });
+
+    it("defaults signedIn to false when the context omits it", () => {
+      expect(resolveCheckinBackend(undefined, { firebaseConfigured: true })).toBe("local");
+    });
+
+    it("derives firebaseConfigured from the Firebase module when omitted", () => {
+      expect(resolveCheckinBackend(undefined, { signedIn: true })).toBe("local");
+
+      vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+      expect(resolveCheckinBackend(undefined, { signedIn: true })).toBe("firestore");
+    });
+
+    it("lets an explicit local setting override a signed-in configured session", () => {
+      expect(
+        resolveCheckinBackend("local", { firebaseConfigured: true, signedIn: true }),
+      ).toBe("local");
+      expect(
+        resolveCheckinBackend("LOCAL", { firebaseConfigured: true, signedIn: true }),
+      ).toBe("local");
+    });
+
+    it("keeps an explicit firestore setting even when signed out or unconfigured", () => {
+      expect(
+        resolveCheckinBackend("firestore", { firebaseConfigured: false, signedIn: false }),
+      ).toBe("firestore");
+    });
+
+    it("forces local for unrecognized values", () => {
+      expect(
+        resolveCheckinBackend("sqlite", { firebaseConfigured: true, signedIn: true }),
+      ).toBe("local");
+    });
+  });
+
+  it("creates the firestore adapter under the automatic default for a signed-in user", () => {
+    vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+
+    const store = createCheckinStore(undefined, { signedIn: true });
+
+    expect(store.backend).toBe("firestore");
+  });
+
+  it("creates the local adapter under the automatic default when signed out", () => {
+    vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+
+    const store = createCheckinStore(undefined, { signedIn: false });
+
+    expect(store.backend).toBe("local");
+  });
+
+  it("creates the local adapter (not firestore-fallback) under the automatic default when Firebase is unconfigured", () => {
+    const store = createCheckinStore(undefined, { signedIn: true });
+
+    expect(store.backend).toBe("local");
   });
 
   it("creates local adapter when backend is local", async () => {
@@ -128,6 +218,60 @@ describe("checkin-store", () => {
 
     expect(vi.mocked(addFirestoreCheckin)).toHaveBeenCalledTimes(1);
     expect(vi.mocked(getFirestoreWeeklySummary)).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to a local write when the Firestore write fails", async () => {
+    vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+    vi.mocked(addFirestoreCheckin).mockRejectedValueOnce(new Error("offline"));
+
+    const store = createCheckinStore(undefined, { signedIn: true });
+    await store.addCheckin(
+      {
+        date: "2026-06-27",
+        focus: "Deep Work",
+        dose: "light",
+        minutes: 5,
+        status: "done",
+      },
+      "user-123",
+    );
+
+    expect(vi.mocked(addFirestoreCheckin)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(addCheckin)).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the local weekly summary when the Firestore read fails", async () => {
+    vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+    vi.mocked(getFirestoreWeeklySummary).mockRejectedValueOnce(new Error("offline"));
+
+    const store = createCheckinStore(undefined, { signedIn: true });
+    const summary = await store.getWeeklySummary(undefined, "user-123");
+
+    expect(vi.mocked(getWeeklySummary)).toHaveBeenCalledTimes(1);
+    expect(summary.total).toBe(0);
+  });
+
+  it("retries migration locally when the Firestore migration fails", async () => {
+    vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+    vi.mocked(addFirestoreCheckin).mockRejectedValueOnce(new Error("offline"));
+    vi.mocked(listCheckins).mockReturnValue([
+      {
+        id: "1",
+        createdAt: "2026-06-27T10:00:00.000Z",
+        date: "2026-06-27",
+        focus: "Deep Work",
+        dose: "light",
+        minutes: 5,
+        status: "done",
+      },
+    ]);
+
+    const store = createCheckinStore(undefined, { signedIn: true });
+    const result = await store.migrateGuestCheckins("user-123");
+
+    expect(result.status).toBe("migrated");
+    expect(result.migratedCount).toBe(1);
+    expect(vi.mocked(addCheckin)).toHaveBeenCalledTimes(1);
   });
 
   it("migrates guest checkins into signed-in scope once", async () => {
