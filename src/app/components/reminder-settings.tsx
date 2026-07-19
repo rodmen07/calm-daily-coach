@@ -4,12 +4,18 @@ import { useEffect, useState } from "react";
 import type { AsyncStatus } from "@/lib/async-status";
 import { downloadReminderCalendar } from "@/lib/reminder-ics";
 import {
+  getNotificationPermission,
+  requestNotificationPermission,
+  showReminderNotification,
+  type NotificationPermissionState,
+} from "@/lib/reminder-notifications";
+import {
   loadReminderPreferences,
   saveReminderPreferences,
   type ReminderChannel,
   type ReminderPreferences,
 } from "@/lib/reminder-preferences";
-import { msUntilNextOccurrence } from "@/lib/reminder-schedule";
+import { startReminderSchedule } from "@/lib/reminder-schedule";
 
 type ReminderSettingsPanelProps = {
   storageScope: string;
@@ -32,6 +38,8 @@ export function ReminderSettingsPanel({
   const [loadedScope, setLoadedScope] = useState(storageScope);
   const [nudgeVisible, setNudgeVisible] = useState(false);
   const [calendarSaved, setCalendarSaved] = useState(false);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermissionState>(() => getNotificationPermission());
 
   if (storageScope !== loadedScope) {
     setLoadedScope(storageScope);
@@ -53,22 +61,57 @@ export function ReminderSettingsPanel({
     setCalendarSaved(downloadReminderCalendar(prefs));
   }
 
+  async function handleAllowNotifications() {
+    setNotificationPermission(await requestNotificationPermission());
+  }
+
+  // Reflect permission changes made outside the panel (browser site
+  // settings) where the Permissions API exists. Purely observational; it
+  // never triggers a permission prompt.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.permissions?.query) {
+      return;
+    }
+
+    let status: PermissionStatus | null = null;
+    let cancelled = false;
+    const sync = () => setNotificationPermission(getNotificationPermission());
+
+    navigator.permissions
+      .query({ name: "notifications" })
+      .then((result) => {
+        if (cancelled) {
+          return;
+        }
+        status = result;
+        result.addEventListener("change", sync);
+      })
+      .catch(() => {
+        // Permission introspection is optional; the explicit request flow
+        // still keeps state current.
+      });
+
+    return () => {
+      cancelled = true;
+      status?.removeEventListener("change", sync);
+    };
+  }, []);
+
   useEffect(() => {
     if (!prefs.enabled || prefs.channel !== "browser") {
       return;
     }
 
-    const delay = msUntilNextOccurrence(prefs.time, new Date());
-    if (delay === null) {
-      return;
-    }
-
-    const timerId = window.setTimeout(() => {
-      setNudgeVisible(true);
-    }, delay);
+    const schedule = startReminderSchedule(prefs.time, () => {
+      // One gentle nudge per occurrence: the OS notification when the user
+      // granted permission, otherwise the in-page banner. Never both.
+      if (!showReminderNotification()) {
+        setNudgeVisible(true);
+      }
+    });
 
     return () => {
-      window.clearTimeout(timerId);
+      schedule?.cancel();
     };
   }, [prefs.enabled, prefs.channel, prefs.time]);
 
@@ -132,6 +175,49 @@ export function ReminderSettingsPanel({
               </label>
             ))}
           </fieldset>
+
+          {prefs.channel === "browser" ? (
+            <div className="flex flex-col gap-2">
+              {notificationPermission === "default" ? (
+                <>
+                  <p className="field-hint">
+                    Optional: allow system notifications so the nudge can reach you while Focus
+                    is open in a tab, even when the tab is in the background. There is no push
+                    service; nothing arrives once the app is closed.
+                  </p>
+                  <div>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={handleAllowNotifications}
+                    >
+                      Allow notifications
+                    </button>
+                  </div>
+                </>
+              ) : null}
+              {notificationPermission === "granted" ? (
+                <p className="field-hint" aria-live="polite">
+                  System notifications are on. At your reminder time, Focus shows one quiet
+                  notification while the app is open in a tab; nothing arrives once the app is
+                  closed.
+                </p>
+              ) : null}
+              {notificationPermission === "denied" ? (
+                <p className="field-hint" aria-live="polite">
+                  Notifications are blocked for this site, so the nudge appears right here
+                  instead while the app is open. If you change your mind, allow notifications in
+                  your browser&apos;s site settings; Focus will not ask again.
+                </p>
+              ) : null}
+              {notificationPermission === "unsupported" ? (
+                <p className="field-hint">
+                  System notifications are not available in this browser. On iPhone, Safari tabs
+                  cannot show them, so the nudge appears right here while the app is open.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           {prefs.channel === "email" ? (
             <div className="flex flex-col gap-2">

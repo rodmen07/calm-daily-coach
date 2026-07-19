@@ -5,6 +5,23 @@ import type { AsyncStatus } from "@/lib/async-status";
 
 const PREFS_KEY = "calm-daily-coach:reminder-prefs:guest";
 
+function stubNotification(permission: string, requestResult = "granted") {
+  const constructed: { title: string; options?: { body?: string; tag?: string } }[] = [];
+  const requestPermission = vi.fn(async () => requestResult);
+
+  class FakeNotification {
+    static permission = permission;
+    static requestPermission = requestPermission;
+
+    constructor(title: string, options?: { body?: string; tag?: string }) {
+      constructed.push({ title, options });
+    }
+  }
+
+  vi.stubGlobal("Notification", FakeNotification);
+  return { constructed, requestPermission };
+}
+
 function renderPanel(overrides?: {
   draftStatus?: AsyncStatus;
   canSendDraft?: boolean;
@@ -30,6 +47,7 @@ describe("ReminderSettingsPanel", () => {
     window.localStorage.clear();
     vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     Reflect.deleteProperty(URL, "createObjectURL");
     Reflect.deleteProperty(URL, "revokeObjectURL");
   });
@@ -207,5 +225,144 @@ describe("ReminderSettingsPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
     expect(screen.queryByText("Reminder: it's time for today's plan.")).toBeNull();
+  });
+
+  it("never requests notification permission on load or on selecting the browser channel", () => {
+    const { requestPermission } = stubNotification("default");
+    window.localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ enabled: true, time: "18:00", channel: "email" }),
+    );
+
+    renderPanel();
+    expect(requestPermission).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Browser nudge (while the app is open)" }));
+
+    expect(requestPermission).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Allow notifications" })).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Optional: allow system notifications so the nudge can reach you while Focus is open in a tab, even when the tab is in the background. There is no push service; nothing arrives once the app is closed.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("requests permission only from the Allow notifications button and reflects the grant", async () => {
+    const { requestPermission } = stubNotification("default", "granted");
+    window.localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ enabled: true, time: "18:00", channel: "browser" }),
+    );
+
+    renderPanel();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Allow notifications" }));
+    });
+
+    expect(requestPermission).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Allow notifications" })).toBeNull();
+    expect(
+      screen.getByText(
+        "System notifications are on. At your reminder time, Focus shows one quiet notification while the app is open in a tab; nothing arrives once the app is closed.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("reflects a denial from the prompt honestly without re-prompting", async () => {
+    const { requestPermission } = stubNotification("default", "denied");
+    window.localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ enabled: true, time: "18:00", channel: "browser" }),
+    );
+
+    renderPanel();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Allow notifications" }));
+    });
+
+    expect(requestPermission).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Allow notifications" })).toBeNull();
+    expect(
+      screen.getByText(
+        "Notifications are blocked for this site, so the nudge appears right here instead while the app is open. If you change your mind, allow notifications in your browser's site settings; Focus will not ask again.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("shows the blocked state without an Allow button when permission is already denied", () => {
+    const { requestPermission } = stubNotification("denied");
+    window.localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ enabled: true, time: "18:00", channel: "browser" }),
+    );
+
+    renderPanel();
+
+    expect(requestPermission).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Allow notifications" })).toBeNull();
+    expect(
+      screen.getByText(
+        "Notifications are blocked for this site, so the nudge appears right here instead while the app is open. If you change your mind, allow notifications in your browser's site settings; Focus will not ask again.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("explains the iPhone Safari limit when notifications are unsupported", () => {
+    window.localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ enabled: true, time: "18:00", channel: "browser" }),
+    );
+
+    renderPanel();
+
+    expect(screen.queryByRole("button", { name: "Allow notifications" })).toBeNull();
+    expect(
+      screen.getByText(
+        "System notifications are not available in this browser. On iPhone, Safari tabs cannot show them, so the nudge appears right here while the app is open.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("delivers one OS notification instead of the banner when permission is granted", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 18, 8, 59, 0, 0));
+    const { constructed } = stubNotification("granted");
+    window.localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ enabled: true, time: "09:00", channel: "browser" }),
+    );
+
+    renderPanel();
+
+    act(() => {
+      vi.advanceTimersByTime(60 * 1000);
+    });
+
+    expect(constructed).toHaveLength(1);
+    expect(constructed[0].title).toBe("Focus");
+    expect(constructed[0].options?.body).toBe("Time for today's plan, whenever you are ready.");
+    expect(screen.queryByText("Reminder: it's time for today's plan.")).toBeNull();
+  });
+
+  it("falls back to the in-page nudge when permission stays undecided", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 18, 8, 59, 0, 0));
+    const { constructed } = stubNotification("default");
+    window.localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ enabled: true, time: "09:00", channel: "browser" }),
+    );
+
+    renderPanel();
+
+    act(() => {
+      vi.advanceTimersByTime(60 * 1000);
+    });
+
+    expect(constructed).toHaveLength(0);
+    expect(screen.getByText("Reminder: it's time for today's plan.")).toBeTruthy();
   });
 });

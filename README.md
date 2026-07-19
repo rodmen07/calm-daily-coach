@@ -53,6 +53,7 @@ Core principles:
 - This app is configured as a fully static Next.js export for GitHub Pages.
 - Plan generation, check-ins, and weekly summaries run in-browser and persist via local storage.
 - Reminders are user-driven: an in-session browser nudge, a pre-filled `mailto:` email draft, or a downloadable `.ics` calendar file the user imports themselves.
+- The browser nudge can optionally use OS notifications: permission is requested only when the user presses "Allow notifications" (never on load), notifications fire only while a Focus tab is open (there is no push service, so nothing arrives once the app is closed), and the in-page banner remains the fallback when permission is undecided, denied, or unsupported (for example iOS Safari tabs).
 
 ## Run locally
 
@@ -92,6 +93,7 @@ Review insight derivation helpers are covered in [src/lib/__tests__/review-insig
 Planner state and helper derivation modules are covered in [src/lib/__tests__/planner-state.test.ts](src/lib/__tests__/planner-state.test.ts), [src/lib/__tests__/planner-derivations.test.ts](src/lib/__tests__/planner-derivations.test.ts), and [src/lib/__tests__/reminder-draft.test.ts](src/lib/__tests__/reminder-draft.test.ts).
 Check-in submission workflow behavior is covered in [src/lib/__tests__/checkin-workflow.test.ts](src/lib/__tests__/checkin-workflow.test.ts).
 Calendar (.ics) reminder generation, folding, escaping, and download behavior are covered in [src/lib/__tests__/reminder-ics.test.ts](src/lib/__tests__/reminder-ics.test.ts) and [src/app/components/__tests__/reminder-settings.test.tsx](src/app/components/__tests__/reminder-settings.test.tsx).
+Notification permission handling, OS-notification fallback, and visibility-aware reminder scheduling are covered in [src/lib/__tests__/reminder-notifications.test.ts](src/lib/__tests__/reminder-notifications.test.ts), [src/lib/__tests__/reminder-schedule.test.ts](src/lib/__tests__/reminder-schedule.test.ts), and [src/app/components/__tests__/reminder-settings.test.tsx](src/app/components/__tests__/reminder-settings.test.tsx).
 Planner session hydration behavior is covered in [src/lib/__tests__/planner-session.test.ts](src/lib/__tests__/planner-session.test.ts).
 The theme toggle and persistence behavior are covered in [src/app/components/__tests__/theme-toggle.test.tsx](src/app/components/__tests__/theme-toggle.test.tsx).
 Rust bridge request and fallback behavior are covered in [src/lib/__tests__/rust-coach-bridge.test.ts](src/lib/__tests__/rust-coach-bridge.test.ts).
