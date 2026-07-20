@@ -150,6 +150,61 @@ describe("Trends page", () => {
     expect(screen.queryByTestId("empty-state-insights")).toBeNull();
   });
 
+  it("exposes a real heading hierarchy (one h1, subsections as h2) instead of visual-only labels", async () => {
+    // Found during the v0.11 QA accessibility audit, 2026-07-20: "Weekly
+    // completion", "Focus areas across the window", and "What the last 4
+    // weeks show" were styled to look like subheadings (uppercase, bold,
+    // tracking-wide) but were plain <p> tags, invisible to a screen reader's
+    // heading-navigation list. This asserts the real semantic structure a
+    // screen reader user relies on to jump between sections, not just the
+    // visible text - it would fail against the pre-fix <p> markup because
+    // getByRole("heading", ...) does not match a paragraph.
+    vi.mocked(useCoachAuth).mockReturnValue(guestAuthMock as never);
+
+    addCheckin(
+      { date: utcDateKey(25), focus: "Fitness", dose: "light", minutes: 5, status: "done" },
+      "guest",
+    );
+    addCheckin(
+      { date: utcDateKey(1), focus: "Deep Work", dose: "deep", minutes: 30, status: "done" },
+      "guest",
+    );
+
+    render(<TrendsPage />);
+
+    await screen.findAllByTestId("trend-bucket");
+
+    expect(screen.getByRole("heading", { level: 1, name: "Your last 4 weeks" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "Weekly completion" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Focus areas across the window" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "What the last 4 weeks show" }),
+    ).toBeTruthy();
+
+    // No skipped levels: every heading on the page is h1 or h2, and there is
+    // exactly one h1.
+    const levels = screen
+      .getAllByRole("heading")
+      .map((heading) => Number(heading.tagName.slice(1)));
+    expect(levels.filter((level) => level === 1)).toHaveLength(1);
+    expect(levels.every((level) => level === 1 || level === 2)).toBe(true);
+  });
+
+  it("has exactly one heading (the h1) in the empty state, with no orphan subheadings", async () => {
+    vi.mocked(useCoachAuth).mockReturnValue(guestAuthMock as never);
+
+    render(<TrendsPage />);
+
+    expect(await screen.findByTestId("empty-state-insights")).toBeTruthy();
+
+    const levels = screen
+      .getAllByRole("heading")
+      .map((heading) => Number(heading.tagName.slice(1)));
+    expect(levels).toEqual([1]);
+  });
+
   it("shows the narrative and dose/focus breakdowns once real history exists", async () => {
     vi.mocked(useCoachAuth).mockReturnValue(guestAuthMock as never);
 
