@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import JournalPage from "@/app/journal/page";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
@@ -71,7 +71,7 @@ describe("Journal page", () => {
     expect((saveButton as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("saving today's entry switches the editor to a gentle read view", () => {
+  it("saving today's entry switches the editor to a gentle read view", async () => {
     render(<JournalPage />);
 
     const prompt = getJournalPrompt(localDateKey());
@@ -79,6 +79,10 @@ describe("Journal page", () => {
       target: { value: "Grateful for rain on the window." },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save today's entry" }));
+
+    // Saving now goes through the async journal-store adapter (v0.9), so the
+    // read view appears once that promise settles rather than synchronously.
+    await screen.findByTestId("journal-saved-note");
 
     expect(screen.getByTestId("journal-saved-note").textContent).toBe(
       "Saved for today. One grateful thought is plenty.",
@@ -92,23 +96,25 @@ describe("Journal page", () => {
     expect(stored[0]?.date).toBe(localDateKey());
   });
 
-  it("shows the read view when today's entry already exists", () => {
+  it("shows the read view when today's entry already exists", async () => {
     saveJournalEntry(localDateKey(), "Already written this morning.", "guest");
 
     render(<JournalPage />);
 
-    expect(screen.getByTestId("journal-saved-note")).toBeTruthy();
+    // Entries load asynchronously through the journal store on mount now.
+    await screen.findByTestId("journal-saved-note");
+
     expect(screen.getByText("Already written this morning.")).toBeTruthy();
     expect(screen.queryByLabelText(getJournalPrompt(localDateKey()))).toBeNull();
     // Today's entry does not count as history.
     expect(screen.getByTestId("empty-state-journal")).toBeTruthy();
   });
 
-  it("edits today's entry in place instead of adding a second one", () => {
+  it("edits today's entry in place instead of adding a second one", async () => {
     saveJournalEntry(localDateKey(), "Original words", "guest");
 
     render(<JournalPage />);
-    fireEvent.click(screen.getByRole("button", { name: "Edit today's entry" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Edit today's entry" }));
 
     const prompt = getJournalPrompt(localDateKey());
     const textarea = screen.getByLabelText(prompt) as HTMLTextAreaElement;
@@ -119,17 +125,17 @@ describe("Journal page", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Save today's entry" }));
 
-    expect(screen.getByText("Original words, plus the evening light")).toBeTruthy();
+    await screen.findByText("Original words, plus the evening light");
     const stored = listJournalEntries("guest");
     expect(stored).toHaveLength(1);
     expect(stored[0]?.text).toBe("Original words, plus the evening light");
   });
 
-  it("lets an edit be abandoned without changing the saved entry", () => {
+  it("lets an edit be abandoned without changing the saved entry", async () => {
     saveJournalEntry(localDateKey(), "Original words", "guest");
 
     render(<JournalPage />);
-    fireEvent.click(screen.getByRole("button", { name: "Edit today's entry" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Edit today's entry" }));
     fireEvent.change(screen.getByLabelText(getJournalPrompt(localDateKey())), {
       target: { value: "A change of heart" },
     });
@@ -139,16 +145,16 @@ describe("Journal page", () => {
     expect(listJournalEntries("guest")[0]?.text).toBe("Original words");
   });
 
-  it("shows earlier entries newest first in modest finite chunks", () => {
+  it("shows earlier entries newest first in modest finite chunks", async () => {
     for (let daysAgo = 1; daysAgo <= 10; daysAgo += 1) {
       saveJournalEntry(pastDateKey(daysAgo), `Thankful note ${daysAgo}`, "guest");
     }
 
     render(<JournalPage />);
 
+    const visible = await screen.findAllByRole("listitem");
     expect(screen.queryByTestId("empty-state-journal")).toBeNull();
 
-    const visible = screen.getAllByRole("listitem");
     expect(visible).toHaveLength(7);
     expect(visible[0]?.textContent).toContain("Thankful note 1");
     expect(visible[6]?.textContent).toContain("Thankful note 7");
@@ -156,7 +162,9 @@ describe("Journal page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Show earlier entries" }));
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(10);
+    await waitFor(() => {
+      expect(screen.getAllByRole("listitem")).toHaveLength(10);
+    });
     expect(screen.getByText("Thankful note 10")).toBeTruthy();
     // Everything is visible now, so the invitation quietly leaves.
     expect(screen.queryByRole("button", { name: "Show earlier entries" })).toBeNull();
