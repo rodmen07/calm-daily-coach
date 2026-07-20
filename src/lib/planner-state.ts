@@ -9,6 +9,19 @@ export type SavedPlannerState = {
   notes: string;
   email: string;
   plan: DailyPlan | null;
+  checkedIn: CheckedInRecord | null;
+};
+
+/**
+ * Today's check-in outcome, persisted alongside the plan so the dashboard
+ * ring survives a reload (cdc bug: checkinStatus used to live only in
+ * useState, so a refresh always dropped a completed loop back to 50 percent).
+ * Scoped to a single date the same way `plan` is: a stale record from a
+ * previous day is dropped on read, matching the plan's own staleness rule.
+ */
+export type CheckedInRecord = {
+  date: string;
+  status: "done" | "skipped";
 };
 
 export function scopedPlannerStorageKey(scopeKey: string): string {
@@ -26,6 +39,7 @@ function plannerFallbackState(): SavedPlannerState {
     notes: "",
     email: "",
     plan: null,
+    checkedIn: null,
   };
 }
 
@@ -80,7 +94,12 @@ export function getInitialPlannerState(scopeKey: string): SavedPlannerState {
       notes?: string;
       email?: string;
       plan?: DailyPlan;
+      checkedIn?: CheckedInRecord;
     };
+
+    const today = todayDateKey();
+    const checkedInStatusValid =
+      parsed.checkedIn?.status === "done" || parsed.checkedIn?.status === "skipped";
 
     return {
       focus:
@@ -93,7 +112,11 @@ export function getInitialPlannerState(scopeKey: string): SavedPlannerState {
           : fallback.dose,
       notes: typeof parsed.notes === "string" ? parsed.notes : fallback.notes,
       email: typeof parsed.email === "string" ? parsed.email : fallback.email,
-      plan: parsed.plan?.date === todayDateKey() ? parsed.plan : fallback.plan,
+      plan: parsed.plan?.date === today ? parsed.plan : fallback.plan,
+      checkedIn:
+        parsed.checkedIn?.date === today && checkedInStatusValid
+          ? parsed.checkedIn
+          : fallback.checkedIn,
     };
   } catch {
     window.localStorage.removeItem(scopedPlannerStorageKey(scopeKey));

@@ -1,11 +1,15 @@
 /**
  * Gratitude journal store (cdc-014): one calm entry per local day.
  *
- * Persistence is localStorage-only, scoped by user key, matching the slicer
- * and reminder-preference surfaces. Only check-ins go through the Firestore
- * adapter today; syncing journal entries is a deliberate follow-up (it needs
- * new Firestore security rules deployed in the console first), not something
- * to half-wire here.
+ * This module is the local-storage half only, scoped by user key, matching
+ * the slicer and reminder-preference surfaces. As of v0.9, journal entries
+ * DO have a Firestore-backed sync path: `journal-store.ts` wraps this module
+ * behind the same backend-resolution policy check-ins use (local vs.
+ * firestore vs. firestore-fallback), `firestore-journal.ts` holds the actual
+ * Firestore client calls, and `src/app/journal/page.tsx` reads and writes
+ * through that adapter rather than calling this module directly. Functions
+ * here remain the source of truth for the local shape and the one-entry-
+ * per-day upsert rule; they are not a dead-end read/write path.
  *
  * Product rules baked into this module:
  * - Entries are keyed by local calendar date, so there is exactly one entry
