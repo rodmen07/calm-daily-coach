@@ -134,12 +134,6 @@ const INTENTIONAL_EXCEPTIONS: ReadonlyArray<{
     reason:
       "modal backdrop dimming overlay - conventionally theme-agnostic by design (THEME_CONSISTENCY.md section 2, checked and set aside); not a defect.",
   },
-  {
-    file: "src/app/components/subscription-guard.tsx",
-    className: "text-slate-950",
-    reason:
-      "the 'Subscribe for $5/month' link's text sits on an already-token-driven bg-[--accent] background, mirroring globals.css's app-wide .primary-button convention (fixed dark text on the accent token). Swapping it to text-[--foreground] would flip contrast the WRONG way in light mode (dark text on the dark-teal light-theme --accent), since --accent itself goes dark in light mode. Left as-is deliberately; the underlying accent-contrast-in-light-mode question is a separate, wider finding (affects .primary-button globally) filed in the backlog rather than patched here.",
-  },
 ];
 
 /**

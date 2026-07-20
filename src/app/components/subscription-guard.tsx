@@ -177,7 +177,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
           <div className="mt-8 space-y-4">
             <Link
               href="/pricing"
-              className="flex w-full items-center justify-center rounded-full bg-[--accent] px-4 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-[--accent-strong] shadow-lg hover:shadow-[--accent]/20"
+              className="flex w-full items-center justify-center rounded-full bg-[--accent] px-4 py-3 text-sm font-bold text-[--accent-foreground] transition-all hover:bg-[--accent-strong] shadow-lg hover:shadow-[--accent]/20"
             >
               Subscribe for $5/month
             </Link>
