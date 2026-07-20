@@ -17,7 +17,7 @@ export default function PricingPage() {
           <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">
             Simplicity first, no tiers.
           </h1>
-          <p className="mb-6 text-sm leading-6 text-slate-700 dark:text-slate-400 sm:text-base">
+          <p className="mb-6 text-sm leading-6 text-slate-700 sm:text-base">
             Every feature of Focus is included in one single direct membership model. 
             Enjoy a completely free, unrestricted 30-day trial. Continue afterward for only $5/month.
           </p>
@@ -30,7 +30,7 @@ export default function PricingPage() {
             <p className="text-5xl font-extrabold text-slate-800 dark:text-slate-100 mt-2">
               $5<span className="text-sm font-normal text-slate-400">/mo</span>
             </p>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-normal">
+            <p className="mt-3 text-sm text-slate-600 leading-normal">
               Continuous focus cycles, action target customizations, weekly performance reviews, and automatic secure cloud syncing.
             </p>
 
@@ -90,7 +90,7 @@ export default function PricingPage() {
             )}
           </div>
 
-          <div className="mt-5 border-t border-slate-200 dark:border-slate-800 pt-4 text-sm text-slate-600 dark:text-slate-400">
+          <div className="mt-5 border-t border-slate-200 dark:border-slate-800 pt-4 text-sm text-slate-600">
             <p>
               Your first 30 days are completely free. If you have questions or need support, contact Hello@CalmDailyCoach.com.
             </p>

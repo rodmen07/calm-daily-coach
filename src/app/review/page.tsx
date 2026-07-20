@@ -132,7 +132,7 @@ export default function ReviewPage() {
 
               <div className="flex-1 w-full">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
                     Weekly completion trend
                   </p>
                   <p className={`progress-badge text-sm font-semibold ${hasWeeklyProgress ? "is-animated" : ""}`}>
@@ -149,7 +149,7 @@ export default function ReviewPage() {
                     style={{ width: `${completionPercent}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-normal">
+                <p className="mt-2 text-xs text-slate-600 leading-normal">
                   Your rolling 7-day effort score. Maintain more than 70% to accumulate solid execution momentum.
                 </p>
               </div>
