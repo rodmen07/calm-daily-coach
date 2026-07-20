@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { CalmEmptyState } from "@/app/components/empty-state";
 import {
   JOURNAL_ENTRY_MAX_LENGTH,
   formatJournalDate,
   getJournalPrompt,
-  listJournalEntries,
   localDateKey,
-  saveJournalEntry,
   type JournalEntry,
 } from "@/lib/journal";
+import { createJournalStore } from "@/lib/journal-store";
 
 // Earlier entries surface in small, finite steps: never an endless feed.
 const HISTORY_CHUNK = 7;
@@ -20,41 +19,65 @@ export default function JournalPage() {
   const { authUser } = useCoachAuth();
   const scope = authUser?.uid ?? "guest";
 
+  // Mirrors the check-in store (v0.4): re-created on sign-in/out so the
+  // unset-env default can resolve to Firestore for signed-in users. See
+  // src/lib/journal-store.ts for the full resolution policy and its safe
+  // local fallback.
+  const signedIn = scope !== "guest";
+  const journalStore = useMemo(
+    () => createJournalStore(undefined, { signedIn }),
+    [signedIn],
+  );
+
   // Capture the day once at mount, like the daily affirmation, so the page
   // never swaps its date underneath a writer mid-session. A visit after
   // midnight simply starts the new day's blank page, and the previous entry
   // settles into the earlier-entries list. Nothing marks the days between.
   const [todayKey] = useState(() => localDateKey());
 
-  const [loadedScope, setLoadedScope] = useState<string | null>(null);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [draft, setDraft] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [visibleCount, setVisibleCount] = useState(HISTORY_CHUNK);
 
-  // Load (or reload) persisted entries when the auth scope resolves or
-  // changes, using the same render-phase adjust pattern as the slicer page.
-  if (scope !== loadedScope) {
-    const loaded = listJournalEntries(scope);
-    setLoadedScope(scope);
-    setEntries(loaded);
-    setDraft(loaded.find((entry) => entry.date === todayKey)?.text ?? "");
-    setIsEditing(false);
-    setVisibleCount(HISTORY_CHUNK);
-  }
+  // Load (or reload) persisted entries whenever the auth scope (and so the
+  // resolved store) changes. The store is async now that Firestore may be in
+  // the mix, so this can no longer run synchronously in the render phase the
+  // way the pre-sync version did; it follows the same effect + "active" guard
+  // shape as use-coach-planner's hydration effect.
+  useEffect(() => {
+    let active = true;
+
+    async function loadEntries() {
+      const loaded = await journalStore.listJournalEntries(scope);
+      if (!active) {
+        return;
+      }
+      setEntries(loaded);
+      setDraft(loaded.find((entry) => entry.date === todayKey)?.text ?? "");
+      setIsEditing(false);
+      setVisibleCount(HISTORY_CHUNK);
+    }
+
+    void loadEntries();
+
+    return () => {
+      active = false;
+    };
+  }, [scope, todayKey, journalStore]);
 
   const todayEntry = entries.find((entry) => entry.date === todayKey) ?? null;
   const earlierEntries = entries.filter((entry) => entry.date !== todayKey);
   const visibleEarlierEntries = earlierEntries.slice(0, visibleCount);
   const prompt = getJournalPrompt(todayKey);
 
-  const handleSave = (event: FormEvent) => {
+  const handleSave = async (event: FormEvent) => {
     event.preventDefault();
-    const saved = saveJournalEntry(todayKey, draft, scope);
+    const saved = await journalStore.saveJournalEntry(todayKey, draft, scope);
     if (!saved) {
       return;
     }
-    setEntries(listJournalEntries(scope));
+    setEntries(await journalStore.listJournalEntries(scope));
     setDraft(saved.text);
     setIsEditing(false);
   };

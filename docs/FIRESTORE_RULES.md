@@ -1,6 +1,15 @@
 # Firestore Security Rules for Focus (Calm Daily Coach)
 
 Status: rules documented for the v0.4 sync-by-default flip (2026-07-19).
+Extended in v0.9 (2026-07-20) with a `users/{uid}/journal/{entryId}` match
+block ahead of the gratitude journal's Firestore sync adapter. The journal
+sync code ships in this same PR; the currently-live console rules have no
+`journal` match block, so until this ruleset is published, every journal
+write the client attempts is denied by Firestore's own deny-by-default
+posture and the adapter's fallback-on-error path (see
+[src/lib/journal-store.ts](../src/lib/journal-store.ts)) quietly keeps the
+entry on localStorage instead. No data loss, no visible breakage, and no
+change in behavior until the user publishes the rules below.
 
 > USER-ONLY: an agent cannot and must not deploy these rules. Publishing rules
 > happens in the Firebase console (paid-account/console action):
@@ -25,6 +34,13 @@ Firebase Auth uid:
   [src/lib/firestore-checkins.ts](../src/lib/firestore-checkins.ts) (fields:
   `date`, `focus`, `dose`, `minutes`, `status`, optional `skipReason`,
   `createdAt`). The app never updates or deletes a check-in.
+- `users/{uid}/journal/{entryId}`: gratitude journal entries written by
+  `addFirestoreJournalEntry` and listed by `listFirestoreJournalEntries` in
+  [src/lib/firestore-journal.ts](../src/lib/firestore-journal.ts) (fields:
+  `date`, `text`, `createdAt`, `updatedAt`). Unlike check-ins, the journal is
+  one entry per calendar day, edited in place: the document id IS the local
+  date key, so the app both creates new entries and updates existing ones,
+  but never deletes one (no delete flow exists client-side).
 
 Everything else should be denied.
 
@@ -62,6 +78,15 @@ service cloud.firestore {
         allow read, create: if isOwner(uid);
         allow update, delete: if false;
       }
+
+      match /journal/{entryId} {
+        // Owner-only, edit-in-place: unlike check-ins, the journal is one
+        // entry per day and the app edits today's entry in place (v0.7
+        // product design), so both create and update are allowed. Deletion
+        // stays denied: no delete flow exists client-side.
+        allow read, create, update: if isOwner(uid);
+        allow delete: if false;
+      }
     }
 
     // No other match blocks: every other path is denied by default.
@@ -72,14 +97,20 @@ service cloud.firestore {
 ## Why these choices
 
 - Deny by default: Firestore denies any path no rule matches, and this ruleset
-  adds no catch-all allows. Only `users/{uid}` and its `checkins` subcollection
-  are reachable, and only by that uid.
+  adds no catch-all allows. Only `users/{uid}` and its `checkins` and
+  `journal` subcollections are reachable, and only by that uid.
 - Per-uid isolation: `request.auth.uid == uid` means signed-in users can only
   ever see and write their own data. Guests (no auth) get nothing; the app
   keeps them on local storage anyway per the resolution matrix in
   [src/lib/checkin-store.ts](../src/lib/checkin-store.ts).
 - Append-only check-ins: the client has no edit/delete flows, so the rules do
   not grant them. This also limits blast radius if a session token leaks.
+- Edit-in-place journal, still owner-only: `request.auth.uid == uid` gates
+  `journal/{entryId}` exactly like `checkins/{checkinId}`, so one signed-in
+  user can never read or write another user's private journal. `update` is
+  granted (unlike check-ins) because the journal is deliberately one entry
+  per day, edited in place, not append-only; `delete` stays denied because
+  no delete flow exists client-side.
 - `subscriptionStatus` pinning: `Map.get("subscriptionStatus", "free_trial")`
   tolerates older account docs that predate the field while still preventing a
   client from flipping itself to `active`. Real entitlement flips stay a
@@ -91,9 +122,12 @@ service cloud.firestore {
    `users/UID_A/checkins/any` as `UID_A` (allow) and as `UID_B` (deny).
 2. Simulate `update` on `users/UID_A` changing `subscriptionStatus` from
    `free_trial` to `active` as `UID_A` (deny).
-3. In the app, sign in on the deployed site: the header badge should read
+3. Simulate `get`, `create`, and `update` on `users/UID_A/journal/any` as
+   `UID_A` (allow) and as `UID_B` (deny); simulate `delete` on the same
+   document as `UID_A` (deny - no delete flow exists client-side).
+4. In the app, sign in on the deployed site: the header badge should read
    `CLOUD SYNCED`, and a submitted check-in should appear under
    `users/{uid}/checkins` in the console Data tab.
-4. Rollback lever if anything misbehaves: set the repository variable
+5. Rollback lever if anything misbehaves: set the repository variable
    `NEXT_PUBLIC_CHECKIN_BACKEND` to `local` and re-run the Pages deploy; the
    app returns to local-only persistence without a code change.
