@@ -24,7 +24,7 @@ export type SubmitCheckinFlowResult =
       nextSkipReason: string;
     };
 
-function statusMessageFor(status: CheckinSubmissionStatus): string {
+export function statusMessageFor(status: CheckinSubmissionStatus): string {
   return status === "done" ? "Great work. Check-in saved." : "Skip logged with context.";
 }
 

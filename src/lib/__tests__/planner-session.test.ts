@@ -10,6 +10,7 @@ function baseState(): SavedPlannerState {
     notes: "",
     email: "",
     plan: null,
+    checkedIn: null,
   };
 }
 

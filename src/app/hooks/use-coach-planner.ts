@@ -8,6 +8,7 @@ import { doseToRustEffort, deriveTopFocus } from "@/lib/planner-derivations";
 import {
   getInitialPlannerState,
   persistPlannerState,
+  type CheckedInRecord,
 } from "@/lib/planner-state";
 import { buildReminderMailtoHref } from "@/lib/reminder-draft";
 import { hydratePlannerSession } from "@/lib/planner-session";
@@ -21,7 +22,7 @@ import {
   type FocusArea,
 } from "@/lib/plan";
 import { getRustCheckinAdvice, getRustPlanBrief } from "@/lib/rust-coach-bridge";
-import { submitCheckinFlow } from "@/lib/checkin-workflow";
+import { statusMessageFor, submitCheckinFlow } from "@/lib/checkin-workflow";
 
 type UseCoachPlannerArgs = {
   storageScope: string;
@@ -47,6 +48,11 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   const [loading, setLoading] = useState(false);
   const [reminderStatus, setReminderStatus] = useState<AsyncStatus>({ type: "idle" });
   const [checkinStatus, setCheckinStatus] = useState<AsyncStatus>({ type: "idle" });
+  // Mirrors checkinStatus but is the persisted half: checkinStatus itself is
+  // transient async UI state (rebuilt fresh every mount), while checkedIn is
+  // what gets round-tripped through localStorage so a reload can rebuild
+  // checkinStatus instead of always starting at idle (see planner-state.ts).
+  const [checkedIn, setCheckedIn] = useState<CheckedInRecord | null>(null);
   const [skipReason, setSkipReason] = useState("");
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<AsyncStatus>({ type: "idle" });
@@ -84,6 +90,12 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       setPlan(session.nextState.plan);
       setMigrationStatus(session.migrationStatus);
       setWeeklySummary(session.weeklySummary);
+      setCheckedIn(session.nextState.checkedIn);
+      setCheckinStatus(
+        session.nextState.checkedIn
+          ? { type: "ok", message: statusMessageFor(session.nextState.checkedIn.status) }
+          : { type: "idle" },
+      );
       setLoadedScope(storageScope);
       setStateHydrated(true);
     }
@@ -107,8 +119,9 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       notes,
       email,
       plan,
+      checkedIn,
     });
-  }, [focus, dose, notes, email, plan, storageScope, stateHydrated, loadedScope]);
+  }, [focus, dose, notes, email, plan, checkedIn, storageScope, stateHydrated, loadedScope]);
 
   const canGenerate = useMemo(() => !loading, [loading]);
 
@@ -123,6 +136,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
       const nextPlan = buildDailyPlan({ focus, dose, notes });
       setPlan(nextPlan);
       setCheckinStatus({ type: "idle" });
+      setCheckedIn(null);
 
       const rustBrief = await getRustPlanBrief({
         priorities: [nextPlan.action, nextPlan.reflection, nextPlan.optionalResource ?? ""],
@@ -174,6 +188,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
     }
 
     setCheckinStatus({ type: "ok", message: result.statusMessage });
+    setCheckedIn({ date: plan.date, status });
     setCheckinAdvice(result.checkinAdvice);
     setSkipReason(result.nextSkipReason);
     setWeeklySummary(result.weeklySummary);
@@ -182,6 +197,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   function startNextDay() {
     setPlan(null);
     setCheckinStatus({ type: "idle" });
+    setCheckedIn(null);
     setReminderStatus({ type: "idle" });
     setSkipReason("");
     setCoachBrief(null);
@@ -201,6 +217,7 @@ export function useCoachPlanner({ storageScope, authEmail }: UseCoachPlannerArgs
   function resetPlan() {
     setPlan(null);
     setCheckinStatus({ type: "idle" });
+    setCheckedIn(null);
     setReminderStatus({ type: "idle" });
     setCoachBrief(null);
   }

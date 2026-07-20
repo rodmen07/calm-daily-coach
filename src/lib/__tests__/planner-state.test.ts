@@ -45,12 +45,14 @@ describe("planner state", () => {
         optionalResource: null,
         capMessage: "Done",
       },
+      checkedIn: { date: "2026-07-03", status: "done" },
     });
 
     const restored = getInitialPlannerState("guest");
     expect(restored.focus).toBe("Learning");
     expect(restored.dose).toBe("deep");
     expect(restored.plan?.date).toBe("2026-07-03");
+    expect(restored.checkedIn).toEqual({ date: "2026-07-03", status: "done" });
 
     vi.useRealTimers();
   });
@@ -76,11 +78,13 @@ describe("planner state", () => {
           optionalResource: null,
           capMessage: "C",
         },
+        checkedIn: { date: "2026-07-02", status: "done" },
       }),
     );
 
     const restored = getInitialPlannerState("guest");
     expect(restored.plan).toBeNull();
+    expect(restored.checkedIn).toBeNull();
 
     vi.useRealTimers();
   });

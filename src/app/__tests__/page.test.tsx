@@ -171,6 +171,45 @@ describe("Dashboard page", () => {
     });
   });
 
+  it("keeps the today ring at 100 percent after a reload once a check-in was submitted (regression)", async () => {
+    // Regression test for the backlog bug: checkinStatus used to live only in
+    // useState, so the ring's 100 percent state never survived a reload. Here
+    // we seed localStorage exactly as a real reload would leave it after a
+    // prior submitCheckin("done") call (see planner-state.ts's checkedIn
+    // field), then render a brand-new Home mount and confirm the ring reads
+    // 100 percent immediately, without ever calling submitCheckin in-session.
+    const today = new Date().toISOString().slice(0, 10);
+    window.localStorage.setItem(
+      "calm-daily-coach:guest",
+      JSON.stringify({
+        focus: "Deep Work",
+        dose: "medium",
+        notes: "",
+        email: "",
+        plan: {
+          date: today,
+          focus: "Deep Work",
+          dose: "medium",
+          minutes: 15,
+          action: "Run one 15-minute focus block with zero context switching.",
+          reflection: "What interrupted your focus, and how will you prevent it tomorrow?",
+          optionalResource: "Optional: Use a single-task timer for your next block.",
+          capMessage: "You reached today's plan. See you tomorrow.",
+        },
+        checkedIn: { date: today, status: "done" },
+      }),
+    );
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "Open today's reflection" }).getAttribute("href")).toBe("/review");
+      expect(screen.getByRole("img", { name: "Today's progress: 100 percent" })).toBeTruthy();
+      expect(screen.getByTestId("progress-text").textContent).toBe("100%");
+      expect(screen.getByText("Today's loop is complete. Nothing more is asked of you.")).toBeTruthy();
+    });
+  });
+
   it("surfaces reminder settings on the dashboard and persists the guest opt-in", async () => {
     window.localStorage.setItem(
       "calm-daily-coach:onboarding",

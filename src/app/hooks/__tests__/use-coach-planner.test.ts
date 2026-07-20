@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 
@@ -77,5 +77,69 @@ describe("useCoachPlanner check-in store wiring", () => {
 
     expect(mockCreateCheckinStore).toHaveBeenCalledWith(undefined, { signedIn: true });
     await waitForHydration();
+  });
+});
+
+describe("useCoachPlanner check-in status persistence (regression: dashboard ring survives reload)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.localStorage.clear();
+    lastAdapter = null;
+    mockCreateCheckinStore.mockImplementation(() => createAdapterMock("local"));
+  });
+
+  it("rehydrates checkinStatus as ok from a fresh mount after a check-in was submitted", async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    window.localStorage.setItem(
+      "calm-daily-coach:guest",
+      JSON.stringify({
+        focus: "Deep Work",
+        dose: "light",
+        notes: "",
+        email: "",
+        plan: {
+          date: today,
+          focus: "Deep Work",
+          dose: "light",
+          minutes: 5,
+          action: "Action",
+          reflection: "Reflection",
+          optionalResource: null,
+          capMessage: "Done",
+        },
+        checkedIn: null,
+      }),
+    );
+
+    const first = renderHook(() => useCoachPlanner({ storageScope: "guest" }));
+    await waitFor(() => {
+      expect(first.result.current.plan?.date).toBe(today);
+    });
+
+    await act(async () => {
+      await first.result.current.submitCheckin("done");
+    });
+
+    expect(first.result.current.checkinStatus).toEqual({
+      type: "ok",
+      message: "Great work. Check-in saved.",
+    });
+
+    // Without the fix, checkinStatus lives only in this component's useState,
+    // so unmounting (a reload in the real app) always throws it away and a
+    // fresh mount starts back at { type: "idle" } (the dashboard ring's
+    // reported 50 percent regression).
+    first.unmount();
+
+    const reloaded = renderHook(() => useCoachPlanner({ storageScope: "guest" }));
+    await waitFor(() => {
+      expect(reloaded.result.current.checkinStatus.type).toBe("ok");
+    });
+
+    expect(reloaded.result.current.checkinStatus).toEqual({
+      type: "ok",
+      message: "Great work. Check-in saved.",
+    });
+    expect(reloaded.result.current.plan?.date).toBe(today);
   });
 });

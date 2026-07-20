@@ -63,7 +63,14 @@ export async function addFirestoreJournalEntry(
   return entry;
 }
 
-/** All entries for a scope, newest date first, matching listJournalEntries. */
+/**
+ * All entries for a scope, newest date first, matching listJournalEntries.
+ * Mirrors firestore-checkins.ts's getFirestoreWeeklySummary: each document is
+ * validated for its required fields before use, so a malformed or partially
+ * written document (a failed write, a manual console edit, a future schema
+ * migration mid-flight) is skipped instead of handed to the caller with
+ * undefined date/text.
+ */
 export async function listFirestoreJournalEntries(
   db: Firestore,
   scopeKey: string,
@@ -74,5 +81,16 @@ export async function listFirestoreJournalEntries(
   );
 
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((entrySnapshot) => entrySnapshot.data() as JournalEntry);
+  const entries: JournalEntry[] = [];
+
+  for (const entrySnapshot of snapshot.docs) {
+    const entry = entrySnapshot.data() as JournalEntry;
+    if (!entry.date || !entry.text) {
+      continue;
+    }
+
+    entries.push(entry);
+  }
+
+  return entries;
 }
