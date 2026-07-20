@@ -89,6 +89,31 @@ export function addCheckin(input: Omit<BrowserCheckin, "id" | "createdAt">, scop
   window.localStorage.setItem(storageKey(scopeKey), JSON.stringify(checkins));
 }
 
+/**
+ * Every check-in in a caller-chosen `days`-long window ending on
+ * `endDateInput` (defaults to today), sourced from the same fully-retained
+ * local list `listCheckins` already returns. Unlike `getWeeklySummary`, this
+ * returns the raw records rather than a pre-aggregated summary, so the same
+ * window math can serve both the 7-day weekly summary shape and the wider
+ * v0.11 Trends window without duplicating the aggregation logic in two
+ * places (see src/lib/trend-insights.ts).
+ */
+export function listCheckinsInRange(
+  days: number,
+  endDateInput: string | undefined,
+  scopeKey = "guest",
+): BrowserCheckin[] {
+  const endDate = new Date(toDateOnly(endDateInput));
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - (days - 1));
+  const startKey = startDate.toISOString().slice(0, 10);
+  const endKey = endDate.toISOString().slice(0, 10);
+
+  return listCheckins(scopeKey).filter((checkin) => {
+    return checkin.date >= startKey && checkin.date <= endKey;
+  });
+}
+
 export function getWeeklySummary(endDateInput?: string, scopeKey = "guest"): WeeklySummary {
   const endDate = new Date(toDateOnly(endDateInput));
   const startDate = new Date(endDate);

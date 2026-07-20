@@ -34,6 +34,7 @@ describe("KeyboardHelp", () => {
     expect(screen.getByText("Go to Focus")).toBeTruthy();
     expect(screen.getByText("Go to Execute")).toBeTruthy();
     expect(screen.getByText("Go to Review")).toBeTruthy();
+    expect(screen.getByText("Go to Trends")).toBeTruthy();
     expect(screen.getByText("Go to Journal")).toBeTruthy();
     expect(
       screen.getByText("Previous or next step while a step card is focused"),
@@ -130,6 +131,11 @@ describe("KeyboardHelp", () => {
     fireEvent.keyDown(window, { key: "g" });
     fireEvent.keyDown(window, { key: "r" });
     expect(push).toHaveBeenCalledWith("/review");
+
+    push.mockReset();
+    fireEvent.keyDown(window, { key: "g" });
+    fireEvent.keyDown(window, { key: "t" });
+    expect(push).toHaveBeenCalledWith("/trends");
 
     push.mockReset();
     fireEvent.keyDown(window, { key: "g" });

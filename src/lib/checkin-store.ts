@@ -31,12 +31,14 @@ import {
   addCheckin as addBrowserCheckin,
   getWeeklySummary as getBrowserWeeklySummary,
   listCheckins,
+  listCheckinsInRange as listBrowserCheckinsInRange,
   type BrowserCheckin,
   type WeeklySummary,
 } from "@/lib/browser-checkins";
 import { getFirebaseFirestore } from "@/lib/firebase";
 import {
   addFirestoreCheckin,
+  getFirestoreCheckinsInRange,
   getFirestoreWeeklySummary,
 } from "@/lib/firestore-checkins";
 
@@ -64,6 +66,20 @@ export type CheckinStoreAdapter = {
     endDateInput: string | undefined,
     scopeKey: string,
   ) => Promise<WeeklySummary>;
+  /**
+   * Every check-in in a caller-chosen `days`-long window (v0.11 Trends). This
+   * is the ONLY sanctioned way to read a wider check-in history: a real bug
+   * was found in review/page.tsx (filed in the backlog, not fixed here)
+   * where the review page bypasses this adapter and calls
+   * browser-checkins.ts's listCheckins directly, silently showing empty data
+   * for signed-in Firestore-synced users. Every caller of check-in history
+   * beyond the current single-week summary must go through this method.
+   */
+  getCheckinsInRange: (
+    days: number,
+    endDateInput: string | undefined,
+    scopeKey: string,
+  ) => Promise<BrowserCheckin[]>;
   migrateGuestCheckins: (targetScopeKey: string) => Promise<{
     status: "migrated" | "already-migrated" | "skipped" | "error";
     migratedCount: number;
@@ -165,6 +181,9 @@ export function createCheckinStore(
     getWeeklySummary: async (endDateInput, scopeKey) => {
       return getBrowserWeeklySummary(endDateInput, scopeKey);
     },
+    getCheckinsInRange: async (days, endDateInput, scopeKey) => {
+      return listBrowserCheckinsInRange(days, endDateInput, scopeKey);
+    },
     migrateGuestCheckins: async (targetScopeKey) => {
       return migrateGuestCheckinsWithAdapter(localStore, targetScopeKey);
     },
@@ -192,6 +211,13 @@ export function createCheckinStore(
           return await getFirestoreWeeklySummary(db, endDateInput, scopeKey);
         } catch {
           return getBrowserWeeklySummary(endDateInput, scopeKey);
+        }
+      },
+      getCheckinsInRange: async (days, endDateInput, scopeKey) => {
+        try {
+          return await getFirestoreCheckinsInRange(db, days, endDateInput, scopeKey);
+        } catch {
+          return listBrowserCheckinsInRange(days, endDateInput, scopeKey);
         }
       },
       migrateGuestCheckins: async (targetScopeKey) => {
