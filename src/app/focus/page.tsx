@@ -190,7 +190,7 @@ export default function FocusPage() {
               Your {plan.minutes}-minute {plan.focus} plan is ready. Continue to Execute to close the day.
             </p>
             {coachBrief ? (
-              <div className="mt-3 rounded-lg border border-(--line) bg-white/70 px-3 py-2 text-sm text-slate-700">
+              <div className="mt-3 rounded-lg border border-(--line) bg-(--panel)/80 px-3 py-2 text-sm text-slate-700">
                 <p className="font-semibold text-slate-900">Coach brief</p>
                 <p className="mt-1 whitespace-pre-line">{coachBrief}</p>
               </div>

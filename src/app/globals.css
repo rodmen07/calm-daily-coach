@@ -8,6 +8,11 @@
   --line: #2a3850;
   --accent: #7ad6b7;
   --accent-strong: #9be2c8;
+  /* Text color for content painted directly on top of --accent. --accent
+     flips lightness between themes (light mint in dark mode, dark teal in
+     light mode), so the text color on it must flip the opposite way to stay
+     readable - a single fixed value (dark or light) only works in one theme. */
+  --accent-foreground: #08131a;
   --muted: #9aa6bb;
   --muted-strong: #d3dbe7;
   --surface-strong: #0f1726;
@@ -32,6 +37,7 @@ html[data-theme="light"] {
   --line: #ddd2be;
   --accent: #135d4c;
   --accent-strong: #0f4d3f;
+  --accent-foreground: #ffffff;
   --muted: #5a6375;
   --muted-strong: #2b3342;
   --surface-strong: #fffdf8;
