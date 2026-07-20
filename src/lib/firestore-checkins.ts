@@ -8,7 +8,7 @@ import {
 } from "firebase/firestore";
 import { FOCUS_AREAS, type FocusArea } from "@/lib/plan";
 import type { CheckinInput } from "@/lib/checkin-store";
-import type { WeeklySummary } from "@/lib/browser-checkins";
+import type { BrowserCheckin, WeeklySummary } from "@/lib/browser-checkins";
 
 type FirestoreCheckinDoc = CheckinInput & {
   createdAt: string;
@@ -103,4 +103,56 @@ export async function getFirestoreWeeklySummary(
     completionRate: total > 0 ? Number((done / total).toFixed(2)) : 0,
     byFocus,
   };
+}
+
+/**
+ * Every check-in document in a caller-chosen `days`-long window, sourced from
+ * the same `users/{uid}/checkins` collection getFirestoreWeeklySummary reads,
+ * with the window parameterized by `days` instead of hardcoded to 7 (v0.11
+ * Trends). Returns the raw records rather than a pre-aggregated summary so
+ * aggregation happens once, in src/lib/trend-insights.ts, instead of being
+ * reimplemented a third time the way getWeeklySummary and
+ * getFirestoreWeeklySummary each independently count byFocus today. No new
+ * collection, no new rule: still a plain owner-scoped read of `checkins`.
+ */
+export async function getFirestoreCheckinsInRange(
+  db: Firestore,
+  days: number,
+  endDateInput: string | undefined,
+  scopeKey: string,
+): Promise<BrowserCheckin[]> {
+  const endDate = new Date(toDateOnly(endDateInput));
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - (days - 1));
+  const startKey = startDate.toISOString().slice(0, 10);
+  const endKey = endDate.toISOString().slice(0, 10);
+
+  const q = query(
+    collection(db, "users", scopeKey, "checkins"),
+    where("date", ">=", startKey),
+    where("date", "<=", endKey),
+  );
+
+  const snapshot = await getDocs(q);
+  const checkins: BrowserCheckin[] = [];
+
+  for (const docSnapshot of snapshot.docs) {
+    const item = docSnapshot.data() as FirestoreCheckinDoc;
+    if (!item.date || !item.focus || !item.status) {
+      continue;
+    }
+
+    checkins.push({
+      id: docSnapshot.id,
+      date: item.date,
+      focus: item.focus,
+      dose: item.dose,
+      minutes: item.minutes,
+      status: item.status,
+      skipReason: item.skipReason,
+      createdAt: item.createdAt,
+    });
+  }
+
+  return checkins;
 }

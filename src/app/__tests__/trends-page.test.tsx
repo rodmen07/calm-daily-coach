@@ -1,0 +1,222 @@
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import TrendsPage from "@/app/trends/page";
+import { useCoachAuth } from "@/app/hooks/use-coach-auth";
+import { addCheckin, listCheckins, listCheckinsInRange } from "@/lib/browser-checkins";
+import { getFirestoreCheckinsInRange } from "@/lib/firestore-checkins";
+import { getFirebaseFirestore } from "@/lib/firebase";
+import { bucketCheckinsByWeek } from "@/lib/trend-insights";
+import type { Firestore } from "firebase/firestore";
+import type { BrowserCheckin } from "@/lib/browser-checkins";
+
+vi.mock("@/app/hooks/use-coach-auth", () => ({
+  useCoachAuth: vi.fn(),
+}));
+
+vi.mock("@/lib/firebase", () => ({
+  getFirebaseFirestore: vi.fn(() => null),
+}));
+
+// Wraps the real browser-checkins implementation instead of replacing it, so
+// the "renders with real local check-ins" tests below can seed history the
+// same way browser-checkins.test.ts and journal-page.test.tsx do (through
+// the real addCheckin/listCheckinsInRange functions against localStorage),
+// while still letting the adapter-bypass regression test track whether
+// listCheckins (the exact function review/page.tsx's bug calls directly) was
+// ever invoked by this page.
+vi.mock("@/lib/browser-checkins", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/browser-checkins")>();
+  return {
+    ...actual,
+    listCheckins: vi.fn(actual.listCheckins),
+  };
+});
+
+vi.mock("@/lib/firestore-checkins", () => ({
+  addFirestoreCheckin: vi.fn(),
+  getFirestoreWeeklySummary: vi.fn(),
+  getFirestoreCheckinsInRange: vi.fn(),
+}));
+
+const guestAuthMock = {
+  authUser: null,
+  authMessage: "",
+  authConfigured: false,
+  signInWithGoogle: vi.fn(),
+  signOutUser: vi.fn(),
+};
+
+const signedInAuthMock = {
+  authUser: { uid: "user-123", email: "person@example.com" },
+  authMessage: "",
+  authConfigured: true,
+  signInWithGoogle: vi.fn(),
+  signOutUser: vi.fn(),
+};
+
+// UTC calendar-day keys, matching browser-checkins.ts's own date keying
+// (toISOString().slice(0, 10)), relative to "now" so the suite stays
+// deterministic regardless of which real day it runs on.
+function utcDateKey(daysAgo: number): string {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - daysAgo);
+  return date.toISOString().slice(0, 10);
+}
+
+function firestoreCheckin(partial: Partial<BrowserCheckin>): BrowserCheckin {
+  return {
+    id: partial.id ?? "1",
+    date: partial.date ?? utcDateKey(2),
+    focus: partial.focus ?? "Deep Work",
+    dose: partial.dose ?? "medium",
+    minutes: partial.minutes ?? 15,
+    status: partial.status ?? "done",
+    skipReason: partial.skipReason,
+    createdAt: partial.createdAt ?? new Date().toISOString(),
+  };
+}
+
+describe("Trends page", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.mocked(getFirebaseFirestore).mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it("shows the calm empty state with zero check-in history", async () => {
+    vi.mocked(useCoachAuth).mockReturnValue(guestAuthMock as never);
+
+    render(<TrendsPage />);
+
+    expect(await screen.findByTestId("empty-state-insights")).toBeTruthy();
+    expect(screen.getByText("Your trends are still sprouting")).toBeTruthy();
+  });
+
+  it("renders 4 weekly buckets oldest to newest with real local check-in history", async () => {
+    vi.mocked(useCoachAuth).mockReturnValue(guestAuthMock as never);
+
+    // One check-in per weekly bucket: oldest (~27 days ago) through the most
+    // recent (today), all under the guest scope this page defaults to.
+    addCheckin(
+      { date: utcDateKey(25), focus: "Fitness", dose: "light", minutes: 5, status: "done" },
+      "guest",
+    );
+    addCheckin(
+      {
+        date: utcDateKey(18),
+        focus: "Fitness",
+        dose: "light",
+        minutes: 5,
+        status: "skipped",
+        skipReason: "busy",
+      },
+      "guest",
+    );
+    addCheckin(
+      { date: utcDateKey(10), focus: "Deep Work", dose: "medium", minutes: 15, status: "done" },
+      "guest",
+    );
+    addCheckin(
+      { date: utcDateKey(1), focus: "Deep Work", dose: "deep", minutes: 30, status: "done" },
+      "guest",
+    );
+
+    render(<TrendsPage />);
+
+    const buckets = await screen.findAllByTestId("trend-bucket");
+    expect(buckets).toHaveLength(4);
+
+    // Compute the expected date-range labels the same way the page itself
+    // does (today-anchored), rather than re-deriving the boundary math by
+    // hand in the test, so this stays deterministic on any real run date.
+    const expectedBuckets = bucketCheckinsByWeek([], 4);
+
+    // DOM order is oldest-first: the earliest bucket's date range starts
+    // furthest in the past, the last bucket's range ends on today.
+    expect(buckets[0].textContent).toContain(
+      `${expectedBuckets[0].windowStart} to ${expectedBuckets[0].windowEnd}`,
+    );
+    expect(buckets[0].textContent).toContain("1/1 complete");
+    expect(buckets[3].textContent).toContain(
+      `${expectedBuckets[3].windowStart} to ${expectedBuckets[3].windowEnd}`,
+    );
+    expect(buckets[3].textContent).toContain("1/1 complete");
+
+    expect(screen.getByText("Overall completion")).toBeTruthy();
+    expect(screen.queryByTestId("empty-state-insights")).toBeNull();
+  });
+
+  it("shows the narrative and dose/focus breakdowns once real history exists", async () => {
+    vi.mocked(useCoachAuth).mockReturnValue(guestAuthMock as never);
+
+    addCheckin(
+      { date: utcDateKey(1), focus: "Deep Work", dose: "deep", minutes: 30, status: "done" },
+      "guest",
+    );
+
+    render(<TrendsPage />);
+
+    await screen.findAllByTestId("trend-bucket");
+
+    expect(screen.getByText("What the last 4 weeks show")).toBeTruthy();
+    expect(screen.getByText("Deep sessions")).toBeTruthy();
+  });
+
+  it("reads a signed-in user's history exclusively through CheckinStoreAdapter, never a direct browser-checkins call", async () => {
+    // This is the exact shape of the review/page.tsx bug filed in the
+    // backlog: for a signed-in user resolved to the Firestore backend, a
+    // direct browser-checkins.ts call reads an empty (or stale) local list
+    // instead of the user's real Firestore history. Local storage here is
+    // deliberately left empty to reproduce that exact trap; if Trends ever
+    // regressed to reading listCheckins directly, this test would both see
+    // the spy called AND see the empty state instead of real data.
+    vi.mocked(useCoachAuth).mockReturnValue(signedInAuthMock as never);
+    vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+    vi.mocked(getFirestoreCheckinsInRange).mockResolvedValue([
+      firestoreCheckin({ id: "f1", date: utcDateKey(2), focus: "Deep Work", status: "done" }),
+      firestoreCheckin({ id: "f2", date: utcDateKey(9), focus: "Fitness", status: "done" }),
+    ]);
+
+    render(<TrendsPage />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("empty-state-insights")).toBeNull();
+    });
+
+    expect(vi.mocked(getFirestoreCheckinsInRange)).toHaveBeenCalledWith(
+      expect.anything(),
+      28,
+      undefined,
+      "user-123",
+    );
+    expect(vi.mocked(listCheckins)).not.toHaveBeenCalled();
+
+    const buckets = await screen.findAllByTestId("trend-bucket");
+    const totalCompleted = buckets.reduce((sum, bucket) => {
+      const countEl = within(bucket).getByTestId("trend-bucket-count");
+      const match = countEl.textContent?.match(/^(\d+)\/(\d+) complete$/);
+      return sum + (match ? Number(match[1]) : 0);
+    }, 0);
+    expect(totalCompleted).toBe(2);
+  });
+});
+
+// Guards the test file's own mocking setup: if listCheckinsInRange or
+// getFirestoreCheckinsInRange were ever accidentally left unmocked/unwired
+// in a way that silently no-ops, every assertion above would pass for the
+// wrong reason (an always-empty page trivially "not showing empty data it
+// never bypassed to"). Confirms both are real, callable functions here.
+describe("trends-page.test.tsx mock wiring sanity", () => {
+  it("listCheckinsInRange is the real browser-checkins implementation, not replaced", () => {
+    window.localStorage.clear();
+    addCheckin(
+      { date: utcDateKey(0), focus: "Deep Work", dose: "light", minutes: 5, status: "done" },
+      "guest",
+    );
+    expect(listCheckinsInRange(28, undefined, "guest")).toHaveLength(1);
+  });
+});

@@ -17,6 +17,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/focus", label: "Focus" },
   { href: "/execute", label: "Execute" },
   { href: "/review", label: "Review" },
+  { href: "/trends", label: "Trends" },
   { href: "/journal", label: "Journal" },
   { href: "/pricing", label: "Pricing" },
   { href: "/monetization", label: "Monetization" },

@@ -56,4 +56,10 @@ describe("SiteNav", () => {
       screen.getByRole("link", { name: "Dashboard" }).getAttribute("aria-current"),
     ).toBe("page");
   });
+
+  it("links to the Trends page (v0.11)", () => {
+    usePathname.mockReturnValue("/");
+    render(<SiteNav />);
+    expect(screen.getByRole("link", { name: "Trends" }).getAttribute("href")).toBe("/trends");
+  });
 });

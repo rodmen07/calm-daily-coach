@@ -1,6 +1,15 @@
 import { createCheckinStore, resolveCheckinBackend } from "@/lib/checkin-store";
-import { addCheckin, getWeeklySummary, listCheckins } from "@/lib/browser-checkins";
-import { addFirestoreCheckin, getFirestoreWeeklySummary } from "@/lib/firestore-checkins";
+import {
+  addCheckin,
+  getWeeklySummary,
+  listCheckins,
+  listCheckinsInRange,
+} from "@/lib/browser-checkins";
+import {
+  addFirestoreCheckin,
+  getFirestoreCheckinsInRange,
+  getFirestoreWeeklySummary,
+} from "@/lib/firestore-checkins";
 import { getFirebaseFirestore } from "@/lib/firebase";
 import type { Firestore } from "firebase/firestore";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,6 +21,7 @@ vi.mock("@/lib/firebase", () => ({
 vi.mock("@/lib/browser-checkins", () => ({
   addCheckin: vi.fn(),
   listCheckins: vi.fn(() => []),
+  listCheckinsInRange: vi.fn(() => []),
   getWeeklySummary: vi.fn(() => ({
     windowStart: "2026-06-21",
     windowEnd: "2026-06-27",
@@ -39,6 +49,7 @@ vi.mock("@/lib/browser-checkins", () => ({
 
 vi.mock("@/lib/firestore-checkins", () => ({
   addFirestoreCheckin: vi.fn(),
+  getFirestoreCheckinsInRange: vi.fn(() => Promise.resolve([])),
   getFirestoreWeeklySummary: vi.fn(() =>
     Promise.resolve({
       windowStart: "2026-06-21",
@@ -249,6 +260,73 @@ describe("checkin-store", () => {
 
     expect(vi.mocked(getWeeklySummary)).toHaveBeenCalledTimes(1);
     expect(summary.total).toBe(0);
+  });
+
+  describe("getCheckinsInRange (v0.11 Trends)", () => {
+    const fakeInRangeCheckin = {
+      id: "1",
+      createdAt: "2026-07-01T10:00:00.000Z",
+      date: "2026-07-01",
+      focus: "Deep Work" as const,
+      dose: "medium" as const,
+      minutes: 15,
+      status: "done" as const,
+    };
+
+    it("reads the local range function under the local backend", async () => {
+      vi.mocked(listCheckinsInRange).mockReturnValueOnce([fakeInRangeCheckin]);
+
+      const store = createCheckinStore("local");
+      const result = await store.getCheckinsInRange(28, undefined, "guest");
+
+      expect(vi.mocked(listCheckinsInRange)).toHaveBeenCalledWith(28, undefined, "guest");
+      expect(result).toEqual([fakeInRangeCheckin]);
+      expect(vi.mocked(getFirestoreCheckinsInRange)).not.toHaveBeenCalled();
+    });
+
+    it("uses the local fallback adapter's range read when firestore mode is requested but not configured", async () => {
+      vi.mocked(listCheckinsInRange).mockReturnValueOnce([fakeInRangeCheckin]);
+
+      const store = createCheckinStore("firestore");
+      expect(store.backend).toBe("firestore-fallback");
+
+      const result = await store.getCheckinsInRange(28, undefined, "guest");
+
+      expect(vi.mocked(listCheckinsInRange)).toHaveBeenCalledTimes(1);
+      expect(result).toEqual([fakeInRangeCheckin]);
+    });
+
+    it("reads the Firestore range function under the firestore backend", async () => {
+      vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+      vi.mocked(getFirestoreCheckinsInRange).mockResolvedValueOnce([fakeInRangeCheckin]);
+
+      const store = createCheckinStore(undefined, { signedIn: true });
+      expect(store.backend).toBe("firestore");
+
+      const result = await store.getCheckinsInRange(28, undefined, "user-123");
+
+      expect(vi.mocked(getFirestoreCheckinsInRange)).toHaveBeenCalledWith(
+        expect.anything(),
+        28,
+        undefined,
+        "user-123",
+      );
+      expect(vi.mocked(listCheckinsInRange)).not.toHaveBeenCalled();
+      expect(result).toEqual([fakeInRangeCheckin]);
+    });
+
+    it("falls back to the local range read when the Firestore range read throws", async () => {
+      vi.mocked(getFirebaseFirestore).mockReturnValue({} as Firestore);
+      vi.mocked(getFirestoreCheckinsInRange).mockRejectedValueOnce(new Error("offline"));
+      vi.mocked(listCheckinsInRange).mockReturnValueOnce([fakeInRangeCheckin]);
+
+      const store = createCheckinStore(undefined, { signedIn: true });
+      const result = await store.getCheckinsInRange(28, undefined, "user-123");
+
+      expect(vi.mocked(getFirestoreCheckinsInRange)).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(listCheckinsInRange)).toHaveBeenCalledTimes(1);
+      expect(result).toEqual([fakeInRangeCheckin]);
+    });
   });
 
   it("retries migration locally when the Firestore migration fails", async () => {

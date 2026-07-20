@@ -18,6 +18,7 @@ const GO_TO_TARGETS: Record<string, string> = {
   f: "/focus",
   e: "/execute",
   r: "/review",
+  t: "/trends",
   j: "/journal",
 };
 
@@ -39,6 +40,7 @@ const SHORTCUT_ROWS: ShortcutRow[] = [
   { keys: ["g", "f"], separator: "then", description: "Go to Focus" },
   { keys: ["g", "e"], separator: "then", description: "Go to Execute" },
   { keys: ["g", "r"], separator: "then", description: "Go to Review" },
+  { keys: ["g", "t"], separator: "then", description: "Go to Trends" },
   { keys: ["g", "j"], separator: "then", description: "Go to Journal" },
   {
     keys: ["Left / Right arrow"],
