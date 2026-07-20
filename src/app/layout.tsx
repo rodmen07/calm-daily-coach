@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Sora, IBM_Plex_Mono } from "next/font/google";
-import Link from "next/link";
+import { SiteNav } from "@/app/components/site-nav";
 import { ThemeToggle } from "@/app/components/theme-toggle";
 import { SyncStatusBadge } from "@/app/components/sync-status-badge";
 import { SubscriptionGuard } from "@/app/components/subscription-guard";
@@ -54,23 +54,15 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
+        {/* First thing a keyboard reaches, invisible until then. */}
+        <a className="skip-link" href="#main-content">
+          Skip to main content
+        </a>
         <header className="site-nav-shell">
           <div className="site-nav-inner">
             <p className="site-nav-title">Focus</p>
             <div className="site-nav-actions">
-              <nav className="site-nav-links" aria-label="Primary">
-                <Link href="/">Dashboard</Link>
-                <Link href="/slicer">Slicer</Link>
-                <Link href="/ambient">Ambient</Link>
-                <Link href="/breathe">Breathe</Link>
-                <Link href="/challenges">Challenges</Link>
-                <Link href="/focus">Focus</Link>
-                <Link href="/execute">Execute</Link>
-                <Link href="/review">Review</Link>
-                <Link href="/journal">Journal</Link>
-                <Link href="/pricing">Pricing</Link>
-                <Link href="/monetization">Monetization</Link>
-              </nav>
+              <SiteNav />
               <div className="flex items-center gap-3">
                 <SyncStatusBadge />
                 <KeyboardHelp />
@@ -79,7 +71,13 @@ export default function RootLayout({
             </div>
           </div>
         </header>
-        <SubscriptionGuard>{children}</SubscriptionGuard>
+        {/* The single main landmark for every route. Pages contribute their own
+            content wrappers; the landmark lives here so the skip link always has
+            the same target, including on the sign-in and trial gate screens.
+            tabIndex lets focus actually land here when the skip link is used. */}
+        <main id="main-content" className="flex-1" tabIndex={-1}>
+          <SubscriptionGuard>{children}</SubscriptionGuard>
+        </main>
       </body>
     </html>
   );

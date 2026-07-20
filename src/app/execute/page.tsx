@@ -51,7 +51,7 @@ export default function ExecutePage() {
 
   return (
     <div className="page-shell">
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         <SwipeStepCard
           stepLabel="Step 2"
           title="Execute your plan"
@@ -310,7 +310,7 @@ export default function ExecutePage() {
           </section>
         )}
         </SwipeStepCard>
-      </main>
+      </div>
     </div>
   );
 }

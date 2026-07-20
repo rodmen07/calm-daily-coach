@@ -11,7 +11,7 @@ export default function PricingPage() {
 
   return (
     <div className="page-shell">
-      <main className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-10">
         <section className="panel text-center animate-status-rise">
           <p className="eyebrow">Membership</p>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -101,7 +101,7 @@ export default function PricingPage() {
             </div>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

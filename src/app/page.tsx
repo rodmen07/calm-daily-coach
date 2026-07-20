@@ -8,6 +8,7 @@ import { getFirebaseFirestore } from "@/lib/firebase";
 import { getTrialDaysRemaining, getUserAccount } from "@/lib/firestore-user";
 import { getMonetizationEvents, summarizeMonetizationEvents, trackMonetizationEvent } from "@/lib/monetization";
 import { deriveTodayLoopPercent } from "@/lib/planner-derivations";
+import { prefersReducedMotion } from "@/lib/reduced-motion";
 import { Onboarding } from "@/app/components/onboarding";
 import { AffirmationCard } from "@/app/components/AffirmationCard";
 import ProgressRing from "@/app/components/ProgressRing";
@@ -27,6 +28,18 @@ function subscribeMonetization(callback: () => void) {
   };
 }
 
+// The counters tick up on a timer, so no CSS media query can stop them. They
+// stand still for anyone who asked for reduced motion, and for the test escape
+// hatch that keeps assertions off a moving target.
+function skipCounterAnimation(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const win = window as unknown as { __ANIMATE_COUNTERS__?: boolean };
+  return win.__ANIMATE_COUNTERS__ === false || prefersReducedMotion();
+}
+
 function AnimatedCounter({
   value,
   suffix = "",
@@ -38,18 +51,23 @@ function AnimatedCounter({
   className?: string;
   testId?: string;
 }) {
+  // The initial value stays hydration-safe: only the test escape hatch, which
+  // is never set during a server render, can pre-fill it. Reduced motion is a
+  // client-only preference, so the effect below settles it after hydration.
   const [displayValue, setDisplayValue] = useState(() => {
-    const win = typeof window !== "undefined" ? (window as unknown as { __ANIMATE_COUNTERS__?: boolean }) : undefined;
-    if (win && win.__ANIMATE_COUNTERS__ === false) {
-      return value;
-    }
-    return 0;
+    const win =
+      typeof window !== "undefined"
+        ? (window as unknown as { __ANIMATE_COUNTERS__?: boolean })
+        : undefined;
+    return win && win.__ANIMATE_COUNTERS__ === false ? value : 0;
   });
 
   useEffect(() => {
-    const win = typeof window !== "undefined" ? (window as unknown as { __ANIMATE_COUNTERS__?: boolean }) : undefined;
-    if (win && win.__ANIMATE_COUNTERS__ === false) {
-      return;
+    if (skipCounterAnimation()) {
+      // Settle on the final value without a cascading synchronous render, the
+      // same deferred approach the progress ring uses under reduced motion.
+      const settle = window.setTimeout(() => setDisplayValue(value), 0);
+      return () => window.clearTimeout(settle);
     }
 
     const duration = 650;
@@ -341,7 +359,7 @@ export default function Home() {
 
   return (
     <div className="page-shell">
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         {showOnboarding && typeof window !== "undefined" && (
           <div className="mb-6">
             <Onboarding
@@ -772,7 +790,7 @@ export default function Home() {
             )}
           </section>
         ) : null}
-      </main>
+      </div>
     </div>
   );
 }

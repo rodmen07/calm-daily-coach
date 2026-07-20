@@ -56,6 +56,50 @@ body {
   font-family: var(--font-sora), sans-serif;
 }
 
+/* One shared focus ring for the whole app. Every interactive element gets the
+   same calm accent outline, so keyboard users never have to guess where they
+   are, and no surface needs an ad hoc outline of its own. Element selectors
+   keep this above the component rules that reset `outline`. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The main landmark is focusable only so the skip link can land on it. It is
+   not a control, so it stays quiet when focus arrives. */
+#main-content:focus,
+#main-content:focus-visible {
+  outline: none;
+}
+
+/* Skip link: out of the way until a keyboard reaches it, then the first thing
+   on the page. No transition, so it behaves the same under reduced motion. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 60;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 52%, var(--line));
+  background: var(--panel);
+  color: var(--foreground);
+  padding: 9px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+}
+
 html[data-theme="dark"] .text-slate-600,
 html[data-theme="dark"] .text-slate-700,
 html[data-theme="dark"] .text-slate-800,
@@ -135,6 +179,13 @@ html[data-theme="dark"] .border-slate-200 {
 
 .site-nav-links a:hover {
   background: color-mix(in srgb, var(--accent) 16%, var(--surface-strong));
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--line));
+}
+
+/* The page you are already on, marked quietly rather than shouted. */
+.site-nav-links a[aria-current="page"] {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-strong));
   border-color: color-mix(in srgb, var(--accent) 52%, var(--line));
 }
 
@@ -1233,26 +1284,27 @@ html[data-theme="dark"] .border-slate-200 {
   }
 }
 
+/* Reduced motion, applied once for the whole app.
+   This used to enumerate the animated classes by hand, which quietly missed
+   every Tailwind `animate-*` / `transition-*` utility used inline by the
+   dashboard loop, the slicer celebration, the breathe pacer, the sync badge,
+   and the loading spinner. A single sweeping rule settles everything on its
+   final frame instead, and covers anything added later without maintenance.
+   The one JS-driven animation, ProgressRing, reads the same preference itself. */
 @media (prefers-reduced-motion: reduce) {
-  .flow-chip,
-  .category-chip,
-  .progress-badge,
-  .progress-fill,
-  .progress-caption,
-  .focus-row,
-  .summary-card,
-  .status-banner,
-  .primary-button,
-  .secondary-button,
-  .today-ring,
-  .today-ring svg *,
-  .keyboard-help-overlay,
-  .keyboard-help-dialog,
-  .keyboard-help-trigger {
-    animation: none !important;
-    transition-duration: 0ms !important;
+  *,
+  *::before,
+  *::after {
+    animation-delay: 0ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 
+  /* The progress sheen sweeps across the bar and would otherwise settle
+     mid-track; park it just past the end where it is invisible. */
   .progress-fill.is-animated::after {
     animation: none !important;
     transform: translateX(130%);

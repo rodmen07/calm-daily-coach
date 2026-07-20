@@ -65,7 +65,7 @@ export default function ReviewPage() {
 
   return (
     <div className="page-shell">
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         <SwipeStepCard
           stepLabel="Step 3"
           title="Review and adjust"
@@ -290,7 +290,7 @@ export default function ReviewPage() {
             Finish this step by returning to Dashboard, then begin your next cycle from Focus.
           </div>
         </SwipeStepCard>
-      </main>
+      </div>
     </div>
   );
 }

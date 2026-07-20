@@ -1,16 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+import { REDUCED_MOTION_QUERY, prefersReducedMotion } from '@/lib/reduced-motion';
 
 // The fill animation is driven by a JS timer, so CSS media queries alone cannot
-// stop it. Read the preference directly, guarded for SSR and for test
-// environments (jsdom) where matchMedia does not exist.
-function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return false;
-  }
-  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
-}
+// stop it; the shared helper reads the preference directly.
 
 type ProgressRingProps = {
   percentage: number;

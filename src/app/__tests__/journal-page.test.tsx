@@ -53,6 +53,13 @@ describe("Journal page", () => {
     expect(screen.getByText("No earlier entries, and that is fine")).toBeTruthy();
   });
 
+  it("does not introduce its own main landmark (the layout owns the single main)", () => {
+    // The page content wrapper is a plain div now; the one <main> lives in the
+    // root layout so the skip link always has a single, stable target.
+    render(<JournalPage />);
+    expect(screen.queryByRole("main")).toBeNull();
+  });
+
   it("keeps the save button disabled for whitespace-only drafts", () => {
     render(<JournalPage />);
 
