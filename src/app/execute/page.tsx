@@ -76,7 +76,7 @@ export default function ExecutePage() {
           <section>
             <h2 className="mb-4 text-xl font-semibold">Today&apos;s deliberate dose</h2>
             <div className="plan-meta-grid mb-5 text-sm">
-              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-slate-400 dark:text-slate-300">
+              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-(--muted)">
                 <div className="rounded-lg bg-[--accent]/10 text-[--accent] p-1.5 shrink-0">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                     <circle cx="12" cy="12" r="10" />
@@ -89,7 +89,7 @@ export default function ExecutePage() {
                 </div>
               </div>
 
-              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-slate-400 dark:text-slate-300">
+              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-(--muted)">
                 <div className="rounded-lg bg-[--accent]/10 text-[--accent] p-1.5 shrink-0">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -101,7 +101,7 @@ export default function ExecutePage() {
                 </div>
               </div>
 
-              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-slate-400 dark:text-slate-300">
+              <div className="plan-pill flex items-start gap-2.5 p-3 rounded-xl border border-[var(--line)] bg-[var(--field)] text-(--muted)">
                 <div className="rounded-lg bg-[--accent]/10 text-[--accent] p-1.5 shrink-0">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                     <circle cx="12" cy="12" r="10" />
