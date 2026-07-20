@@ -127,9 +127,9 @@ export default function TrendsPage() {
               </div>
 
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
                   Weekly completion
-                </p>
+                </h2>
                 <div className="space-y-2">
                   {trendSummary.buckets.map((bucket, index) => {
                     const percent = Math.round(bucket.completionRate * 100);
@@ -181,9 +181,9 @@ export default function TrendsPage() {
 
               {focusTotals.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
                     Focus areas across the window
-                  </p>
+                  </h2>
                   {focusTotals.map((item) => (
                     <div
                       key={item.focusArea}
@@ -215,9 +215,9 @@ export default function TrendsPage() {
                   <span className="text-sm shrink-0" aria-hidden="true">
                     ✨
                   </span>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
                     What the last 4 weeks show
-                  </p>
+                  </h2>
                 </div>
                 <p className="leading-6">{trendSummary.narrative}</p>
               </div>
