@@ -184,6 +184,25 @@ design (dimming behind a modal reads correctly in both themes), not a defect.
     either via the CSS override list or an explicit `dark:` pair in the same
     class string. A new literal outside both fails CI instead of shipping
     silently broken in one theme.
+
+    **Correction (post-merge review, 2026-07-20): this `dark:`-pair
+    exemption is unsound for this app and was correctly never
+    implemented.** This project's Tailwind `dark:` variant is the library
+    default - it tracks the OS-level `prefers-color-scheme` media query.
+    Confirmed by absence: no `@custom-variant dark` remap exists in
+    `globals.css` or `postcss.config.mjs`, and there is no
+    `tailwind.config.{js,ts}` setting a `darkMode` strategy either. This
+    app's actual light/dark toggle (`ThemeToggle`) instead sets
+    `html[data-theme]`, a separate, independent signal - a user can have the
+    app in light mode while their OS is set to dark, or the reverse. A
+    `dark:foo-500` class pairing therefore proves nothing about whether
+    `foo-500` is safe under this app's real toggle, and treating it as
+    Source B coverage would let a genuinely broken class through. The
+    shipped `theme-token-guard.test.ts` never implemented this bullet - do
+    not add it. Every `dark:`-paired literal in the tree today already
+    clears the CSS-override or `BASELINE_DEBT` mechanisms on its own
+    merits, and a dedicated test in that file proves a hypothetical new
+    `dark:`-paired class would still be flagged, not exempted.
   - **Verify the guard actually guards** before merging: temporarily revert
     one of Fixes 1-3, confirm the new test fails, then restore the fix and
     confirm it passes again - the same "prove the behavior difference"

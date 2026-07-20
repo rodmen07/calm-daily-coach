@@ -46,6 +46,27 @@
  * Fixing a baselined occurrence should delete or lower its entry in the
  * same change, the same discipline the design doc asks of Fix 1-3 above -
  * otherwise the ceiling quietly stops meaning anything.
+ *
+ * Deliberately NOT a fourth mechanism: THEME_CONSISTENCY.md section 3 named
+ * "an explicit `dark:` pair in the same class string" as a way a Source A
+ * occurrence could be considered covered. This guard does not implement
+ * that, on purpose, and post-merge review (2026-07-20) confirmed why it
+ * would be unsound to add: this app's Tailwind `dark:` variant is the
+ * library default, tracking the OS-level `prefers-color-scheme` media query
+ * (no `@custom-variant dark` remap exists anywhere in globals.css or
+ * postcss.config.mjs) - it does NOT track `html[data-theme]`, the attribute
+ * `ThemeToggle` actually flips. A user can run this app in light mode on a
+ * dark-OS device (or the reverse), so a `dark:foo-500` class pairing proves
+ * nothing about whether `foo-500` is safe under the app's own toggle; the
+ * two are independent signals. Concretely: every `dark:`-paired risky class
+ * already in this tree (verified 2026-07-20 - `page.tsx`'s
+ * `dark:border-slate-800` and `dark:bg-slate-900/40`, `pricing/page.tsx`'s
+ * two `dark:border-slate-800`, `review/page.tsx`'s `dark:text-slate-800`)
+ * is scanned and accounted for the same as any other occurrence, via
+ * COVERED_CLASSES or BASELINE_DEBT - never via a `dark:`-pair bypass, because
+ * there is none. The synthetic test at the bottom of this file proves a new
+ * `dark:`-paired class would be flagged, not silently waved through, so this
+ * stays true even if someone adds Source A occurrences.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
@@ -174,6 +195,89 @@ const BASELINE_DEBT: Readonly<Record<string, Readonly<Record<string, number>>>> 
   },
 };
 
+/**
+ * Documented, human-facing total of every BASELINE_DEBT ceiling. This is the
+ * number a PR description or doc referencing "how much baseline debt this
+ * guard permits" should cite.
+ *
+ * History: PR #93's own description claimed "~25 pre-existing occurrences"
+ * for what shipped as this same BASELINE_DEBT table. That prose was wrong -
+ * a post-merge review (2026-07-20) re-summed the table and re-ran the scan
+ * below independently and both agree on 42, a 68% undercount in the
+ * description only. The BASELINE_DEBT table itself was never wrong; nothing
+ * here changes its per-file ceilings. What was missing was this constant (so
+ * "the total" has one canonical, checkable home instead of living only in
+ * prose that can silently go stale) and the two self-checks below it, which
+ * fail loudly instead of letting the number drift unnoticed the next time
+ * BASELINE_DEBT is edited without this constant being updated to match.
+ */
+const BASELINE_DEBT_TOTAL = 42;
+
+/** Sum of every ceiling in BASELINE_DEBT, independent of BASELINE_DEBT_TOTAL. */
+function sumBaselineDebtCeilings(): number {
+  let total = 0;
+  for (const perClass of Object.values(BASELINE_DEBT)) {
+    for (const ceiling of Object.values(perClass)) total += ceiling;
+  }
+  return total;
+}
+
+/**
+ * The real, live, app-wide count of Source-A occurrences that are found but
+ * not covered by globals.css's override list and not an INTENTIONAL_EXCEPTION
+ * - i.e. exactly what BASELINE_DEBT's ceilings exist to permit. Computed
+ * straight from riskyClassesIn/COVERED_CLASSES/INTENTIONAL_EXCEPTIONS and
+ * never reads a BASELINE_DEBT number, so it cannot trivially agree with a
+ * stale ceiling table just by construction.
+ */
+function scanRealBaselineDebtTotal(): number {
+  let total = 0;
+  for (const absPath of APP_FILES) {
+    const rel = relPath(absPath);
+    const source = readFileSync(absPath, "utf-8");
+    const exceptionsForFile = new Set(
+      INTENTIONAL_EXCEPTIONS.filter((exc) => exc.file === rel).map((exc) => exc.className),
+    );
+    for (const className of riskyClassesIn(source)) {
+      if (COVERED_CLASSES.has(className)) continue;
+      if (exceptionsForFile.has(className)) continue;
+      total += 1;
+    }
+  }
+  return total;
+}
+
+/**
+ * Every violation a file's real source would produce against BASELINE_DEBT's
+ * ceilings, COVERED_CLASSES, and INTENTIONAL_EXCEPTIONS - the same check the
+ * per-file `it.each` below runs, factored out so the synthetic `dark:`-pair
+ * test can run the identical, real mechanism against fabricated source
+ * instead of duplicating (and risking silently diverging from) the logic.
+ */
+function violationsForFile(rel: string, source: string): string[] {
+  const found = riskyClassesIn(source);
+  const counts = new Map<string, number>();
+  for (const className of found) {
+    counts.set(className, (counts.get(className) ?? 0) + 1);
+  }
+
+  const exceptionsForFile = new Set(
+    INTENTIONAL_EXCEPTIONS.filter((exc) => exc.file === rel).map((exc) => exc.className),
+  );
+  const baselineForFile = BASELINE_DEBT[rel] ?? {};
+
+  const violations: string[] = [];
+  for (const [className, count] of counts) {
+    if (COVERED_CLASSES.has(className)) continue;
+    if (exceptionsForFile.has(className)) continue;
+    const ceiling = baselineForFile[className] ?? 0;
+    if (count > ceiling) {
+      violations.push(`${className} (found ${count}, baseline allows ${ceiling})`);
+    }
+  }
+  return violations;
+}
+
 describe("theme-token drift guard", () => {
   it("finds app files to scan", () => {
     // Guards the scanner itself: if this ever drops near zero, the walk
@@ -202,27 +306,7 @@ describe("theme-token drift guard", () => {
     "%s introduces no hardcoded color class beyond the recorded baseline",
     (rel, absPath) => {
       const source = readFileSync(absPath, "utf-8");
-      const found = riskyClassesIn(source);
-
-      const counts = new Map<string, number>();
-      for (const className of found) {
-        counts.set(className, (counts.get(className) ?? 0) + 1);
-      }
-
-      const exceptionsForFile = new Set(
-        INTENTIONAL_EXCEPTIONS.filter((exc) => exc.file === rel).map((exc) => exc.className),
-      );
-      const baselineForFile = BASELINE_DEBT[rel] ?? {};
-
-      const violations: string[] = [];
-      for (const [className, count] of counts) {
-        if (COVERED_CLASSES.has(className)) continue;
-        if (exceptionsForFile.has(className)) continue;
-        const ceiling = baselineForFile[className] ?? 0;
-        if (count > ceiling) {
-          violations.push(`${className} (found ${count}, baseline allows ${ceiling})`);
-        }
-      }
+      const violations = violationsForFile(rel, source);
 
       expect(
         violations,
@@ -236,6 +320,93 @@ describe("theme-token drift guard", () => {
       ).toEqual([]);
     },
   );
+
+  it("BASELINE_DEBT's ceilings sum to the documented, freshly-verified total", () => {
+    // Catches BASELINE_DEBT being edited (an entry added, removed, raised, or
+    // lowered) without updating BASELINE_DEBT_TOTAL to match - the exact
+    // "prose total quietly stops describing the real table" failure that
+    // produced PR #93's "~25" undercount in the first place.
+    expect(sumBaselineDebtCeilings()).toBe(BASELINE_DEBT_TOTAL);
+  });
+
+  it("the documented baseline-debt total matches a live, independent app-wide scan", () => {
+    // scanRealBaselineDebtTotal() never reads a BASELINE_DEBT number - it
+    // re-derives the real count straight from the source files, the same way
+    // the per-file checks above do, just summed across the whole app. The
+    // per-file checks above only fail upward (`count > ceiling`), so a
+    // ceiling left too HIGH after a fix lowered the real count would pass
+    // them silently forever; this equality check is what catches drift in
+    // either direction, the self-check this item exists to add.
+    expect(scanRealBaselineDebtTotal()).toBe(BASELINE_DEBT_TOTAL);
+  });
+
+  describe("the `dark:` Tailwind variant is not treated as a safety exemption", () => {
+    // This app's `dark:` variant is the Tailwind default: it tracks the
+    // OS-level `prefers-color-scheme` media query, not `html[data-theme]`
+    // (the attribute ThemeToggle actually flips). Confirmed by absence, not
+    // assumed: no `@custom-variant dark` remap exists in globals.css, and
+    // there is no tailwind.config.{js,ts} anywhere in the repo to set a
+    // `darkMode` strategy either. A `dark:`-paired class is therefore NOT
+    // proof a color is safe under this app's real light/dark toggle - a user
+    // can have the app in light mode on a dark-OS device or the reverse. This
+    // guard has no code path that treats a `dark:` prefix specially (see the
+    // module doc above), so a `dark:`-paired class is scanned exactly like
+    // any other literal and must clear COVERED_CLASSES / INTENTIONAL_EXCEPTIONS
+    // / BASELINE_DEBT same as everything else. This test proves that stays
+    // true with a fabricated file+class pair that is deliberately absent from
+    // every one of those three lists.
+    it("flags a hypothetical new dark:-paired risky class instead of silently exempting it", () => {
+      const hypotheticalRel = "src/app/__fixtures__/hypothetical-dark-pair.tsx";
+      const hypotheticalSource =
+        '<div className="text-zinc-600 dark:text-zinc-700">not a real file, not in BASELINE_DEBT or INTENTIONAL_EXCEPTIONS</div>';
+
+      // Sanity: prove the fixture actually contains risky classes that are
+      // clear of every exemption, so a pass below is not vacuous.
+      expect(COVERED_CLASSES.has("text-zinc-600")).toBe(false);
+      expect(COVERED_CLASSES.has("text-zinc-700")).toBe(false);
+      expect(BASELINE_DEBT[hypotheticalRel]).toBeUndefined();
+
+      const violations = violationsForFile(hypotheticalRel, hypotheticalSource);
+
+      expect(violations).toContain("text-zinc-600 (found 1, baseline allows 0)");
+      expect(violations).toContain("text-zinc-700 (found 1, baseline allows 0)");
+    });
+
+    it("existing real dark:-paired classes in the app are already accounted for via COVERED_CLASSES or BASELINE_DEBT, never a dark: bypass", () => {
+      // Every real `dark:`-paired risky-family class currently in src/app,
+      // found the same way riskyClassesIn does (it does not special-case
+      // `dark:` either - the prefix simply precedes a normal match). Each
+      // must resolve through the ordinary mechanisms, exactly like a class
+      // with no `dark:` pairing at all.
+      const darkPairPattern =
+        /dark:((?:hover:)?(?:bg|text|border)-(?:slate|gray|zinc|neutral|stone)-(?:500|600|700|800|900|950)(?:\/\d{1,3})?)\b/g;
+
+      let sawAtLeastOne = false;
+      for (const absPath of APP_FILES) {
+        const rel = relPath(absPath);
+        const source = readFileSync(absPath, "utf-8");
+        for (const match of source.matchAll(darkPairPattern)) {
+          sawAtLeastOne = true;
+          const className = baseClass(match[1]);
+          const exceptionsForFile = new Set(
+            INTENTIONAL_EXCEPTIONS.filter((exc) => exc.file === rel).map((exc) => exc.className),
+          );
+          const covered = COVERED_CLASSES.has(className);
+          const excepted = exceptionsForFile.has(className);
+          const baselined = (BASELINE_DEBT[rel]?.[className] ?? 0) > 0;
+          expect(
+            covered || excepted || baselined,
+            `${rel}: dark:${className} is not covered, excepted, or baselined - ` +
+              `it would only pass if something is silently treating the dark: ` +
+              `prefix itself as safe, which this guard must never do`,
+          ).toBe(true);
+        }
+      }
+      // Guards this test itself: if the app-wide dark: pairing ever
+      // disappears entirely, the loop above passes vacuously.
+      expect(sawAtLeastOne).toBe(true);
+    });
+  });
 
   it("the scanner actually finds risky classes somewhere (not vacuously blind)", () => {
     // Sanity check on the whole mechanism, independent of any single file's
