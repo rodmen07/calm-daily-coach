@@ -78,7 +78,7 @@ export default function ChallengesPage(): React.JSX.Element {
         </div>
         <Link 
           href="/" 
-          className="rounded-full border border-[--line] bg-[--surface-strong] px-3.5 py-1.5 text-xs font-semibold text-[--foreground] hover:bg-slate-800 transition-colors"
+          className="rounded-full border border-[--line] bg-[--surface-strong] px-3.5 py-1.5 text-xs font-semibold text-[--foreground] hover:bg-[--panel] transition-colors"
         >
           Back Dashboard
         </Link>

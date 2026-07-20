@@ -269,7 +269,7 @@ export default function SlicerPage() {
         </div>
         <Link
           href="/"
-          className="self-start rounded-full border border-[var(--line)] bg-[var(--panel)] px-4 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-slate-800 transition-colors"
+          className="self-start rounded-full border border-[var(--line)] bg-[var(--panel)] px-4 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--field)] transition-colors"
         >
           ← Back to Dashboard
         </Link>

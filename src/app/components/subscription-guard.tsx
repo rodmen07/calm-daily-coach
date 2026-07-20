@@ -73,7 +73,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
+      <div className="flex min-h-screen items-center justify-center bg-(--background) text-[--foreground]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent border-[--accent]" />
           <p className="text-sm font-medium tracking-wide">Loading account details...</p>
@@ -154,24 +154,24 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
 
   if (isBlocked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8 rounded-2xl border border-rose-900/30 bg-slate-950 p-8 text-center shadow-2xl">
+      <div className="flex min-h-screen items-center justify-center bg-(--background) px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md space-y-8 rounded-2xl border border-rose-900/30 bg-(--panel) p-8 text-center shadow-2xl">
           <div className="space-y-2">
             <span className="inline-block rounded-full bg-rose-500/10 p-3 text-rose-500">
               <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </span>
-            <h2 className="text-3xl font-extrabold tracking-tight text-white">Your Trial Has Ended</h2>
-            <p className="text-sm text-slate-400">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[--foreground]">Your Trial Has Ended</h2>
+            <p className="text-sm text-[--muted]">
               Your 30-day free trial has expired. To continue customizing targets, executing plans, and reviewing daily focus cycles, please subscribe.
             </p>
           </div>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 mt-4">
+          <div className="rounded-xl border border-(--line) bg-(--panel)/50 p-5 mt-4">
             <p className="text-[10px] font-bold text-[--accent] uppercase tracking-wider">Premium Access</p>
-            <p className="text-3xl font-extrabold text-white mt-1">$5<span className="text-sm font-normal text-slate-400">/mo</span></p>
-            <p className="text-xs text-slate-400 mt-2">Unlimited execution timelines, custom categories, analytics review, and secure cloud backups.</p>
+            <p className="text-3xl font-extrabold text-[--foreground] mt-1">$5<span className="text-sm font-normal text-[--muted]">/mo</span></p>
+            <p className="text-xs text-[--muted] mt-2">Unlimited execution timelines, custom categories, analytics review, and secure cloud backups.</p>
           </div>
 
           <div className="mt-8 space-y-4">

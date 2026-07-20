@@ -76,7 +76,7 @@ export default function BreathePage() {
         </div>
         <Link
           href="/"
-          className="rounded-full border border-[--line] bg-[--surface-strong] px-3.5 py-1.5 text-xs font-semibold text-[--foreground] hover:bg-slate-800 transition-colors"
+          className="rounded-full border border-[--line] bg-[--surface-strong] px-3.5 py-1.5 text-xs font-semibold text-[--foreground] hover:bg-[--panel] transition-colors"
         >
           Back Dashboard
         </Link>
@@ -120,7 +120,7 @@ export default function BreathePage() {
               disabled={!running && elapsed === 0}
               className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all ${
                 running || elapsed > 0
-                  ? "border-[--line] text-[--foreground] hover:bg-slate-800 cursor-pointer"
+                  ? "border-[--line] text-[--foreground] hover:bg-[--panel] cursor-pointer"
                   : "border-[--line] text-[--muted] cursor-not-allowed opacity-40"
               }`}
             >
