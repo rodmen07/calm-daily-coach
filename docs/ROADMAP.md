@@ -261,7 +261,7 @@ against it: [docs/design/JOURNAL_FIRESTORE_SYNC.md](design/JOURNAL_FIRESTORE_SYN
   `npm run build` are green on the quality-gate check. **Confirmed met**: all
   four conditions verified green on PR #89 and re-verified on PR #90.
 
-### v0.10 - Theme consistency: close light/dark rendering gaps + regression guard (agent-doable now)
+### v0.10 - Theme consistency: close light/dark rendering gaps + regression guard (DONE)
 
 Defined 2026-07-20 (product-role increment) after auditing the backlog's
 unscheduled candidates - a performance pass, general polish, Playwright E2E -
@@ -276,6 +276,23 @@ Full audit, technical plan, and done-when:
 in that document is an explicitly flagged, overridable default, not a hard
 review gate.
 
+- DONE (2026-07-20, PR #93): fixed all five (not three - the audit found a
+  5th live occurrence while sweeping the whole `hover:bg-slate-800` surface)
+  nav-button hover-contrast occurrences, made `subscription-guard.tsx`
+  theme-aware (the one genuine product call in this milestone) and added a
+  new `--accent-foreground` token after a pre-merge check caught the Subscribe
+  button still hardcoding low-contrast text, fixed `focus/page.tsx`'s
+  hardcoded `bg-white/70` callout, and added
+  `src/app/__tests__/theme-token-guard.test.ts` as the new regression guard.
+  296 tests (was 267). package.json bumped to 0.10.0.
+- DONE (2026-07-20, PR #94, QA hardening pass): fixed a live instance of the
+  guard's target defect class in `MeditationList.tsx` (inline `style` colors,
+  invisible to the guard's className-only regex), corrected the guard's
+  undercounted baseline-debt figure with a self-checking
+  `BASELINE_DEBT_TOTAL` constant, and corrected THEME_CONSISTENCY.md's
+  unsound `dark:`-exemption claim (this app's `dark:` tracks
+  `prefers-color-scheme`, not the in-app theme toggle, so nothing was
+  actually being wrongly exempted). 304 tests.
 - Fix three `hover:bg-slate-800` occurrences (`ambient/page.tsx`,
   `breathe/page.tsx` x2, `challenges/page.tsx`) that read fine in dark mode
   but produce near-invisible dark-on-dark hover contrast in light mode.
@@ -297,14 +314,58 @@ review gate.
   verified to actually fail against the pre-fix state, and `npm run lint`,
   `npm run typecheck`, `npm test`, and `npm run build` are green on the
   quality-gate check. package.json bumps to 0.10.0 in the implementation PR,
-  not in this definition.
+  not in this definition. **Confirmed met**: all conditions verified green on
+  PR #93 and re-verified on PR #94.
+
+### v0.11 - Trends: a longer-horizon insight view (agent-doable now)
+
+Defined 2026-07-20 (product-role increment). Every "trend" the app shows
+today is a single rolling 7-day window compared against the prior 7 days
+(`getWeekOverWeekChange` in
+[src/lib/review-insights.ts](../src/lib/review-insights.ts)); the underlying
+check-in history is retained in full (locally and in Firestore) but nothing
+reads more than fourteen days of it. This milestone is a genuinely new
+surface - a `/trends` page - not a polish pass on an existing one, and it
+was chosen over four other candidates (cross-device continuity's one
+remaining gap, reminder-reach expansion via push notifications, planner
+forward-planning, and journal/check-in cross-referencing) specifically
+because it needed no new backend, no new Firestore rule, and no console
+gate to be agent-doable right now. See the full audit, technical plan, and
+done-when in
+[docs/design/TRENDS_OVER_TIME.md](design/TRENDS_OVER_TIME.md); every choice
+in that document is an explicitly flagged, overridable default.
+
+- Add a 28-day (4-week) trend summary read through the existing
+  `CheckinStoreAdapter` (`src/lib/checkin-store.ts`), never through a direct
+  `browser-checkins.ts` call - see the design doc section 2 for a real bug
+  found in `review/page.tsx` that took the direct-call shortcut and silently
+  shows empty data for signed-in Firestore users as a result (filed in the
+  backlog `## Bugs` section, not fixed by this milestone).
+- New `src/lib/trend-insights.ts`: weekly bucketing, overall completion rate,
+  dose distribution, and a calm narrative with no streak-shaped language.
+- New `/trends` page (nav link + `g` then `t` keyboard chord), reusing
+  existing CSS primitives (`progress-track`, `summary-card`, `focus-row`) and
+  the existing `CalmEmptyState variant="insights"` - no new chart library, no
+  new illustration.
+- Done when: the done-when checklist in
+  [docs/design/TRENDS_OVER_TIME.md section 5](design/TRENDS_OVER_TIME.md#5-done-when-checkable)
+  is fully met and `npm run lint`, `npm run typecheck`, `npm test`, and
+  `npm run build` are green on the quality-gate check. package.json bumps to
+  0.11.0 in the implementation PR, not in this definition.
 
 ## Later / candidates (unscheduled)
 
 Valid direction from AUTONOMOUS_IMPLEMENTATION_PLAN.md Phases 4 to 6 and the
 monetization ladder, plus housekeeping. Nothing here is scheduled until v0.2 through
-v0.10 land.
+v0.11 land.
 
+- Reminder reach expansion: real push notifications via Firebase Cloud
+  Messaging (still BaaS-only, no dedicated server), identified as a
+  candidate while scoping v0.11 (see
+  [docs/design/TRENDS_OVER_TIME.md](design/TRENDS_OVER_TIME.md) section 1).
+  Needs a service worker plus console-side FCM/VAPID-key setup, so it carries
+  multiple USER-ONLY gates before any code is exercisable - not agent-doable
+  now, unlike the milestones above it.
 - Performance pass: bundle analysis, web-vitals instrumentation, Firebase SDK load
   optimization (AUTONOMOUS plan Phase 4).
 - Security hardening: replace the untouched template SECURITY.md with a real policy,
@@ -395,3 +456,20 @@ User-only (paid-account and console actions an agent must not perform):
   auditing the unscheduled candidates and finding none milestone-shaped as
   worded; the audit that produced v0.10 read the app's real component code
   and CSS rather than proposing polish in the abstract.
+- 2026-07-20 milestone definition (product-role increment): v0.10's own
+  header still read "(agent-doable now)" despite PRs #93 and #94 both being
+  merged and package.json reading 0.10.0 - corrected to "(DONE)" above with
+  the same DONE-bullet treatment v0.8/v0.9 already use. v0.11 (Trends: a
+  longer-horizon insight view) defined below and in
+  [docs/design/TRENDS_OVER_TIME.md](design/TRENDS_OVER_TIME.md), chosen over
+  four other candidates (closing the journal guest-migration gap, expanding
+  reminder reach via push notifications, planner forward-planning, and
+  journal/check-in cross-referencing) specifically for being a genuine new
+  surface with no backend, no new Firestore rule, and no console gate
+  standing in front of it. Tracing the current 7-day-only "trend" ceiling
+  also surfaced a real bug (`review/page.tsx` reads check-in history via a
+  direct `browser-checkins.ts` call instead of the `CheckinStoreAdapter`, so
+  its week-over-week and skip-reason panels silently show empty data for
+  signed-in Firestore-synced users) - filed in the backlog `## Bugs` section,
+  not fixed here, and the new milestone's own technical plan is written to
+  avoid repeating it.
