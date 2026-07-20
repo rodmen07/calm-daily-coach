@@ -626,6 +626,13 @@ export default function SlicerPage() {
                       >
                         <div className="flex items-start gap-3 min-w-0 flex-1 pr-4">
                           <button
+                            type="button"
+                            aria-pressed={s.completed}
+                            aria-label={
+                              s.completed
+                                ? `Mark step ${idx + 1} not done`
+                                : `Mark step ${idx + 1} done`
+                            }
                             onClick={() => handleToggleStep(activeTask.id, s.id)}
                             className={`mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
                               s.completed
@@ -636,7 +643,7 @@ export default function SlicerPage() {
                             }`}
                           >
                             {s.completed && (
-                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.5" d="M5 13l4 4L19 7" />
                               </svg>
                             )}

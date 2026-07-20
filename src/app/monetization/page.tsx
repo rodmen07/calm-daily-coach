@@ -37,7 +37,7 @@ export default function MonetizationPage() {
 
   return (
     <div className="page-shell">
-      <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
         <section className="panel animate-status-rise">
           <p className="eyebrow">Monetization</p>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">Conversion analytics snapshot</h1>
@@ -125,7 +125,7 @@ export default function MonetizationPage() {
             </Link>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

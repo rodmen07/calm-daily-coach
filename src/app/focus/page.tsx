@@ -40,7 +40,7 @@ export default function FocusPage() {
 
   return (
     <div className="page-shell">
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         <SwipeStepCard
           stepLabel="Step 1"
           title="Set your focus"
@@ -201,7 +201,7 @@ export default function FocusPage() {
           </section>
         ) : null}
         </SwipeStepCard>
-      </main>
+      </div>
     </div>
   );
 }
