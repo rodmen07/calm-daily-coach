@@ -198,7 +198,7 @@ export default function ReviewPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-(--line) bg-(--field) p-4 mt-4 text-sm text-slate-700 dark:text-slate-300">
+            <div className="rounded-xl border border-(--line) bg-(--field) p-4 mt-4 text-sm text-slate-700">
               <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-sm shrink-0" aria-hidden="true">✨</span>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Coach insights & patterns</p>
@@ -207,7 +207,7 @@ export default function ReviewPage() {
             </div>
 
             {weekOverWeek && (
-              <div className="rounded-xl border border-(--line) bg-(--field) p-4 mt-4 text-sm text-slate-700 dark:text-slate-300">
+              <div className="rounded-xl border border-(--line) bg-(--field) p-4 mt-4 text-sm text-slate-700">
                 <div className="flex items-center gap-1.5 mb-2">
                   <span className="text-sm shrink-0" aria-hidden="true">🔁</span>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">What changed this week</p>

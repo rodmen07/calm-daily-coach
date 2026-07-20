@@ -210,7 +210,7 @@ export default function TrendsPage() {
                 </div>
               )}
 
-              <div className="rounded-xl border border-(--line) bg-(--field) p-4 text-sm text-slate-700 dark:text-slate-300">
+              <div className="rounded-xl border border-(--line) bg-(--field) p-4 text-sm text-slate-700">
                 <div className="mb-2 flex items-center gap-1.5">
                   <span className="text-sm shrink-0" aria-hidden="true">
                     ✨

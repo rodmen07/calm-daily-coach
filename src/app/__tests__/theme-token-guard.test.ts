@@ -372,39 +372,113 @@ describe("theme-token drift guard", () => {
       expect(violations).toContain("text-zinc-700 (found 1, baseline allows 0)");
     });
 
-    it("existing real dark:-paired classes in the app are already accounted for via COVERED_CLASSES or BASELINE_DEBT, never a dark: bypass", () => {
-      // Every real `dark:`-paired risky-family class currently in src/app,
-      // found the same way riskyClassesIn does (it does not special-case
-      // `dark:` either - the prefix simply precedes a normal match). Each
-      // must resolve through the ordinary mechanisms, exactly like a class
-      // with no `dark:` pairing at all.
-      const darkPairPattern =
-        /dark:((?:hover:)?(?:bg|text|border)-(?:slate|gray|zinc|neutral|stone)-(?:500|600|700|800|900|950)(?:\/\d{1,3})?)\b/g;
+    // Shade range includes 300 (widened from the 500-950 RISKY_FAMILY_PATTERN
+    // range used elsewhere in this file) because of a real shipped defect
+    // (found during the v0.11 Trends audit, fixed 2026-07-20): a literal
+    // `text-slate-700 dark:text-slate-300` (or `text-slate-400 dark:
+    // text-slate-300`) pairing appeared 7 times across review/pricing/
+    // execute/trends. `text-slate-300` sits below 500, so it was invisible to
+    // every mechanism above - COVERED_CLASSES, BASELINE_DEBT, and this guard
+    // alike - even though it is exactly the kind of `dark:`-paired literal
+    // this describe block exists to catch. The bug was real: this app's
+    // `dark:` variant tracks the OS `prefers-color-scheme` media query, not
+    // `html[data-theme]`, so with the app in light theme and the OS set to
+    // dark, `dark:text-slate-300` won the cascade by source order over an
+    // already-AA-safe base class, rendering ~1.4:1 contrast text. 300 is
+    // added here, specifically and only for this shade-300 partner, not the
+    // general 500-950 sweep, so this guard's blast radius matches exactly
+    // what was verified fixed.
+    //
+    // 400 is deliberately NOT added yet: widening to 400 here would also
+    // newly flag 6 additional real `dark:text-slate-400` occurrences
+    // (page.tsx, pricing/page.tsx x2, review/page.tsx x2) that share the
+    // identical root cause but were out of scope for this fix - see the
+    // backlog's `## Bugs` section (calm-daily-coach.md) for that follow-up.
+    const DARK_PAIR_PATTERN =
+      /dark:((?:hover:)?(?:bg|text|border)-(?:slate|gray|zinc|neutral|stone)-(?:300|500|600|700|800|900|950)(?:\/\d{1,3})?)\b/g;
 
+    /**
+     * Every `dark:`-paired risky-family class in `source` (DARK_PAIR_PATTERN,
+     * above) that is NOT accounted for via COVERED_CLASSES, an
+     * INTENTIONAL_EXCEPTIONS entry for `rel`, or a BASELINE_DEBT ceiling for
+     * `rel` - the same three mechanisms violationsForFile checks, applied to
+     * `dark:`-prefixed matches specifically. Factored out so the synthetic
+     * regression test below runs the identical, real mechanism against
+     * fabricated source instead of duplicating (and risking silently
+     * diverging from) the logic the real-app scan uses - the same discipline
+     * violationsForFile follows for the general Source-A checks above.
+     */
+    function unaccountedDarkPairsIn(rel: string, source: string): string[] {
+      const exceptionsForFile = new Set(
+        INTENTIONAL_EXCEPTIONS.filter((exc) => exc.file === rel).map((exc) => exc.className),
+      );
+      const unaccounted: string[] = [];
+      for (const match of source.matchAll(DARK_PAIR_PATTERN)) {
+        const className = baseClass(match[1]);
+        const covered = COVERED_CLASSES.has(className);
+        const excepted = exceptionsForFile.has(className);
+        const baselined = (BASELINE_DEBT[rel]?.[className] ?? 0) > 0;
+        if (!(covered || excepted || baselined)) unaccounted.push(className);
+      }
+      return unaccounted;
+    }
+
+    it("existing real dark:-paired classes in the app are already accounted for via COVERED_CLASSES or BASELINE_DEBT, never a dark: bypass", () => {
+      // Every real `dark:`-paired risky-family class currently in src/app
+      // must resolve through the ordinary mechanisms, exactly like a class
+      // with no `dark:` pairing at all - see unaccountedDarkPairsIn above for
+      // the shade-range rationale.
       let sawAtLeastOne = false;
       for (const absPath of APP_FILES) {
         const rel = relPath(absPath);
         const source = readFileSync(absPath, "utf-8");
-        for (const match of source.matchAll(darkPairPattern)) {
-          sawAtLeastOne = true;
-          const className = baseClass(match[1]);
-          const exceptionsForFile = new Set(
-            INTENTIONAL_EXCEPTIONS.filter((exc) => exc.file === rel).map((exc) => exc.className),
-          );
-          const covered = COVERED_CLASSES.has(className);
-          const excepted = exceptionsForFile.has(className);
-          const baselined = (BASELINE_DEBT[rel]?.[className] ?? 0) > 0;
-          expect(
-            covered || excepted || baselined,
-            `${rel}: dark:${className} is not covered, excepted, or baselined - ` +
-              `it would only pass if something is silently treating the dark: ` +
-              `prefix itself as safe, which this guard must never do`,
-          ).toBe(true);
-        }
+        if (source.match(DARK_PAIR_PATTERN)) sawAtLeastOne = true;
+        const unaccounted = unaccountedDarkPairsIn(rel, source);
+        expect(
+          unaccounted,
+          unaccounted.length === 0
+            ? ""
+            : `${rel}: dark:${unaccounted.join(", dark:")} is not covered, excepted, or ` +
+              `baselined - it would only pass if something is silently treating the ` +
+              `dark: prefix itself as safe, which this guard must never do`,
+        ).toEqual([]);
       }
       // Guards this test itself: if the app-wide dark: pairing ever
       // disappears entirely, the loop above passes vacuously.
       expect(sawAtLeastOne).toBe(true);
+    });
+
+    it("would have caught the shipped text-slate-700(or 400) dark:text-slate-300 contrast bug (regression)", () => {
+      // Reproduces the exact shape of the real, shipped defect fixed
+      // 2026-07-20 in review/page.tsx (x2), pricing/page.tsx, execute/page.tsx
+      // (x3), and trends/page.tsx (x1): a `dark:text-slate-300` pair with no
+      // `html[data-theme="dark"] .text-slate-300` override anywhere in
+      // globals.css (slate-300 is a light shade never meant to be a dark-mode
+      // override target, which is exactly why it is dangerous as a `dark:`
+      // partner - it wins the cascade whenever the OS reports dark regardless
+      // of the app's own light/dark toggle). The fixture's base class
+      // (text-slate-700) IS covered - that alone used to be irrelevant to
+      // this mechanism, since only the paired class after `dark:` is checked
+      // - but it is the paired class, text-slate-300, that must fail here.
+      //
+      // Verified concretely, not just asserted: reverted the trends/page.tsx
+      // fix locally (restored ` dark:text-slate-300` on its one occurrence),
+      // ran this file's suite, watched this exact test fail with `trends`
+      // absent from unaccountedDarkPairsIn's real-app equivalent (the test
+      // above) reporting `text-slate-300` unaccounted, then restored the fix
+      // and re-ran to confirm green.
+      const hypotheticalRel = "src/app/__fixtures__/hypothetical-light-dark-pair.tsx";
+      const hypotheticalSource =
+        '<div className="rounded-xl border p-4 text-sm text-slate-700 dark:text-slate-300">not a real file, mirrors the shipped defect shape</div>';
+
+      // Sanity: prove the fixture's paired class is genuinely unexempted, so
+      // a failure below would be real and not vacuous.
+      expect(COVERED_CLASSES.has("text-slate-300")).toBe(false);
+      expect(BASELINE_DEBT[hypotheticalRel]).toBeUndefined();
+
+      expect(unaccountedDarkPairsIn(hypotheticalRel, hypotheticalSource)).toContain(
+        "text-slate-300",
+      );
     });
   });
 

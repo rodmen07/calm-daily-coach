@@ -34,7 +34,7 @@ export default function PricingPage() {
               Continuous focus cycles, action target customizations, weekly performance reviews, and automatic secure cloud syncing.
             </p>
 
-            <ul className="text-left space-y-2 text-xs text-slate-700 dark:text-slate-300 my-5 border-t border-slate-200 dark:border-slate-800 pt-4">
+            <ul className="text-left space-y-2 text-xs text-slate-700 my-5 border-t border-slate-200 dark:border-slate-800 pt-4">
               <li className="flex items-center gap-1.5">
                 <span className="text-[--accent]" aria-hidden="true">✓</span>
                 <span>Unrestricted daily cycle timelines</span>
