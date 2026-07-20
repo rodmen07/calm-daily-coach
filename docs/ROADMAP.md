@@ -1,16 +1,27 @@
 # Focus (Calm Daily Coach) - Product Roadmap
 
-Canonical forward roadmap as of 2026-07-18. This document supersedes the forward-looking
-sections of docs/FRONTEND_FUNCTIONALITY_PLAN.md, docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md,
-and docs/MONETIZATION_PLAN.md; those files remain as historical records with status banners.
+Canonical forward roadmap, last audited against real git/gh state 2026-07-20. This
+document supersedes the forward-looking sections of docs/FRONTEND_FUNCTIONALITY_PLAN.md,
+docs/AUTONOMOUS_IMPLEMENTATION_PLAN.md, and docs/MONETIZATION_PLAN.md; those files remain
+as historical records with status banners.
+
+## Direction (user, 2026-07-19)
+
+Development focus is **frontend, UI, and UX**. Backend-leaning work (Stripe webhooks,
+entitlement server logic) is explicitly deprioritized until the user redirects; see the
+v0.5 entry below. This applies to every milestone in this document, not just the one it
+is written next to.
 
 ## Versioning convention
 
 - Delivery is PR-based: releases are tracked by merged PR number on `main`, deployed
   automatically to GitHub Pages. There are no git tags.
 - package.json has stayed at 0.1.0 since the project started. Starting with the roadmap
-  consolidation PR, package.json is bumped once per roadmap milestone (0.2.0, 0.3.0, ...),
-  targeting roughly one minor version per week.
+  consolidation PR, package.json is bumped once per shipped milestone, targeting roughly
+  one minor version per week. In practice this has not been a strict 1:1 sequence: v0.3
+  (reminder delivery, PRs #80-#81) shipped without its own bump, so package.json stayed
+  at 0.2.0 through v0.3 and moved directly to 0.4.0 when v0.4 shipped. Treat "one bump
+  per shipped feature milestone" as the rule, not "every integer gets used."
 - Milestones below are sized so each ships as one or two small PRs, matching the
   autonomous one-increment-per-run dev workflow.
 
@@ -21,7 +32,7 @@ and docs/MONETIZATION_PLAN.md; those files remain as historical records with sta
 - Daily dose cap stays enforced.
 - Calm, ADHD friendly UX: opt-in nudges only, no guilt or escalation mechanics.
 
-## Current state (2026-07-18)
+## Current state (2026-07-20)
 
 - App: "Focus: Your ADHD friendly self-improvement coach" (rebranded from Calm Daily
   Coach in PR #59). Next.js 16 / React 19 TypeScript static export on GitHub Pages at
@@ -31,11 +42,20 @@ and docs/MONETIZATION_PLAN.md; those files remain as historical records with sta
   Firebase-configured deployments and to localStorage otherwise; explicit
   `local|firestore` values still force their mode. Automatic local fallback and
   idempotent guest-to-account migration are unchanged. Signed-out and
-  Firebase-less usage stays localStorage-only.
+  Firebase-less usage stays localStorage-only. Gratitude journal entries (v0.7) remain
+  localStorage-only; see v0.9 below.
 - Monetization: single $5/month membership after a 30-day free trial. Stripe Payment
   Link billing scaffolding shipped in PR #77 (src/lib/billing.ts,
   `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`, `client_reference_id` plus `prefilled_email`
-  attribution, mailto fallback). Entitlement flips are manual in Firestore for now.
+  attribution, mailto fallback). Entitlement flips are manual in Firestore for now, and
+  automating that flip (v0.5) is deprioritized per the direction above.
+- Quality gate: PR #86 (2026-07-19) consolidated CI into a single required job (lint,
+  typecheck, tests, build) so the branch-protection check now actually gates all of
+  them; it previously gated only lint and build.
+- Accessibility: PR #87 (2026-07-20, v0.8) added a global focus-visible ring, a
+  skip-to-content link, a reduced-motion reset that covers every animated surface (it
+  had previously only covered some), a single layout `<main>` landmark, aria-current
+  navigation, and fixed an icon-only checkbox with no accessible name.
 - PRs #69 through #77 all merged on 2026-07-18 (highest number is #77; the final merge
   to main that day was #76): automation PR reliability (#69), dev-agent backlog
   hygiene (#70), ReminderSettingsPanel (#71), sync-badge backend-mode fix (#72),
@@ -105,7 +125,13 @@ Status (2026-07-19): agent-side work implemented; awaiting the USER-ONLY items b
 - Done when: a fresh deploy defaults to Firestore sync for signed-in users, falls back
   to local cleanly when Firestore is unreachable, and the security rules doc is merged.
 
-### v0.5 - Entitlement: webhook design and client-side membership state (target week of 2026-08-15)
+### v0.5 - Entitlement: webhook design and client-side membership state (DEPRIORITIZED)
+
+**Status (2026-07-19): DEPRIORITIZED.** The user's frontend/UI-UX direction (see
+"Direction" above) explicitly deprioritizes backend-leaning work including this
+milestone. The version number 0.5 stays reserved for it; nothing below is scheduled
+until the user redirects. This is why the old v0.9 ("paid-value expansion," gated on
+this milestone's approval) has been re-slotted; see v0.9 below.
 
 Monetization ladder step 4. The static site cannot receive Stripe webhooks, so
 automation needs a design doc first; meanwhile the client can honestly read the
@@ -166,11 +192,67 @@ Agent-doable now. A single small PR, matching the one-or-two-PR milestone size.
 - Done when: the journal PR is merged with tests and the surface enforces the
   one-entry-per-day bound.
 
+### v0.8 - Accessibility, focus-state, and reduced-motion pass (DONE)
+
+Scheduled QA-stream audit (see "Standing streams" in the backlog), landed as a
+milestone since it touched every interactive surface in the app.
+
+- DONE (2026-07-20, PR #87): global focus-visible ring replacing two ad hoc rules,
+  a skip-to-content link, a reduced-motion reset covering every inline Tailwind
+  `animate-*`/`transition-*` class (the old block missed the dashboard counters,
+  slicer confetti/bounce/ping, breathe pacer, sync-badge pulse, and
+  subscription-guard spinner), a single layout `<main id="main-content">` (was 7
+  duplicate per-page mains), aria-current navigation via a new `site-nav.tsx`, and a
+  real accessibility bug fixed (the slicer step-toggle checkbox had no accessible
+  name when unchecked). 249 to 257 tests. package.json bumped to 0.8.0.
+- Worth an eyeball live: the subscription-guard spinner freezes under reduced
+  motion (expected behavior, but confirm it does not read as stuck).
+- Done when: the PR is merged with tests and no new interactive surface regresses
+  keyboard reachability or a visible focus state.
+
+### v0.9 - Gratitude journal Firestore sync (agent-doable now)
+
+Re-slotted 2026-07-20: the previously-defined v0.9 ("paid-value expansion design
+doc") was gated behind v0.5 entitlement-design approval, which is itself
+deprioritized per the direction above with no re-approval date, so it was not a
+real next milestone. This replacement has no backend/entitlement dependency: it
+extends the same client-side Firestore pattern v0.4 already shipped
+(`src/lib/firestore-checkins.ts` calls the `firebase/firestore` client SDK
+directly, no server component) to the gratitude journal, which has been
+localStorage-only since v0.7 by deliberate, documented choice pending exactly this
+work.
+
+Full design, safety argument, scope boundaries, and the candidates considered
+against it: [docs/design/JOURNAL_FIRESTORE_SYNC.md](design/JOURNAL_FIRESTORE_SYNC.md).
+Every choice in that document is an explicitly flagged, overridable default, not a
+hard review gate.
+
+- Add `src/lib/firestore-journal.ts` (client SDK only) and a backend-resolution
+  adapter for the journal mirroring `checkin-store.ts`'s
+  `resolveCheckinBackend` / `createCheckinStore` shape (local, firestore, and a
+  safe firestore-fallback on any error).
+- Document a `users/{uid}/journal/{entryId}` ruleset in
+  [docs/FIRESTORE_RULES.md](FIRESTORE_RULES.md), owner-only, consistent with the
+  existing deny-by-default posture.
+- Explicitly out of scope for v0.9 (keeps this a 1-PR milestone): guest-to-account
+  migration of existing localStorage journal entries; a separate
+  `NEXT_PUBLIC_JOURNAL_BACKEND` toggle (reuses the existing
+  `NEXT_PUBLIC_CHECKIN_BACKEND` resolution policy by default).
+- USER-ONLY, does not block merge: publish the updated ruleset in the Firebase
+  console. Until then, writes to the undeclared path are denied by the currently
+  live rules and the adapter's existing fallback-on-error path keeps everything on
+  localStorage exactly as it behaves today, so shipping the code first is safe.
+- Done when: the adapter and resolution tests pass (mirroring
+  `checkin-store.test.ts`'s coverage of local/firestore/fallback/override), the
+  rules doc is updated, and `npm run lint`, `npm run typecheck`, `npm test`, and
+  `npm run build` are green on the quality-gate check. package.json bumps to
+  0.9.0 in that implementation PR, not in this roadmap-audit PR.
+
 ## Later / candidates (unscheduled)
 
 Valid direction from AUTONOMOUS_IMPLEMENTATION_PLAN.md Phases 4 to 6 and the
 monetization ladder, plus housekeeping. Nothing here is scheduled until v0.2 through
-v0.7 land.
+v0.9 land.
 
 - Performance pass: bundle analysis, web-vitals instrumentation, Firebase SDK load
   optimization (AUTONOMOUS plan Phase 4).
@@ -183,10 +265,13 @@ v0.7 land.
   static export has no server routes to run it.
 - Paid value expansion (advanced weekly narratives, cloud restore): deferred until
   entitlement automation ships.
-- Gratitude journal cloud sync: move journal entries onto the check-in style
-  Firestore adapter once a users/{uid}/journal ruleset is documented next to
-  docs/FIRESTORE_RULES.md and deployed in the console (deploy is USER-ONLY).
-  Until then the journal stays localStorage-only by design.
+- checkinStatus dashboard persistence (LOW bug, backlog `## Bugs`): the ProgressRing
+  resets to 50 percent on reload instead of persisting the 100 percent check-in state,
+  because checkinStatus is in-memory per page mount. Small standalone fix, not
+  milestone-sized; considered and set aside for v0.9 in favor of journal sync (see
+  docs/design/JOURNAL_FIRESTORE_SYNC.md section 1) but not forgotten.
+- ~~Gratitude journal cloud sync~~: promoted out of this list into v0.9 above
+  (2026-07-20); no longer just a candidate.
 
 ## Blocked and user-only summary
 
@@ -196,7 +281,8 @@ Blocked (with reasons):
   user; a static GitHub Pages site cannot run background schedulers itself.
 - Stripe webhook entitlement implementation: blocked on the v0.5 design doc approval
   and on the user provisioning Firebase Functions billing; a static site cannot
-  receive webhooks.
+  receive webhooks. As of 2026-07-19, v0.5 itself is deprioritized per the user's
+  frontend/UI-UX direction, so this has no active target date at all right now.
 - Rust coach bridge deployment (`NEXT_PUBLIC_RUST_COACH_BRIDGE_URL`): blocked; no
   backend exists to host it. The portfolio GCP/Fly infrastructure was decommissioned
   to zero on 2026-06-04 with all runtime data gone, so any idea that assumed reusing
@@ -232,3 +318,12 @@ User-only (paid-account and console actions an agent must not perform):
   expansion) carry forward as v0.5 and "Later / candidates".
 - Challenge streaks shipped in PR #53 were deliberately removed in PR #73 to honor the
   no-streak-pressure promise; any roadmap item implying streaks is off-limits.
+- 2026-07-20 roadmap audit (product-role increment): this document had no v0.8 section
+  at all despite v0.8 (PR #87, accessibility pass) being merged and package.json reading
+  0.8.0, and it did not mention the 2026-07-19 frontend-direction memo anywhere, so a
+  reader could not tell v0.5 was deprioritized from this file alone. Both are corrected
+  above. The backlog's v0.9 ("paid-value expansion," gated on v0.5 approval) was also
+  found to be stuck behind a deprioritized dependency with no re-approval date; v0.9 is
+  re-slotted to gratitude journal Firestore sync (see v0.9 above and
+  [docs/design/JOURNAL_FIRESTORE_SYNC.md](design/JOURNAL_FIRESTORE_SYNC.md)), and paid-value
+  expansion remains valid future direction under "Later / candidates," unchanged.
