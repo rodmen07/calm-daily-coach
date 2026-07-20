@@ -42,8 +42,13 @@ is written next to.
   Firebase-configured deployments and to localStorage otherwise; explicit
   `local|firestore` values still force their mode. Automatic local fallback and
   idempotent guest-to-account migration are unchanged. Signed-out and
-  Firebase-less usage stays localStorage-only. Gratitude journal entries (v0.7) remain
-  localStorage-only; see v0.9 below.
+  Firebase-less usage stays localStorage-only. Gratitude journal entries (v0.7)
+  gained the same adapter in v0.9 (PR #89, hardened in PR #90): the code path
+  for signed-in, Firebase-configured sync exists and is tested, reusing this
+  same resolution policy with no separate toggle. Live behavior is still
+  local-fallback for every real user today because the updated Firestore rules
+  have not been published in the console yet (USER-ONLY, see below); once
+  published, journal entries sync exactly like check-ins do.
 - Monetization: single $5/month membership after a 30-day free trial. Stripe Payment
   Link billing scaffolding shipped in PR #77 (src/lib/billing.ts,
   `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`, `client_reference_id` plus `prefilled_email`
@@ -210,7 +215,7 @@ milestone since it touched every interactive surface in the app.
 - Done when: the PR is merged with tests and no new interactive surface regresses
   keyboard reachability or a visible focus state.
 
-### v0.9 - Gratitude journal Firestore sync (agent-doable now)
+### v0.9 - Gratitude journal Firestore sync (DONE)
 
 Re-slotted 2026-07-20: the previously-defined v0.9 ("paid-value expansion design
 doc") was gated behind v0.5 entitlement-design approval, which is itself
@@ -218,41 +223,87 @@ deprioritized per the direction above with no re-approval date, so it was not a
 real next milestone. This replacement has no backend/entitlement dependency: it
 extends the same client-side Firestore pattern v0.4 already shipped
 (`src/lib/firestore-checkins.ts` calls the `firebase/firestore` client SDK
-directly, no server component) to the gratitude journal, which has been
+directly, no server component) to the gratitude journal, which had been
 localStorage-only since v0.7 by deliberate, documented choice pending exactly this
 work.
 
 Full design, safety argument, scope boundaries, and the candidates considered
 against it: [docs/design/JOURNAL_FIRESTORE_SYNC.md](design/JOURNAL_FIRESTORE_SYNC.md).
-Every choice in that document is an explicitly flagged, overridable default, not a
-hard review gate.
 
-- Add `src/lib/firestore-journal.ts` (client SDK only) and a backend-resolution
-  adapter for the journal mirroring `checkin-store.ts`'s
-  `resolveCheckinBackend` / `createCheckinStore` shape (local, firestore, and a
-  safe firestore-fallback on any error).
-- Document a `users/{uid}/journal/{entryId}` ruleset in
-  [docs/FIRESTORE_RULES.md](FIRESTORE_RULES.md), owner-only, consistent with the
-  existing deny-by-default posture.
-- Explicitly out of scope for v0.9 (keeps this a 1-PR milestone): guest-to-account
-  migration of existing localStorage journal entries; a separate
-  `NEXT_PUBLIC_JOURNAL_BACKEND` toggle (reuses the existing
-  `NEXT_PUBLIC_CHECKIN_BACKEND` resolution policy by default).
-- USER-ONLY, does not block merge: publish the updated ruleset in the Firebase
-  console. Until then, writes to the undeclared path are denied by the currently
-  live rules and the adapter's existing fallback-on-error path keeps everything on
-  localStorage exactly as it behaves today, so shipping the code first is safe.
+- DONE (2026-07-20, PR #89): `src/lib/firestore-journal.ts` (client SDK only,
+  upsert-by-date-key against `users/{uid}/journal/{entryId}`) plus
+  `src/lib/journal-store.ts`, a backend-resolution adapter reusing
+  `resolveCheckinBackend` / `NEXT_PUBLIC_CHECKIN_BACKEND` directly (no new env
+  var), with local / firestore / firestore-fallback semantics mirroring
+  `checkin-store.ts`. `docs/FIRESTORE_RULES.md` gained the
+  `users/{uid}/journal/{entryId}` match block (owner-only read/create/update,
+  delete denied). `src/app/journal/page.tsx` was rewired to create its store
+  via `createJournalStore` and route load/save through the async adapter
+  (a pre-merge verification pass found the adapter had been built but never
+  wired into the page, and the fix landed in the same PR before merge).
+  package.json bumped to 0.9.0.
+- DONE (2026-07-20, PR #90, QA hardening pass): added the missing
+  firestore-fallback test coverage, fixed a stale module docstring, and added
+  a malformed-document field-presence check to `listFirestoreJournalEntries`
+  (dates/text validated before use, matching `firestore-checkins.ts`'s
+  existing pattern) with a new direct-SDK-mock test file proving the skip.
+  261 to 267 tests total.
+- Guest-to-account journal migration stayed explicitly out of scope, matching
+  the design doc.
+- USER-ONLY, does not block anything already merged: publishing the updated
+  ruleset in the Firebase console is still outstanding. Until then, journal
+  writes hit the currently-live rules (no journal match block yet), and the
+  adapter's fallback-on-error path keeps entries on localStorage exactly as
+  they behave today - no data loss, no visible breakage.
 - Done when: the adapter and resolution tests pass (mirroring
   `checkin-store.test.ts`'s coverage of local/firestore/fallback/override), the
   rules doc is updated, and `npm run lint`, `npm run typecheck`, `npm test`, and
-  `npm run build` are green on the quality-gate check. package.json bumps to
-  0.9.0 in that implementation PR, not in this roadmap-audit PR.
+  `npm run build` are green on the quality-gate check. **Confirmed met**: all
+  four conditions verified green on PR #89 and re-verified on PR #90.
+
+### v0.10 - Theme consistency: close light/dark rendering gaps + regression guard (agent-doable now)
+
+Defined 2026-07-20 (product-role increment) after auditing the backlog's
+unscheduled candidates - a performance pass, general polish, Playwright E2E -
+and finding none of them milestone-shaped as worded (see the design doc's
+section 1 for why each was set aside). Reading the app's actual theming
+architecture (`globals.css` plus every route's real markup) against itself
+found real, currently-shipped light/dark rendering defects instead of a
+hypothetical polish target.
+
+Full audit, technical plan, and done-when:
+[docs/design/THEME_CONSISTENCY.md](design/THEME_CONSISTENCY.md). Every choice
+in that document is an explicitly flagged, overridable default, not a hard
+review gate.
+
+- Fix three `hover:bg-slate-800` occurrences (`ambient/page.tsx`,
+  `breathe/page.tsx` x2, `challenges/page.tsx`) that read fine in dark mode
+  but produce near-invisible dark-on-dark hover contrast in light mode.
+- Resolve `subscription-guard.tsx`'s fixed-dark paywall screen one way or the
+  other (default: make it theme-aware using the app's existing tokens;
+  overridable: keep it deliberately fixed-dark as a recorded decision) - the
+  one genuine product call in this milestone.
+- Fix `focus/page.tsx`'s hardcoded `bg-white/70` callout nested in an
+  otherwise theme-token-driven card.
+- Add a regression-guard test that reads the app's literal color-class usage
+  and `globals.css`'s override allowlist as two sources that must agree, so a
+  future page can't silently ship broken in one theme the way these three did.
+- Explicitly out of scope for v0.10 (keeps this a small, well-scoped
+  milestone): migrating the ~70 already-covered `text-slate-700`-style
+  literals to the `--token` system wholesale. They render correctly in both
+  themes today via the existing override list; that's a nice-to-have
+  cleanup, not a currently-broken surface.
+- Done when: all three named fixes land, the new guard test exists and is
+  verified to actually fail against the pre-fix state, and `npm run lint`,
+  `npm run typecheck`, `npm test`, and `npm run build` are green on the
+  quality-gate check. package.json bumps to 0.10.0 in the implementation PR,
+  not in this definition.
 
 ## Later / candidates (unscheduled)
 
 Valid direction from AUTONOMOUS_IMPLEMENTATION_PLAN.md Phases 4 to 6 and the
 monetization ladder, plus housekeeping. Nothing here is scheduled until v0.2 through
-v0.9 land.
+v0.10 land.
 
 - Performance pass: bundle analysis, web-vitals instrumentation, Firebase SDK load
   optimization (AUTONOMOUS plan Phase 4).
@@ -265,11 +316,13 @@ v0.9 land.
   static export has no server routes to run it.
 - Paid value expansion (advanced weekly narratives, cloud restore): deferred until
   entitlement automation ships.
-- checkinStatus dashboard persistence (LOW bug, backlog `## Bugs`): the ProgressRing
-  resets to 50 percent on reload instead of persisting the 100 percent check-in state,
-  because checkinStatus is in-memory per page mount. Small standalone fix, not
-  milestone-sized; considered and set aside for v0.9 in favor of journal sync (see
-  docs/design/JOURNAL_FIRESTORE_SYNC.md section 1) but not forgotten.
+- ~~checkinStatus dashboard persistence (LOW bug)~~: FIXED via PR #90
+  (2026-07-20). The ProgressRing no longer resets to 50 percent on reload; a
+  `checkedIn` field on `SavedPlannerState` now persists and rehydrates the
+  same 100 percent check-in state through the existing localStorage blob.
+  Considered and set aside for v0.9 proper in favor of journal sync, then
+  picked up as a standalone QA-stream fix instead, exactly as this entry
+  originally anticipated.
 - ~~Gratitude journal cloud sync~~: promoted out of this list into v0.9 above
   (2026-07-20); no longer just a candidate.
 
@@ -327,3 +380,18 @@ User-only (paid-account and console actions an agent must not perform):
   re-slotted to gratitude journal Firestore sync (see v0.9 above and
   [docs/design/JOURNAL_FIRESTORE_SYNC.md](design/JOURNAL_FIRESTORE_SYNC.md)), and paid-value
   expansion remains valid future direction under "Later / candidates," unchanged.
+- 2026-07-20 roadmap re-audit (product-role increment, second pass same day):
+  verified PRs #88, #89, and #90 (roadmap audit, journal sync implementation,
+  and its QA hardening) via `gh pr view --json mergedAt,mergeCommit` before
+  writing anything, then found this document still described the gratitude
+  journal as "localStorage-only" in the Current state section and still
+  carried v0.9's done-when as an open checklist despite both PRs being merged
+  and package.json reading 0.9.0 - both corrected above. Also found the
+  "Later / candidates" checkinStatus bug entry stale in the other direction:
+  it described the bug as unfixed and deferred, when PR #90 (same day) had
+  already fixed it; struck through and marked FIXED. v0.10 (theme
+  consistency) defined below and in
+  [docs/design/THEME_CONSISTENCY.md](design/THEME_CONSISTENCY.md) after
+  auditing the unscheduled candidates and finding none milestone-shaped as
+  worded; the audit that produced v0.10 read the app's real component code
+  and CSS rather than proposing polish in the abstract.
