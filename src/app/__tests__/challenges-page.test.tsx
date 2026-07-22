@@ -1,9 +1,28 @@
 import { cleanup, render, screen, fireEvent } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ChallengesPage from "@/app/challenges/page";
+
+// The page seeds its date-based "daily recommendation" spotlight from
+// `new Date().getDate()` (challenges/page.tsx) and always renders that
+// challenge's title, independent of the active category filter. Without a
+// pinned clock the "filters micro tasks" test flaked: MICRO_CHALLENGES has
+// "Tomorrow's Top Three" (a productivity item) at index 7, and
+// `getDate() % 15 === 7` on the 7th and 22nd of any month, so on those days the
+// spotlight surfaced that title even after the Mindful filter removed it from
+// the list - failing `queryByText("Tomorrow's Top Three").toBeNull()` (a real
+// 2026-07-22 CI failure that passed locally on the 21st). Pin the clock to a
+// date whose pick is a mindfulness challenge (getDate() 1 -> index 1, "Ambient
+// Detail Spotting") so the spotlight never surfaces a productivity title and
+// the filter assertion is deterministic. Only Date is faked, so React Testing
+// Library's own timers stay real.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 0, 1, 12, 0, 0));
+});
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
 });
 
 describe("Challenges Page", () => {
