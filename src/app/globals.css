@@ -688,7 +688,13 @@ html[data-theme="dark"] .border-slate-200 {
 
 .primary-button {
   border: 1px solid transparent;
-  color: #08131a;
+  /* Theme-aware: --accent-foreground is #08131a in dark theme (unchanged from
+     the old fixed value) and #ffffff in light theme, so the text flips
+     opposite to --accent's own dark<->light flip. The old fixed #08131a
+     rendered near-black on the light theme's dark-teal --accent (~2:1, below
+     WCAG AA). Same token + rationale as subscription-guard's Subscribe button
+     (PR #93): dark ~10.8:1, light ~7.5:1, both AA-clear. */
+  color: var(--accent-foreground);
   background: var(--accent);
 }
 

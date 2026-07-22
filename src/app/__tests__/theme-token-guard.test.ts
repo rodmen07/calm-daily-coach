@@ -563,3 +563,38 @@ describe("theme-token drift guard", () => {
     expect(total).toBeGreaterThan(0);
   });
 });
+
+describe(".primary-button text colour stays theme-aware on --accent (WCAG AA)", () => {
+  // globals.css's `.primary-button` paints text on `background: var(--accent)`,
+  // and --accent flips light-mint (dark theme) <-> dark-teal (light theme).
+  // A FIXED dark text colour (#08131a) rendered ~2:1 on the light-theme
+  // dark-teal accent, below WCAG AA 4.5:1. The fix points the text at
+  // --accent-foreground, which flips OPPOSITE --accent (dark #08131a / light
+  // #ffffff) - the same token the Subscribe button already ships (PR #93,
+  // verified dark ~10.8:1 / light ~7.5:1). This guard fails if a future edit
+  // reintroduces a hardcoded, non-theme-aware colour on .primary-button.
+
+  // The base `.primary-button { ... }` rule that sets colour + `background:
+  // var(--accent)` - not the shared shape rule (`.primary-button,
+  // .secondary-button`), nor `:hover` (var(--accent-strong)) / `:disabled`.
+  const primaryButtonRule =
+    GLOBALS_CSS.match(/\.primary-button\s*\{[^}]*background:\s*var\(--accent\)[^}]*\}/)?.[0] ?? "";
+
+  it("locates the .primary-button rule that paints on --accent", () => {
+    expect(primaryButtonRule).not.toBe("");
+  });
+
+  it("uses var(--accent-foreground), never a hardcoded colour", () => {
+    const colour = primaryButtonRule.match(/color:\s*([^;]+);/)?.[1]?.trim();
+    expect(colour).toBe("var(--accent-foreground)");
+    // Belt and suspenders: no raw hex left on the colour declaration.
+    expect(primaryButtonRule).not.toMatch(/color:\s*#[0-9a-fA-F]{3,8}\s*;/);
+  });
+
+  it("--accent-foreground is defined for both themes so the flip actually happens", () => {
+    // One definition in :root (dark) + one in html[data-theme="light"]; without
+    // the light override the text would not flip and the contrast fix is moot.
+    const defs = GLOBALS_CSS.match(/--accent-foreground:\s*[^;]+;/g) ?? [];
+    expect(defs.length).toBeGreaterThanOrEqual(2);
+  });
+});
