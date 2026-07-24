@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCoachAuth } from "@/app/hooks/use-coach-auth";
 import { useCoachPlanner } from "@/app/hooks/use-coach-planner";
 import type { FocusArea } from "@/lib/plan";
 import { SwipeStepCard } from "@/app/components/swipe-step-card";
 import { CalmEmptyState } from "@/app/components/empty-state";
-import { listCheckins } from "@/lib/browser-checkins";
+import { createCheckinStore, type CheckinStoreAdapter } from "@/lib/checkin-store";
+import type { BrowserCheckin } from "@/lib/browser-checkins";
 import {
   filterCheckinsInWindow,
   getCompletionPercent,
@@ -17,6 +18,14 @@ import {
   getWeekOverWeekChange,
 } from "@/lib/review-insights";
 
+// A 14-day window: the current 7-day summary window plus the 7 days before it
+// that getWeekOverWeekChange compares against (its priorStart is
+// weeklySummary.windowStart - 7). filterCheckinsInWindow and
+// getWeekOverWeekChange both re-filter by explicit date, so any range that
+// covers [windowStart - 7, windowEnd] is behaviour-identical to the old
+// "fetch every check-in" call for the panels on this page.
+const REVIEW_HISTORY_DAYS = 14;
+
 export default function ReviewPage() {
   const { authUser } = useCoachAuth();
   const storageScope = authUser?.uid ?? "guest";
@@ -25,14 +34,53 @@ export default function ReviewPage() {
     authEmail: authUser?.email,
   });
 
+  // Read check-in history through CheckinStoreAdapter (mirrors trends/page.tsx
+  // and use-coach-planner.ts's v0.4 memoization pattern), re-created on
+  // sign-in/out so the unset-env default can resolve to Firestore for
+  // signed-in users, with createCheckinStore's own safe local fallback. The
+  // previous direct listCheckins(storageScope) call read only the local list,
+  // so a signed-in user whose check-ins live in Firestore saw the
+  // week-over-week and skip-reason panels silently render empty (backlog bug
+  // filed 2026-07-20; the exact trap trends/page.tsx was built to avoid).
+  const signedIn = storageScope !== "guest";
+  const checkinStore: CheckinStoreAdapter = useMemo(
+    () => createCheckinStore(undefined, { signedIn }),
+    [signedIn],
+  );
+
+  const [rangeCheckins, setRangeCheckins] = useState<BrowserCheckin[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCheckins() {
+      const inRange = await checkinStore.getCheckinsInRange(
+        REVIEW_HISTORY_DAYS,
+        undefined,
+        storageScope,
+      );
+
+      if (!active) {
+        return;
+      }
+
+      setRangeCheckins(inRange);
+    }
+
+    void loadCheckins();
+
+    return () => {
+      active = false;
+    };
+  }, [storageScope, checkinStore]);
+
   const completionPercent = useMemo(() => getCompletionPercent(weeklySummary), [weeklySummary]);
 
   const hasWeeklyProgress = completionPercent > 0;
 
   const checkinsInWindow = useMemo(() => {
-    const allCheckins = listCheckins(storageScope);
-    return filterCheckinsInWindow(allCheckins, weeklySummary);
-  }, [storageScope, weeklySummary]);
+    return filterCheckinsInWindow(rangeCheckins, weeklySummary);
+  }, [rangeCheckins, weeklySummary]);
 
   const mostUsedDose = useMemo(() => getMostUsedDose(checkinsInWindow), [checkinsInWindow]);
 
@@ -43,9 +91,8 @@ export default function ReviewPage() {
   const skipReasonsList = useMemo(() => getSkipReasonInsights(checkinsInWindow), [checkinsInWindow]);
 
   const weekOverWeek = useMemo(() => {
-    const allCheckins = listCheckins(storageScope);
-    return getWeekOverWeekChange(allCheckins, weeklySummary);
-  }, [storageScope, weeklySummary]);
+    return getWeekOverWeekChange(rangeCheckins, weeklySummary);
+  }, [rangeCheckins, weeklySummary]);
 
   const focusBreakdown = useMemo(() => {
     if (!weeklySummary) {
