@@ -303,6 +303,14 @@ export default function Home() {
       buttonLabel: hasCheckedIn ? "Open reflection" : "Preview reflection",
       primary: hasCheckedIn,
     },
+    {
+      label: "One thing now",
+      state: "Always open",
+      description: "A calm, single-task timer for right now. No pressure, stop whenever you need to.",
+      href: "/now",
+      buttonLabel: "Focus on one thing",
+      primary: false,
+    },
   ];
 
   const completionPercent = weeklySummary ? Math.round(weeklySummary.completionRate * 100) : 0;

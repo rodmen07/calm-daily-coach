@@ -62,15 +62,21 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
  * still gets exactly one gentle nudge.
  */
 export function showReminderNotification(): boolean {
+  return showNotification(REMINDER_NOTIFICATION_TITLE, REMINDER_NOTIFICATION_BODY, REMINDER_NOTIFICATION_TAG);
+}
+
+/**
+ * Shared one-shot notification helper (extracted so the focus-session end nudge
+ * reuses the exact same permission gate and browser-quirk handling as the daily
+ * reminder). Returns true only when a notification was actually created.
+ */
+export function showNotification(title: string, body: string, tag: string): boolean {
   if (getNotificationPermission() !== "granted") {
     return false;
   }
 
   try {
-    new Notification(REMINDER_NOTIFICATION_TITLE, {
-      body: REMINDER_NOTIFICATION_BODY,
-      tag: REMINDER_NOTIFICATION_TAG,
-    });
+    new Notification(title, { body, tag });
     return true;
   } catch {
     return false;
